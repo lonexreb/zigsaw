@@ -1,0 +1,1599 @@
+import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
+import { Handle, Position } from '@xyflow/react';
+import { 
+  Bot, 
+  Cpu, 
+  Activity, 
+  Settings, 
+  RotateCcw, 
+  Save, 
+  FileText, 
+  Zap, 
+  Search, 
+  Plus, 
+  Brain,
+  Wrench,
+  Code,
+  Database,
+  MessageSquare,
+  Globe,
+  Calculator,
+  Calendar,
+  Mail,
+  Image,
+  Play,
+  Pause,
+  Check,
+  Star,
+  Layers,
+  Trash2,
+  Maximize2,
+  Minimize2
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Input } from '../ui/input';
+import { Slider } from '../ui/slider';
+import { Textarea } from '../ui/textarea';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Card, CardContent } from '../ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Switch } from '../ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
+import { NodeDataOutputDialog } from '../ui/dialog';
+import { useToast } from '../ui/use-toast';
+import { cn } from '../../lib/utils';
+import { Tool, ToolCategory } from '../../types/tools';
+import { useWorkflow } from '../../contexts/WorkflowContext';
+import { workflowPersistenceService } from '../../services/workflowPersistenceService';
+import { useAuth } from '../../contexts/AuthContext';
+
+// Simple debounce function
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout;
+  return ((...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+}
+
+// AI Provider Configuration
+interface AIProvider {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  models: Model[];
+  supportsTools: boolean;
+  supportsVision: boolean;
+  supportsFunction: boolean;
+  maxTokens: number;
+  costPerToken: number;
+}
+
+interface Model {
+  id: string;
+  name: string;
+  contextLength: number;
+  costMultiplier: number;
+  capabilities: string[];
+}
+
+// Tool Configuration (using types from types/tools.ts)
+
+interface AgentMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: Date;
+  toolCalls?: any[];
+}
+
+interface UniversalAgentNodeProps {
+  data: {
+    label: string;
+    description: string;
+    status: 'idle' | 'active' | 'running' | 'completed' | 'error';
+    config?: {
+      provider?: string;
+      model?: string;
+      temperature?: number;
+      maxTokens?: number;
+      systemPrompt?: string;
+      messages?: AgentMessage[];
+      tools?: ToolWithIcon[];
+      toolPresets?: string[];
+      streamResponse?: boolean;
+      autoRetry?: boolean;
+      retryCount?: number;
+      timeout?: number;
+    };
+    onConfigChange?: (config: any) => void;
+    outputData?: any;
+    onShowOutputData?: () => void;
+  };
+  id?: string;
+  selected: boolean;
+}
+
+// AI Providers Data
+const aiProviders: AIProvider[] = [
+  {
+    id: 'anthropic',
+    name: 'Anthropic Claude',
+    icon: <Brain className="h-4 w-4" />,
+    models: [
+      { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', contextLength: 200000, costMultiplier: 1.0, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-opus', name: 'Claude 3 Opus', contextLength: 200000, costMultiplier: 1.5, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-haiku', name: 'Claude 3 Haiku', contextLength: 200000, costMultiplier: 0.25, capabilities: ['text', 'vision', 'tools'] },
+    ],
+    supportsTools: true,
+    supportsVision: true,
+    supportsFunction: true,
+    maxTokens: 4096,
+    costPerToken: 0.00001,
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI GPT',
+    icon: <Zap className="h-4 w-4" />,
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o', contextLength: 128000, costMultiplier: 1.0, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', contextLength: 128000, costMultiplier: 0.15, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', contextLength: 128000, costMultiplier: 1.2, capabilities: ['text', 'vision', 'tools'] },
+    ],
+    supportsTools: true,
+    supportsVision: true,
+    supportsFunction: true,
+    maxTokens: 4096,
+    costPerToken: 0.00001,
+  },
+  {
+    id: 'groq',
+    name: 'Groq',
+    icon: <Cpu className="h-4 w-4" />,
+    models: [
+      { id: 'llama3-70b', name: 'Llama 3 70B', contextLength: 8192, costMultiplier: 1.0, capabilities: ['text', 'tools'] },
+      { id: 'llama3-8b', name: 'Llama 3 8B', contextLength: 8192, costMultiplier: 0.1, capabilities: ['text', 'tools'] },
+      { id: 'mixtral-8x7b', name: 'Mixtral 8x7B', contextLength: 32768, costMultiplier: 0.5, capabilities: ['text', 'tools'] },
+    ],
+    supportsTools: true,
+    supportsVision: false,
+    supportsFunction: true,
+    maxTokens: 4096,
+    costPerToken: 0.000001,
+  },
+];
+
+// Available Tools with React Icons
+interface ToolWithIcon extends Omit<Tool, 'icon'> {
+  icon: React.ReactNode;
+}
+
+const availableTools: ToolWithIcon[] = [
+  {
+    id: 'web_search',
+    name: 'Web Search',
+    description: 'Search the web for current information',
+    category: 'search',
+    icon: <Globe className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'query', type: 'string', description: 'Search query', required: true },
+      { name: 'num_results', type: 'number', description: 'Number of results', required: false, default: 10 },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['web', 'search', 'information'],
+    rating: 4.5,
+    downloads: 1000,
+    cost: 0.01,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.example.com/web-search',
+    examples: [
+      {
+        title: 'Basic Search',
+        description: 'Search for information about AI',
+        parameters: { query: 'artificial intelligence news', num_results: 5 }
+      }
+    ]
+  },
+  {
+    id: 'code_interpreter',
+    name: 'Code Interpreter',
+    description: 'Execute Python code safely',
+    category: 'development',
+    icon: <Code className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'code', type: 'string', description: 'Python code to execute', required: true },
+      { name: 'timeout', type: 'number', description: 'Execution timeout (seconds)', required: false, default: 30 },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['python', 'code', 'execution'],
+    rating: 4.8,
+    downloads: 2500,
+    cost: 0.02,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.example.com/code-interpreter',
+    examples: [
+      {
+        title: 'Simple Calculation',
+        description: 'Perform a mathematical calculation',
+        parameters: { code: 'print(2 + 2)', timeout: 10 }
+      }
+    ]
+  },
+  {
+    id: 'database_query',
+    name: 'Database Query',
+    description: 'Query database with SQL',
+    category: 'data',
+    icon: <Database className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'query', type: 'string', description: 'SQL query', required: true },
+      { name: 'connection_string', type: 'string', description: 'Database connection', required: true },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['sql', 'database', 'query'],
+    rating: 4.2,
+    downloads: 800,
+    cost: 0.03,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.example.com/database-query',
+    examples: [
+      {
+        title: 'Select Query',
+        description: 'Query user data',
+        parameters: { 
+          query: 'SELECT * FROM users LIMIT 10',
+          connection_string: 'postgresql://user:pass@localhost:5432/db'
+        }
+      }
+    ]
+  },
+  {
+    id: 'calculator',
+    name: 'Calculator',
+    description: 'Perform mathematical calculations',
+    category: 'utility',
+    icon: <Calculator className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'expression', type: 'string', description: 'Mathematical expression', required: true },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['math', 'calculation', 'arithmetic'],
+    rating: 4.3,
+    downloads: 1200,
+    cost: 0.001,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.example.com/calculator',
+    examples: [
+      {
+        title: 'Basic Calculation',
+        description: 'Perform arithmetic operations',
+        parameters: { expression: '2 + 2 * 3' }
+      }
+    ]
+  },
+  {
+    id: 'email_sender',
+    name: 'Email Sender',
+    description: 'Send emails via SMTP',
+    category: 'communication',
+    icon: <Mail className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'to', type: 'string', description: 'Recipient email', required: true },
+      { name: 'subject', type: 'string', description: 'Email subject', required: true },
+      { name: 'body', type: 'string', description: 'Email body', required: true },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['email', 'communication', 'smtp'],
+    rating: 4.0,
+    downloads: 600,
+    cost: 0.005,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.example.com/email-sender',
+    examples: [
+      {
+        title: 'Send Email',
+        description: 'Send a simple email',
+        parameters: { 
+          to: 'user@example.com',
+          subject: 'Hello',
+          body: 'Hello, this is a test email.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'calendar_manager',
+    name: 'Calendar Manager',
+    description: 'Manage calendar events',
+    category: 'productivity',
+    icon: <Calendar className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'action', type: 'select', description: 'Calendar action', required: true, options: ['create', 'update', 'delete', 'list'] },
+      { name: 'event_details', type: 'json', description: 'Event details', required: false },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['calendar', 'events', 'scheduling'],
+    rating: 4.4,
+    downloads: 900,
+    cost: 0.008,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.example.com/calendar-manager',
+    examples: [
+      {
+        title: 'Create Event',
+        description: 'Create a new calendar event',
+        parameters: { 
+          action: 'create',
+          event_details: {
+            title: 'Meeting',
+            start: '2024-01-01T10:00:00Z',
+            end: '2024-01-01T11:00:00Z'
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: 'image_analyzer',
+    name: 'Image Analyzer',
+    description: 'Analyze and describe images',
+    category: 'vision',
+    icon: <Image className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'image_url', type: 'string', description: 'Image URL or base64', required: true },
+      { name: 'analysis_type', type: 'select', description: 'Analysis type', required: false, options: ['description', 'objects', 'text', 'faces'] },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['vision', 'image', 'analysis'],
+    rating: 4.6,
+    downloads: 1500,
+    cost: 0.02,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.example.com/image-analyzer',
+    examples: [
+      {
+        title: 'Analyze Image',
+        description: 'Analyze an image and describe its contents',
+        parameters: { 
+          image_url: 'https://example.com/image.jpg',
+          analysis_type: 'description'
+        }
+      }
+    ]
+  },
+];
+
+// Tool Categories with React Icons
+interface ToolCategoryWithIcon extends Omit<ToolCategory, 'icon'> {
+  icon: React.ReactNode;
+}
+
+const toolCategories: ToolCategoryWithIcon[] = [
+  { id: 'all', name: 'All Tools', icon: <Layers className="h-4 w-4" />, count: 0 },
+  { id: 'search', name: 'Search', icon: <Search className="h-4 w-4" />, count: 0 },
+  { id: 'development', name: 'Development', icon: <Code className="h-4 w-4" />, count: 0 },
+  { id: 'data', name: 'Data', icon: <Database className="h-4 w-4" />, count: 0 },
+  { id: 'communication', name: 'Communication', icon: <MessageSquare className="h-4 w-4" />, count: 0 },
+  { id: 'utility', name: 'Utility', icon: <Calculator className="h-4 w-4" />, count: 0 },
+  { id: 'productivity', name: 'Productivity', icon: <Calendar className="h-4 w-4" />, count: 0 },
+  { id: 'vision', name: 'Vision', icon: <Image className="h-4 w-4" />, count: 0 },
+];
+
+// Tool Presets
+const toolPresets = [
+  { id: 'data_analyst', name: 'Data Analyst', tools: ['database_query', 'code_interpreter', 'calculator', 'web_search'] },
+  { id: 'customer_support', name: 'Customer Support', tools: ['email_sender', 'calendar_manager', 'web_search'] },
+  { id: 'content_creator', name: 'Content Creator', tools: ['web_search', 'image_analyzer', 'code_interpreter'] },
+  { id: 'developer', name: 'Developer', tools: ['code_interpreter', 'web_search', 'database_query'] },
+  { id: 'research_assistant', name: 'Research Assistant', tools: ['web_search', 'database_query', 'calculator'] },
+];
+
+// Default Configuration
+const defaultConfig = {
+  provider: 'anthropic',
+  model: 'claude-3-5-sonnet',
+  temperature: 0.7,
+  maxTokens: 1000,
+  systemPrompt: 'You are a helpful AI assistant with access to various tools. Use them appropriately to help the user.',
+  messages: [
+    { role: 'user' as const, content: 'Hello! How can I help you today?', timestamp: new Date() }
+  ],
+  tools: [],
+  toolPresets: [],
+  streamResponse: true,
+  autoRetry: true,
+  retryCount: 3,
+  timeout: 30000,
+};
+
+// Component
+const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selected }) => {
+  const { updateNodeConfig, getSelectedNode } = useWorkflow();
+  const { currentUser } = useAuth();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState('config');
+  const [showToolMarketplace, setShowToolMarketplace] = useState(false);
+  const [toolSearchQuery, setToolSearchQuery] = useState('');
+  const [selectedToolCategory, setSelectedToolCategory] = useState('all');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const [showDataOutput, setShowDataOutput] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const { toast } = useToast();
+  
+  // Debounced save function to prevent excessive API calls
+  const debouncedSave = useMemo(
+    () => debounce(async (nodeId: string, config: any) => {
+      if (currentUser) {
+        try {
+          const idToken = await currentUser.getIdToken();
+          const selectedNode = getSelectedNode();
+          const position = selectedNode?.position || { x: 100, y: 100 };
+          
+          await workflowPersistenceService.saveNodeConfig(nodeId, config, 'UNIVERSAL_AGENT', idToken, position);
+          setHasUnsavedChanges(false);
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+          setHasUnsavedChanges(true);
+          
+          // Show user-friendly error for model validation issues
+          if (error instanceof Error && error.message.includes('Model') && error.message.includes('not available')) {
+            toast({
+              title: "Model Validation Error",
+              description: `The selected model "${config.model}" is not available on the backend. Please check your backend configuration.`,
+              variant: "destructive",
+            });
+          } else if (error instanceof Error && error.message.includes('workflow')) {
+            toast({
+              title: "Workflow Save Error", 
+              description: "Failed to save to workflow. Changes are preserved locally.",
+              variant: "destructive",
+            });
+          }
+        }
+      }
+    }, 500), // 500ms debounce
+    [currentUser, getSelectedNode, toast]
+  );
+  
+  // Local configuration state
+  const [config, setConfig] = useState(() => {
+    const selectedNode = getSelectedNode();
+    const nodeConfig = selectedNode?.id === id ? selectedNode?.data?.config : data.config;
+    
+    return {
+      provider: (nodeConfig as any)?.provider || defaultConfig.provider,
+      model: (nodeConfig as any)?.model || defaultConfig.model,
+      temperature: (nodeConfig as any)?.temperature || defaultConfig.temperature,
+      maxTokens: (nodeConfig as any)?.maxTokens || defaultConfig.maxTokens,
+      systemPrompt: (nodeConfig as any)?.systemPrompt || defaultConfig.systemPrompt,
+      messages: (nodeConfig as any)?.messages || defaultConfig.messages,
+      tools: (nodeConfig as any)?.tools || defaultConfig.tools,
+      toolPresets: (nodeConfig as any)?.toolPresets || defaultConfig.toolPresets,
+      streamResponse: (nodeConfig as any)?.streamResponse || defaultConfig.streamResponse,
+      autoRetry: (nodeConfig as any)?.autoRetry || defaultConfig.autoRetry,
+      retryCount: (nodeConfig as any)?.retryCount || defaultConfig.retryCount,
+      timeout: (nodeConfig as any)?.timeout || defaultConfig.timeout,
+    };
+  });
+
+  // Initialize as having unsaved changes if this is a new node (no saved config)
+  useEffect(() => {
+    const selectedNode = getSelectedNode();
+    const nodeConfig = selectedNode?.id === id ? selectedNode?.data?.config : data.config;
+    
+    // If the node has no config or very minimal config, consider it as needing to be saved
+    if (!nodeConfig || Object.keys(nodeConfig).length === 0) {
+      setHasUnsavedChanges(true);
+    }
+  }, [id, getSelectedNode, data.config]);
+
+  // Sync config when node data changes
+  useEffect(() => {
+    const selectedNode = getSelectedNode();
+    const nodeConfig = selectedNode?.id === id ? selectedNode?.data?.config : data.config;
+    
+    if (nodeConfig) {
+      setConfig(prev => ({
+        provider: (nodeConfig as any)?.provider || prev.provider,
+        model: (nodeConfig as any)?.model || prev.model,
+        temperature: (nodeConfig as any)?.temperature || prev.temperature,
+        maxTokens: (nodeConfig as any)?.maxTokens || prev.maxTokens,
+        systemPrompt: (nodeConfig as any)?.systemPrompt || prev.systemPrompt,
+        messages: (nodeConfig as any)?.messages || prev.messages,
+        tools: (nodeConfig as any)?.tools || prev.tools,
+        toolPresets: (nodeConfig as any)?.toolPresets || prev.toolPresets,
+        streamResponse: (nodeConfig as any)?.streamResponse !== undefined ? (nodeConfig as any).streamResponse : prev.streamResponse,
+        autoRetry: (nodeConfig as any)?.autoRetry !== undefined ? (nodeConfig as any).autoRetry : prev.autoRetry,
+        retryCount: (nodeConfig as any)?.retryCount || prev.retryCount,
+        timeout: (nodeConfig as any)?.timeout || prev.timeout,
+      }));
+    }
+  }, [id, getSelectedNode, data.config]);
+
+  // Get current provider and model
+  const currentProvider = useMemo(() => 
+    aiProviders.find(p => p.id === config.provider) || aiProviders[0], 
+    [config.provider]
+  );
+  
+  const currentModel = useMemo(() => 
+    currentProvider.models.find(m => m.id === config.model) || currentProvider.models[0], 
+    [currentProvider, config.model]
+  );
+
+  // Filter tools based on search and category
+  const filteredTools = useMemo(() => {
+    return availableTools.filter(tool => {
+      const matchesSearch = tool.name.toLowerCase().includes(toolSearchQuery.toLowerCase()) ||
+                           tool.description.toLowerCase().includes(toolSearchQuery.toLowerCase());
+      const matchesCategory = selectedToolCategory === 'all' || tool.category === selectedToolCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [toolSearchQuery, selectedToolCategory]);
+
+  // Handle configuration changes with auto-save
+  const handleConfigChange = useCallback((key: string, value: any) => {
+    // Update local state immediately for reactive UI
+    setConfig(prev => {
+      const newConfig = { ...prev, [key]: value };
+      
+      // Update the workflow context with the complete config
+      if (id) {
+        updateNodeConfig(id, newConfig);
+      }
+      
+      // Trigger debounced auto-save
+      if (id) {
+        setHasUnsavedChanges(true); // Show unsaved state immediately
+        debouncedSave(id, newConfig);
+      }
+      
+      return newConfig;
+    });
+  }, [id, updateNodeConfig, debouncedSave]);
+
+  // Handle tool toggle
+  const handleToolToggle = useCallback((toolId: string) => {
+    const toolIndex = config.tools.findIndex((t: ToolWithIcon) => t.id === toolId);
+    const tool = availableTools.find(t => t.id === toolId);
+    
+    if (!tool) return;
+    
+    let newTools: ToolWithIcon[];
+    if (toolIndex >= 0) {
+      // Remove tool
+      newTools = config.tools.filter((_: ToolWithIcon, index: number) => index !== toolIndex);
+    } else {
+      // Add tool
+      newTools = [...config.tools, { ...tool, enabled: true }];
+    }
+    
+    handleConfigChange('tools', newTools);
+    setActivePreset(null); // Clear active preset when manually removing/adding tools
+  }, [config.tools, handleConfigChange]);
+
+  // Handle tool preset selection
+  const handleToolPresetSelection = useCallback((presetId: string) => {
+    const preset = toolPresets.find(p => p.id === presetId);
+    if (!preset) return;
+    
+    const presetTools = preset.tools.map(toolId => {
+      const tool = availableTools.find(t => t.id === toolId);
+      return tool ? { ...tool, enabled: true } : null;
+    }).filter(Boolean) as ToolWithIcon[];
+    
+    handleConfigChange('tools', presetTools);
+    setActivePreset(presetId);
+    setShowToolMarketplace(false);
+    
+    toast({
+      title: "Tool Preset Applied",
+      description: `${preset.name} tools have been configured.`,
+    });
+  }, [handleConfigChange, toast]);
+
+  // Check if current tools match a preset
+  const getCurrentActivePreset = useCallback(() => {
+    if (config.tools.length === 0) return null;
+    
+    const currentToolIds = config.tools.map((t: ToolWithIcon) => t.id).sort();
+    
+    for (const preset of toolPresets) {
+      const presetToolIds = preset.tools.sort();
+      if (currentToolIds.length === presetToolIds.length && 
+          currentToolIds.every((id: string, index: number) => id === presetToolIds[index])) {
+        return preset.id;
+      }
+    }
+    return null;
+  }, [config.tools]);
+
+  // Update active preset when tools change
+  useEffect(() => {
+    const currentPreset = getCurrentActivePreset();
+    setActivePreset(currentPreset);
+  }, [config.tools, getCurrentActivePreset]);
+
+  // Handle node execution
+  const handleExecute = useCallback(async () => {
+    if (!currentProvider || !currentModel) return;
+    
+    setIsRunning(true);
+    
+    try {
+      // TODO: Implement actual execution logic
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate execution
+      
+      toast({
+        title: "Execution Complete",
+        description: "Agent has finished processing your request.",
+      });
+    } catch (error) {
+      toast({
+        title: "Execution Error",
+        description: "An error occurred while executing the agent.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRunning(false);
+    }
+  }, [currentProvider, currentModel, toast]);
+
+  // Save configuration
+  const handleSaveConfig = useCallback(async () => {
+    if (!currentUser || !id) {
+      toast({ variant: "destructive", title: "Error", description: "User must be logged in to save configurations." });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const idToken = await currentUser.getIdToken();
+      
+      // Get position from the selected node
+      const selectedNode = getSelectedNode();
+      const position = selectedNode?.position || { x: 100, y: 100 };
+      
+      // Update the workflow context with the complete config before saving
+      updateNodeConfig(id, config);
+      
+      // Use the current config state that includes all user changes
+      await workflowPersistenceService.saveNodeConfig(id, config, 'UNIVERSAL_AGENT', idToken, position);
+      setHasUnsavedChanges(false);
+      toast({
+        title: "Configuration Saved",
+        description: "Agent configuration has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to save node:', error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to save node configuration." });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [id, currentUser, config, getSelectedNode, updateNodeConfig, toast]);
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'idle': return 'bg-gray-500';
+      case 'active': return 'bg-blue-500';
+      case 'running': return 'bg-yellow-500';
+      case 'completed': return 'bg-green-500';
+      case 'error': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  return (
+    <TooltipProvider>
+      <motion.div 
+        className={cn(
+          "relative bg-gradient-to-br from-slate-900/90 via-purple-900/40 to-blue-900/60 backdrop-blur-xl border border-purple-400/20 rounded-2xl shadow-2xl transition-all duration-500 hover:shadow-purple-500/20 hover:border-purple-400/40 hover:scale-[1.02]",
+          selected && "ring-2 ring-purple-400/60 shadow-purple-500/30",
+          isExpanded ? "min-w-[300px] max-w-[400px]" : "min-w-[290px] max-w-[220px]"
+        )}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-indigo-600/10 rounded-2xl animate-pulse" />
+        
+        {/* Animated Light Streaks */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 rounded-2xl">
+            {/* Top streak */}
+            <motion.div 
+              className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-purple-400/60 to-transparent"
+              animate={{
+                x: ['-100%', '100%'],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            
+            {/* Right streak */}
+            <motion.div 
+              className="absolute top-0 right-0 w-0.5 h-full bg-gradient-to-b from-transparent via-blue-400/60 to-transparent"
+              animate={{
+                y: ['-100%', '100%'],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.75
+              }}
+            />
+            
+            {/* Bottom streak */}
+            <motion.div 
+              className="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-l from-transparent via-purple-400/60 to-transparent"
+              animate={{
+                x: ['100%', '-100%'],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1.5
+              }}
+            />
+            
+            {/* Left streak */}
+            <motion.div 
+              className="absolute bottom-0 left-0 w-0.5 h-full bg-gradient-to-t from-transparent via-blue-400/60 to-transparent"
+              animate={{
+                y: ['100%', '-100%'],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 2.25
+              }}
+            />
+          </div>
+        </div>
+        
+
+
+        {/* Header */}
+        <div className="relative flex items-center justify-between p-4 border-b border-purple-400/20 select-none">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <motion.div 
+                className="bg-gradient-to-br from-purple-500/30 to-blue-500/30 p-3 rounded-xl border border-purple-400/30"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Bot className="h-6 w-6 text-purple-200" />
+              </motion.div>
+              <motion.div 
+                className={cn(
+                  "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-900",
+                  getStatusColor(data.status)
+                )} 
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white tracking-tight">{data.label}</h3>
+              <p className="text-sm text-purple-200/70 font-medium line-clamp-2">{data.description}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div whileHover={{ scale: isSaving ? 1 : 1.1 }} whileTap={{ scale: isSaving ? 1 : 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSaveConfig}
+                    disabled={isSaving}
+                    className={`rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${
+                      hasUnsavedChanges 
+                        ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10' 
+                        : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'
+                    }`}
+                  >
+                    {isSaving ? (
+                      <Activity className="h-4 w-4 animate-spin" />
+                    ) : hasUnsavedChanges ? (
+                      <Save className="h-4 w-4" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isSaving ? 'Auto-saving...' : hasUnsavedChanges ? 'Auto-save pending...' : 'All changes auto-saved'}
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleExecute}
+                    disabled={isRunning}
+                    className="text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-xl"
+                  >
+                    {isRunning ? (
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                        <Pause className="h-4 w-4" />
+                      </motion.div>
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isRunning ? 'Running...' : 'Execute Agent'}
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl"
+                  >
+                    {isExpanded ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isExpanded ? 'Collapse' : 'Expand'}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Content */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div 
+              className="relative p-4"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-purple-400/20 rounded-xl p-1">
+                  <TabsTrigger value="config" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
+                    Configuration
+                  </TabsTrigger>
+                  <TabsTrigger value="tools" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
+                    Tools ({config.tools.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="messages" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
+                    Messages
+                  </TabsTrigger>
+                </TabsList>
+                
+                {/* Configuration Tab */}
+                <TabsContent value="config" className="space-y-6 mt-6">
+                  {/* Provider and Model Selection */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                        <Brain className="h-4 w-4" />
+                        AI Provider
+                      </label>
+                      <Select value={config.provider} onValueChange={(value) => handleConfigChange('provider', value)}>
+                        <SelectTrigger className="bg-slate-800/50 border-purple-400/30 text-white hover:border-purple-400/50 rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="!bg-slate-800 !border-purple-400/30 !text-white">
+                          {aiProviders.map(provider => (
+                            <SelectItem key={provider.id} value={provider.id} className="!text-white hover:!bg-purple-600/20 focus:!bg-purple-600/30 focus:!text-white data-[highlighted]:!bg-purple-600/30 data-[highlighted]:!text-white">
+                              <div className="flex items-center gap-3">
+                                {provider.icon}
+                                <span className="font-medium">{provider.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                        <Cpu className="h-4 w-4" />
+                        Model
+                      </label>
+                      <Select value={config.model} onValueChange={(value) => handleConfigChange('model', value)}>
+                        <SelectTrigger className="bg-slate-800/50 border-purple-400/30 text-white hover:border-purple-400/50 rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="!bg-slate-800 !border-purple-400/30 !text-white">
+                          {currentProvider.models.map(model => (
+                            <SelectItem key={model.id} value={model.id} className="!text-white hover:!bg-purple-600/20 focus:!bg-purple-600/30 focus:!text-white data-[highlighted]:!bg-purple-600/30 data-[highlighted]:!text-white">
+                              <div className="flex items-center justify-between w-full">
+                                <span className="font-medium">{model.name}</span>
+                                <Badge variant="secondary" className="ml-2 bg-purple-600/20 text-purple-200">
+                                  {model.contextLength.toLocaleString()} ctx
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Temperature and Max Tokens */}
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          Creativity
+                        </span>
+                        <span className="text-purple-300 font-mono">{config.temperature}</span>
+                      </label>
+                      <Slider
+                        value={[config.temperature]}
+                        onValueChange={(value) => handleConfigChange('temperature', value[0])}
+                        min={0}
+                        max={2}
+                        step={0.1}
+                        className="w-full cursor-pointer"
+                      />
+                      <div className="flex justify-between text-xs text-purple-300/60">
+                        <span>Conservative</span>
+                        <span>Creative</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          Max Tokens
+                        </span>
+                        <span className="text-purple-300 font-mono">{config.maxTokens}</span>
+                      </label>
+                      <Slider
+                        value={[config.maxTokens]}
+                        onValueChange={(value) => handleConfigChange('maxTokens', value[0])}
+                        min={100}
+                        max={currentProvider.maxTokens}
+                        step={100}
+                        className="w-full cursor-pointer"
+                      />
+                      <div className="flex justify-between text-xs text-purple-300/60">
+                        <span>Short</span>
+                        <span>Long</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* System Prompt */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      System Prompt
+                    </label>
+                    <Textarea
+                      value={config.systemPrompt}
+                      onChange={(e) => handleConfigChange('systemPrompt', e.target.value)}
+                      placeholder="Define the agent's behavior, personality, and instructions..."
+                      className="bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 min-h-[120px] rounded-xl resize-none"
+                    />
+                  </div>
+
+                  {/* Advanced Options */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between p-4 bg-slate-800/30 border border-purple-400/20 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-purple-300" />
+                          <span className="text-sm font-medium text-purple-200">Stream Response</span>
+                        </div>
+                        <Switch
+                          checked={config.streamResponse}
+                          onCheckedChange={(checked) => handleConfigChange('streamResponse', checked)}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-4 bg-slate-800/30 border border-purple-400/20 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <RotateCcw className="h-4 w-4 text-purple-300" />
+                          <span className="text-sm font-medium text-purple-200">Auto Retry</span>
+                        </div>
+                        <Switch
+                          checked={config.autoRetry}
+                          onCheckedChange={(checked) => handleConfigChange('autoRetry', checked)}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Retry Count and Timeout */}
+                    {config.autoRetry && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <RotateCcw className="h-4 w-4" />
+                              Retry Count
+                            </span>
+                            <span className="text-purple-300 font-mono">{config.retryCount}</span>
+                          </label>
+                          <Slider
+                            value={[config.retryCount]}
+                            onValueChange={(value) => handleConfigChange('retryCount', value[0])}
+                            min={1}
+                            max={10}
+                            step={1}
+                            className="w-full cursor-pointer"
+                          />
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <Settings className="h-4 w-4" />
+                              Timeout (s)
+                            </span>
+                            <span className="text-purple-300 font-mono">{config.timeout / 1000}</span>
+                          </label>
+                          <Slider
+                            value={[config.timeout / 1000]}
+                            onValueChange={(value) => handleConfigChange('timeout', value[0] * 1000)}
+                            min={5}
+                            max={300}
+                            step={5}
+                            className="w-full cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+              {/* Tools Tab */}
+              <TabsContent value="tools" className="space-y-6 mt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-2 rounded-lg">
+                      <Wrench className="h-5 w-5 text-purple-300" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-purple-200">Available Tools</h4>
+                      <p className="text-sm text-purple-300/60">{config.tools.length} tools configured</p>
+                    </div>
+                  </div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowToolMarketplace(true)}
+                      className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Browse Tools
+                    </Button>
+                  </motion.div>
+                </div>
+
+                {/* Tool Presets */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <Star className="h-4 w-4" />
+                      Quick Presets
+                    </label>
+                    {activePreset && (
+                      <Badge variant="secondary" className="bg-green-600/20 text-green-300 border-green-500/30">
+                        <Check className="h-3 w-3 mr-1" />
+                        {toolPresets.find(p => p.id === activePreset)?.name} Active
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {toolPresets.map(preset => {
+                      const isActive = activePreset === preset.id;
+                      return (
+                        <motion.div key={preset.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToolPresetSelection(preset.id)}
+                            className={cn(
+                              "w-full border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl h-auto p-3 relative",
+                              isActive && "bg-purple-600/20 border-purple-400/60 text-purple-200"
+                            )}
+                          >
+                            <div className="text-left w-full">
+                              <div className="flex items-center justify-between">
+                                <div className="font-medium">{preset.name}</div>
+                                {isActive && (
+                                  <Check className="h-4 w-4 text-green-400" />
+                                )}
+                              </div>
+                              <div className="text-xs text-purple-400/60">{preset.tools.length} tools</div>
+                            </div>
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Current Tools */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Configured Tools
+                  </label>
+                  
+                  {config.tools.length === 0 ? (
+                    <motion.div 
+                      className="text-center py-12 bg-slate-800/20 border-2 border-dashed border-purple-400/30 rounded-2xl"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <Wrench className="h-8 w-8 text-purple-300" />
+                      </div>
+                      <h5 className="text-lg font-semibold text-purple-200 mb-2">No tools configured</h5>
+                      <p className="text-sm text-purple-300/60 mb-4">Add tools to enhance your agent's capabilities</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowToolMarketplace(true)}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Browse Tools
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <div className="grid gap-3">
+                      {config.tools.map((tool: ToolWithIcon, index: number) => (
+                        <motion.div
+                          key={tool.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          whileHover={{ scale: 1.02 }}
+                        >
+                          <Card className={cn(
+                            "bg-slate-800/30 border-purple-400/20 hover:border-purple-400/40 transition-all",
+                            !tool.enabled && "opacity-60"
+                          )}>
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-start gap-3 flex-1">
+                                  <div className={cn(
+                                    "bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2 rounded-lg border border-purple-400/30 flex-shrink-0",
+                                    !tool.enabled && "grayscale"
+                                  )}>
+                                    {tool.icon}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h5 className="text-sm font-semibold text-purple-200 truncate">{tool.name}</h5>
+                                      {tool.enabled && (
+                                        <Badge variant="secondary" className="bg-green-600/20 text-green-300 text-xs">
+                                          Active
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-purple-300/60 mb-2 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{tool.description}</p>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <Badge variant="secondary" className="bg-purple-600/20 text-purple-200 text-xs">
+                                        {tool.category}
+                                      </Badge>
+                                      <span className="text-xs text-purple-400/60">
+                                        ⭐ {tool.rating}
+                                      </span>
+                                      <span className="text-xs text-purple-400/60">
+                                        {tool.downloads} downloads
+                                      </span>
+                                      <span className="text-xs text-green-400">
+                                        ${tool.cost.toFixed(3)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 ml-2">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Switch
+                                        checked={tool.enabled}
+                                        onCheckedChange={(checked) => {
+                                          const newTools = [...config.tools];
+                                          newTools[index] = { ...tool, enabled: checked };
+                                          handleConfigChange('tools', newTools);
+                                        }}
+                                      />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {tool.enabled ? 'Disable tool' : 'Enable tool'}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleToolToggle(tool.id)}
+                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Remove tool</TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Messages Tab */}
+              <TabsContent value="messages" className="space-y-6 mt-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-2 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-purple-300" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-purple-200">Conversation</h4>
+                    <p className="text-sm text-purple-300/60">{config.messages.length} messages</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {config.messages.map((message: AgentMessage, index: number) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={cn(
+                        "flex",
+                        message.role === 'user' ? 'justify-end' : 'justify-start'
+                      )}
+                    >
+                      <Card className={cn(
+                        "max-w-[80%] border transition-all",
+                        message.role === 'user' 
+                          ? 'bg-purple-600/20 border-purple-400/30 text-purple-100' 
+                          : 'bg-slate-800/30 border-purple-400/20 text-purple-200'
+                      )}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant={message.role === 'user' ? 'default' : 'secondary'} className="text-xs">
+                              {message.role === 'user' ? 'You' : 'Agent'}
+                            </Badge>
+                            <span className="text-xs text-purple-300/60">
+                              {message.timestamp.toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-sm leading-relaxed">{message.content}</p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+                
+                <div className="flex gap-3">
+                  <Input
+                    placeholder="Type a message to test the agent..."
+                    className="bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 flex-1 rounded-xl"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const input = e.target as HTMLInputElement;
+                        if (input.value.trim()) {
+                          const newMessage: AgentMessage = {
+                            role: 'user',
+                            content: input.value,
+                            timestamp: new Date(),
+                          };
+                          handleConfigChange('messages', [...config.messages, newMessage]);
+                          input.value = '';
+                        }
+                      }
+                    }}
+                  />
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                  </motion.div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        )}
+        </AnimatePresence>
+
+        {/* Compact View */}
+        {!isExpanded && (
+          <div className="relative p-4 space-y-3">
+            {/* Provider Info */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2 rounded-lg border border-purple-400/30">
+                  {currentProvider.icon}
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-purple-200">{currentProvider.name}</span>
+                  <p className="text-xs text-purple-300/60">{currentModel.name}</p>
+                </div>
+              </div>
+              <Badge variant="secondary" className="bg-purple-600/20 text-purple-200 text-xs">
+                {currentModel.contextLength.toLocaleString()} ctx
+              </Badge>
+            </div>
+            
+            {/* Tools Summary */}
+            {config.tools.length > 0 && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4 text-purple-300" />
+                  <span className="text-sm text-purple-200/80">
+                    {config.tools.length} tools configured
+                  </span>
+                </div>
+                <div className="flex -space-x-1">
+                  {config.tools.slice(0, 3).map((tool: ToolWithIcon) => (
+                    <Tooltip key={tool.id}>
+                      <TooltipTrigger asChild>
+                        <div className="bg-slate-800/50 border border-purple-400/30 rounded-full p-1">
+                          <div className="w-4 h-4 text-purple-300">
+                            {tool.icon}
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>{tool.name}</TooltipContent>
+                    </Tooltip>
+                  ))}
+                  {config.tools.length > 3 && (
+                    <div className="bg-slate-800/50 border border-purple-400/30 rounded-full p-1 text-xs text-purple-300 w-6 h-6 flex items-center justify-center">
+                      +{config.tools.length - 3}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Configuration Summary */}
+            <div className="flex items-center justify-between text-xs text-purple-300/60">
+              <span>Temperature: {config.temperature}</span>
+              <span>Max Tokens: {config.maxTokens}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Handles */}
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="w-4 h-4 bg-gradient-to-br from-purple-500 to-blue-500 border-2 border-purple-300 shadow-lg"
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="w-4 h-4 bg-gradient-to-br from-purple-500 to-blue-500 border-2 border-purple-300 shadow-lg"
+        />
+      </motion.div>
+
+      {/* Tool Marketplace Dialog */}
+      <Dialog open={showToolMarketplace} onOpenChange={setShowToolMarketplace}>
+        <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden bg-slate-900/95 border-purple-400/30">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-2xl font-bold text-purple-200 flex items-center gap-3">
+              <div className="bg-gradient-to-br from-purple-500/30 to-blue-500/30 p-2 rounded-xl">
+                <Star className="h-6 w-6 text-purple-300" />
+              </div>
+              Tool Marketplace
+            </DialogTitle>
+            <DialogDescription className="text-purple-300/70 text-base">
+              Browse and add powerful tools to enhance your agent's capabilities
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Search and Filter */}
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-300/60" />
+                  <Input
+                    placeholder="Search tools by name or description..."
+                    value={toolSearchQuery}
+                    onChange={(e) => setToolSearchQuery(e.target.value)}
+                    className="bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 pl-10 rounded-xl"
+                  />
+                </div>
+              </div>
+              <Select value={selectedToolCategory} onValueChange={setSelectedToolCategory}>
+                <SelectTrigger className="w-56 bg-slate-800/50 border-purple-400/30 text-white rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="!bg-slate-800 !border-purple-400/30 !text-white">
+                  {toolCategories.map(category => (
+                    <SelectItem key={category.id} value={category.id} className="!text-white hover:!bg-purple-600/20 focus:!bg-purple-600/30 focus:!text-white data-[highlighted]:!bg-purple-600/30 data-[highlighted]:!text-white">
+                      <div className="flex items-center gap-3">
+                        {category.icon}
+                        <span className="font-medium">{category.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tools Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[50vh] overflow-y-auto">
+              {filteredTools.map((tool, index) => {
+                const isSelected = config.tools.some((t: ToolWithIcon) => t.id === tool.id);
+                return (
+                  <motion.div
+                    key={tool.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <Card className={cn(
+                      "cursor-pointer transition-all hover:shadow-xl border-2",
+                      isSelected 
+                        ? "ring-2 ring-purple-500 bg-purple-900/30 border-purple-400/60" 
+                        : "bg-slate-800/30 border-purple-400/20 hover:border-purple-400/40"
+                    )}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2 rounded-lg border border-purple-400/30">
+                              {tool.icon}
+                            </div>
+                            <div>
+                              <Badge variant="secondary" className="bg-purple-600/20 text-purple-200 text-xs mb-1">
+                                {tool.category}
+                              </Badge>
+                              <p className="text-xs text-purple-400/60">
+                                ⭐ {tool.rating} · {tool.downloads} downloads
+                              </p>
+                            </div>
+                          </div>
+                          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <Button
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handleToolToggle(tool.id)}
+                              className={cn(
+                                "rounded-xl",
+                                isSelected 
+                                  ? "bg-purple-600/80 text-white hover:bg-purple-600/90"
+                                  : "border-purple-400/30 text-purple-300 hover:bg-purple-500/10"
+                              )}
+                            >
+                              {isSelected ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Plus className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </motion.div>
+                        </div>
+                        
+                        <h5 className="font-semibold mb-2 text-purple-200">{tool.name}</h5>
+                        <p className="text-sm text-purple-300/80 mb-4 line-clamp-3">{tool.description}</p>
+                        
+                        <div className="flex items-center justify-between text-xs text-purple-400/60">
+                          <span>{tool.parameters.length} parameters</span>
+                          <span className="flex items-center gap-1">
+                            <span className="text-green-400">$</span>
+                            {tool.cost.toFixed(3)}
+                          </span>
+                        </div>
+                        
+                        {/* Tool Tags */}
+                        {tool.tags && tool.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-3">
+                            {tool.tags.slice(0, 3).map(tag => (
+                              <Badge key={tag} variant="outline" className="text-xs text-purple-300/60 border-purple-500/30">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {tool.tags.length > 3 && (
+                              <Badge variant="outline" className="text-xs text-purple-300/60 border-purple-500/30">
+                                +{tool.tags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Output Data Dialog */}
+      <NodeDataOutputDialog
+        isOpen={showDataOutput}
+        onClose={() => setShowDataOutput(false)}
+        nodeId={id || 'unknown'}
+        nodeLabel={data.label}
+        nodeType="universal_agent"
+        outputData={data.outputData}
+      />
+    </TooltipProvider>
+  );
+};
+
+export default memo(UniversalAgentNode); 

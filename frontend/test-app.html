@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug App</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: Arial, sans-serif; 
+            background: #1a1a1a; 
+            color: white;
+        }
+        .debug { 
+            background: #333; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Your App</h1>
+    <div class="debug">
+        <h3>Step 1: Check if React loads</h3>
+        <div id="react-check">Testing...</div>
+    </div>
+    
+    <div class="debug">
+        <h3>Step 2: Check Firebase</h3>
+        <div id="firebase-check">Testing...</div>
+    </div>
+    
+    <div class="debug">
+        <h3>Step 3: Check Console</h3>
+        <p>Open browser console (F12) and check for any red errors</p>
+    </div>
+
+    <script type="module">
+        // Test 1: Basic JavaScript
+        console.log('✅ JavaScript is working');
+        
+        // Test 2: Check React
+        try {
+            import('react').then(() => {
+                document.getElementById('react-check').innerHTML = '<span class="success">✅ React module loads</span>';
+            }).catch(e => {
+                document.getElementById('react-check').innerHTML = '<span class="error">❌ React failed: ' + e.message + '</span>';
+            });
+        } catch (e) {
+            document.getElementById('react-check').innerHTML = '<span class="error">❌ React import failed: ' + e.message + '</span>';
+        }
+        
+        // Test 3: Check Firebase
+        try {
+            import('firebase/app').then(() => {
+                document.getElementById('firebase-check').innerHTML = '<span class="success">✅ Firebase module loads</span>';
+            }).catch(e => {
+                document.getElementById('firebase-check').innerHTML = '<span class="error">❌ Firebase failed: ' + e.message + '</span>';
+            });
+        } catch (e) {
+            document.getElementById('firebase-check').innerHTML = '<span class="error">❌ Firebase import failed: ' + e.message + '</span>';
+        }
+    </script>
+</body>
+</html>
