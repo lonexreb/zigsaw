@@ -972,8 +972,13 @@ const WorkflowContent = () => {
         }
       })
 
+    // Use environment variable or fallback to Vercel backend
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app'
+    const apiEndpoint = `${backendUrl}/api/workflow/execute`
+
     try {
-      const response = await fetch('http://localhost:3000/api/workflow/execute', {
+      console.log(`🚀 Testing POST to: ${apiEndpoint}`)
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -981,9 +986,16 @@ const WorkflowContent = () => {
           agentConfigs,
         }),
       })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
+      console.log('✅ Test POST successful:', data)
       alert('Test POST response:\n' + JSON.stringify(data, null, 2))
     } catch (error) {
+      console.error('❌ Test POST failed:', error)
       alert('Test POST failed: ' + (error instanceof Error ? error.message : String(error)))
     }
   }

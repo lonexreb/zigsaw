@@ -51,6 +51,62 @@ const MatrixRain = () => {
   );
 };
 
+// Test POST Button Component
+const TestPostButton = () => {
+  const [isPressed, setIsPressed] = useState(false);
+  const [lastPressed, setLastPressed] = useState<Date | null>(null);
+  const [pressCount, setPressCount] = useState(0);
+
+  const handleTestPost = async () => {
+    setIsPressed(true);
+    setLastPressed(new Date());
+    setPressCount(prev => prev + 1);
+
+    // Simulate API call
+    try {
+      const response = await fetch('/api/workflow/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          test: true,
+          timestamp: new Date().toISOString(),
+          source: 'backend-dashboard'
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('✅ Test POST successful from backend dashboard');
+      }
+    } catch (error) {
+      console.error('❌ Test POST failed:', error);
+    }
+
+    // Reset button state after 2 seconds
+    setTimeout(() => setIsPressed(false), 2000);
+  };
+
+  return (
+    <div className={styles.testPostSection}>
+      <h3>Frontend Test POST</h3>
+      <div className={styles.testPostInfo}>
+        <div className={styles.testPostStats}>
+          <span>Press Count: {pressCount}</span>
+          {lastPressed && (
+            <span>Last Pressed: {lastPressed.toLocaleTimeString()}</span>
+          )}
+        </div>
+        <button 
+          className={`${styles.testPostButton} ${isPressed ? styles.testPostButtonPressed : ''}`}
+          onClick={handleTestPost}
+          disabled={isPressed}
+        >
+          {isPressed ? 'POSTING...' : 'TEST POST'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // Dashboard stats component
 const DashboardStats = () => {
   const [stats, setStats] = useState({
@@ -398,6 +454,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className={styles.testPostGrid}>
+            <TestPostButton />
           </div>
 
           <div className={styles.actions}>
