@@ -974,7 +974,7 @@ const WorkflowContent = () => {
 
     // Use environment variable or fallback to Vercel backend
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app'
-    const apiEndpoint = `${backendUrl}/api/workflow/execute`
+    const apiEndpoint = `${backendUrl.replace(/\/$/, '')}/api/workflow/execute`
 
     try {
       console.log(`🚀 Testing POST to: ${apiEndpoint}`)
