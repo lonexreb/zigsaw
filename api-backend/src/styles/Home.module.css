@@ -728,6 +728,31 @@
   font-family: var(--font-jetbrains-mono);
 }
 
+.testPostStatGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 65, 0.1);
+  min-width: 200px;
+}
+
+.testPostStatGroup h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--matrix-green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.testPostStatGroup span {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
 .testPostButton {
   background: linear-gradient(45deg, var(--matrix-green), var(--accent-blue));
   border: none;

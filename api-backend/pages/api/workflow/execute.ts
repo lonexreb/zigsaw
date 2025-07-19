@@ -1,5 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+// In-memory storage for tracking frontend requests (in production, use a database)
+let frontendRequestCount = 0;
+let lastFrontendRequest: string | null = null;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -20,17 +24,52 @@ export default async function handler(
   }
 
   try {
-    const { workflow, agentConfigs, test, timestamp, source } = req.body;
+    const { workflow, agentConfigs, test, timestamp, source, checkFrontendRequests } = req.body;
 
     console.log('🚀 Workflow execute request received:', {
       test,
       timestamp,
       source,
+      checkFrontendRequests,
       hasWorkflow: !!workflow,
       hasAgentConfigs: !!agentConfigs,
       nodeCount: workflow?.nodes?.length || 0,
       edgeCount: workflow?.edges?.length || 0
     });
+
+    // If this is a request to check frontend request statistics
+    if (checkFrontendRequests) {
+      return res.status(200).json({
+        success: true,
+        frontendRequests: {
+          count: frontendRequestCount,
+          lastRequest: lastFrontendRequest
+        }
+      });
+    }
+
+    // If this is a test request from the frontend
+    if (test && source !== 'backend-dashboard') {
+      // Track frontend request
+      frontendRequestCount++;
+      lastFrontendRequest = new Date().toISOString();
+      
+      console.log(`📊 Frontend test POST #${frontendRequestCount} received at ${lastFrontendRequest}`);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Test POST successful from frontend',
+        timestamp: new Date().toISOString(),
+        source: 'frontend',
+        requestNumber: frontendRequestCount,
+        receivedData: {
+          hasWorkflow: !!workflow,
+          hasAgentConfigs: !!agentConfigs,
+          nodeCount: workflow?.nodes?.length || 0,
+          edgeCount: workflow?.edges?.length || 0
+        }
+      });
+    }
 
     // If this is a test request from the backend dashboard
     if (test && source === 'backend-dashboard') {
@@ -39,22 +78,6 @@ export default async function handler(
         message: 'Test POST successful from backend dashboard',
         timestamp: new Date().toISOString(),
         source: 'backend-dashboard'
-      });
-    }
-
-    // If this is a test request from the frontend
-    if (test) {
-      return res.status(200).json({
-        success: true,
-        message: 'Test POST successful from frontend',
-        timestamp: new Date().toISOString(),
-        source: 'frontend',
-        receivedData: {
-          hasWorkflow: !!workflow,
-          hasAgentConfigs: !!agentConfigs,
-          nodeCount: workflow?.nodes?.length || 0,
-          edgeCount: workflow?.edges?.length || 0
-        }
       });
     }
 

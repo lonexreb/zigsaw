@@ -56,6 +56,40 @@ const TestPostButton = () => {
   const [isPressed, setIsPressed] = useState(false);
   const [lastPressed, setLastPressed] = useState<Date | null>(null);
   const [pressCount, setPressCount] = useState(0);
+  const [frontendPresses, setFrontendPresses] = useState(0);
+  const [lastFrontendPress, setLastFrontendPress] = useState<Date | null>(null);
+
+  // Poll for frontend test POST requests
+  useEffect(() => {
+    const checkFrontendRequests = async () => {
+      try {
+        const response = await fetch('/api/workflow/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            checkFrontendRequests: true,
+            timestamp: new Date().toISOString()
+          }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.frontendRequests) {
+            setFrontendPresses(data.frontendRequests.count);
+            if (data.frontendRequests.lastRequest) {
+              setLastFrontendPress(new Date(data.frontendRequests.lastRequest));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check frontend requests:', error);
+      }
+    };
+
+    // Check every 2 seconds
+    const interval = setInterval(checkFrontendRequests, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleTestPost = async () => {
     setIsPressed(true);
@@ -87,13 +121,23 @@ const TestPostButton = () => {
 
   return (
     <div className={styles.testPostSection}>
-      <h3>Frontend Test POST</h3>
+      <h3>Test POST Monitoring</h3>
       <div className={styles.testPostInfo}>
         <div className={styles.testPostStats}>
-          <span>Press Count: {pressCount}</span>
-          {lastPressed && (
-            <span>Last Pressed: {lastPressed.toLocaleTimeString()}</span>
-          )}
+          <div className={styles.testPostStatGroup}>
+            <h4>Backend Dashboard</h4>
+            <span>Press Count: {pressCount}</span>
+            {lastPressed && (
+              <span>Last Pressed: {lastPressed.toLocaleTimeString()}</span>
+            )}
+          </div>
+          <div className={styles.testPostStatGroup}>
+            <h4>Frontend Requests</h4>
+            <span>Press Count: {frontendPresses}</span>
+            {lastFrontendPress && (
+              <span>Last Pressed: {lastFrontendPress.toLocaleTimeString()}</span>
+            )}
+          </div>
         </div>
         <button 
           className={`${styles.testPostButton} ${isPressed ? styles.testPostButtonPressed : ''}`}
