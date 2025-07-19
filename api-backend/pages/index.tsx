@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Image from "next/image";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import styles from "@/styles/Home.module.css";
+import styles from "../src/styles/Home.module.css";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -36,7 +36,7 @@ export default function Home() {
           />
           <ol>
             <li>
-              Get started by editing <code>src/pages/index.tsx</code>.
+              Get started by editing <code>pages/index.tsx</code>.
             </li>
             <li>Save and see your changes instantly.</li>
           </ol>
