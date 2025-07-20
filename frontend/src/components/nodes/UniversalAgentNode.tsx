@@ -86,7 +86,7 @@ interface Model {
 // Tool Configuration (using types from types/tools.ts)
 
 interface AgentMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: Date;
   toolCalls?: any[];
@@ -157,9 +157,9 @@ const aiProviders: AIProvider[] = [
     name: 'Groq',
     icon: <Cpu className="h-4 w-4" />,
     models: [
-      { id: 'llama3-70b', name: 'Llama 3 70B', contextLength: 8192, costMultiplier: 1.0, capabilities: ['text', 'tools'] },
-      { id: 'llama3-8b', name: 'Llama 3 8B', contextLength: 8192, costMultiplier: 0.1, capabilities: ['text', 'tools'] },
-      { id: 'mixtral-8x7b', name: 'Mixtral 8x7B', contextLength: 32768, costMultiplier: 0.5, capabilities: ['text', 'tools'] },
+      { id: 'llama3-70b-8192', name: 'Llama 3 70B', contextLength: 8192, costMultiplier: 1.0, capabilities: ['text', 'tools'] },
+      { id: 'llama3-8b-8192', name: 'Llama 3 8B', contextLength: 8192, costMultiplier: 0.1, capabilities: ['text', 'tools'] },
+      { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', contextLength: 32768, costMultiplier: 0.5, capabilities: ['text', 'tools'] },
     ],
     supportsTools: true,
     supportsVision: false,
@@ -175,6 +175,37 @@ interface ToolWithIcon extends Omit<Tool, 'icon'> {
 }
 
 const availableTools: ToolWithIcon[] = [
+  {
+    id: 'firecrawl_scraper',
+    name: 'Firecrawl Web Scraper',
+    description: 'Scrape and extract content from web pages using Firecrawl',
+    category: 'scraping',
+    icon: <Globe className="h-4 w-4" />,
+    version: '1.0.0',
+    author: 'System',
+    parameters: [
+      { name: 'url', type: 'string', description: 'URL to scrape', required: true },
+      { name: 'extract_text', type: 'boolean', description: 'Extract text content', required: false, default: true },
+      { name: 'extract_links', type: 'boolean', description: 'Extract links', required: false, default: false },
+      { name: 'extract_images', type: 'boolean', description: 'Extract image URLs', required: false, default: false },
+    ],
+    required: false,
+    enabled: false,
+    tags: ['web', 'scraping', 'content', 'firecrawl'],
+    rating: 4.8,
+    downloads: 500,
+    cost: 0.02,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: 'https://docs.firecrawl.dev',
+    examples: [
+      {
+        title: 'Basic Web Scraping',
+        description: 'Extract text content from a webpage',
+        parameters: { url: 'https://example.com', extract_text: true }
+      }
+    ]
+  },
   {
     id: 'web_search',
     name: 'Web Search',
@@ -404,6 +435,7 @@ interface ToolCategoryWithIcon extends Omit<ToolCategory, 'icon'> {
 
 const toolCategories: ToolCategoryWithIcon[] = [
   { id: 'all', name: 'All Tools', icon: <Layers className="h-4 w-4" />, count: 0 },
+  { id: 'scraping', name: 'Web Scraping', icon: <Globe className="h-4 w-4" />, count: 0 },
   { id: 'search', name: 'Search', icon: <Search className="h-4 w-4" />, count: 0 },
   { id: 'development', name: 'Development', icon: <Code className="h-4 w-4" />, count: 0 },
   { id: 'data', name: 'Data', icon: <Database className="h-4 w-4" />, count: 0 },
@@ -427,7 +459,7 @@ const systemPromptPresets = [
   {
     id: 'general_assistant',
     name: 'General Assistant',
-    prompt: 'You are a helpful AI assistant with access to various tools. Use them appropriately to help the user with their requests. Be friendly, professional, and thorough in your responses.'
+    prompt: 'You are a helpful AI assistant with access to various tools. When you have access to tools like web scraping, use them to gather information and provide more accurate, up-to-date responses. Always explain what you\'re doing and use tools when they would be helpful to answer the user\'s question. Be friendly, professional, and thorough in your responses.'
   },
   {
     id: 'data_analyst',
@@ -513,7 +545,7 @@ const userPromptPresets = [
 // Default Configuration
 const defaultConfig = {
   provider: 'groq',
-  model: 'llama3-70b',
+  model: 'llama3-70b-8192',
   temperature: 0.7,
   maxTokens: 1000,
   systemPrompt: 'You are a helpful AI assistant with access to various tools. Use them appropriately to help the user.',
@@ -549,6 +581,9 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
   const [apiKeys, setApiKeys] = useState<{[key: string]: string}>({});
   const [isValidatingApiKey, setIsValidatingApiKey] = useState<{[key: string]: boolean}>({});
   const [apiKeyValidation, setApiKeyValidation] = useState<{[key: string]: {valid: boolean, message: string}}>({});
+  const [firecrawlApiKey, setFirecrawlApiKey] = useState('');
+  const [isValidatingFirecrawl, setIsValidatingFirecrawl] = useState(false);
+  const [firecrawlValidation, setFirecrawlValidation] = useState<{valid: boolean, message: string} | null>(null);
   const [chatMessages, setChatMessages] = useState<AgentMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -657,6 +692,12 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
       } catch (error) {
         console.error('Failed to parse saved API keys:', error);
       }
+    }
+
+    // Load Firecrawl API key
+    const savedFirecrawlKey = localStorage.getItem('universal-agent-firecrawl-key');
+    if (savedFirecrawlKey) {
+      setFirecrawlApiKey(savedFirecrawlKey);
     }
   }, []);
 
@@ -903,7 +944,137 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     validateApiKey(provider, apiKey);
   }, [apiKeys, validateApiKey]);
 
-  // Send message to AI service
+  // Validate Firecrawl API key
+  const validateFirecrawlApiKey = useCallback(async () => {
+    if (!firecrawlApiKey.trim()) {
+      setFirecrawlValidation({ valid: false, message: 'Firecrawl API key is required' });
+      return false;
+    }
+
+    setIsValidatingFirecrawl(true);
+
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      const response = await fetch(`${backendUrl}/api/v1/firecrawl`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: 'https://example.com',
+          extract_text: true,
+          extract_links: false,
+          extract_images: false,
+          apiKey: firecrawlApiKey
+        })
+      });
+
+      if (response.ok) {
+        setFirecrawlValidation({ valid: true, message: 'Valid Firecrawl API key' });
+        toast({
+          title: "Firecrawl API Key Valid",
+          description: "Your Firecrawl API key is working correctly.",
+        });
+        return true;
+      } else {
+        const errorData = await response.json();
+        setFirecrawlValidation({ valid: false, message: errorData.details || 'Invalid API key' });
+        toast({
+          title: "Firecrawl API Key Invalid",
+          description: errorData.details || "Please check your Firecrawl API key.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } catch (error) {
+      setFirecrawlValidation({ valid: false, message: 'Validation failed' });
+      toast({
+        title: "Validation Error",
+        description: "Failed to validate Firecrawl API key",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsValidatingFirecrawl(false);
+    }
+  }, [firecrawlApiKey, toast]);
+
+  // Handle web scraping with Firecrawl
+  const handleWebScraping = useCallback(async (url: string, options: {
+    extract_text?: boolean;
+    extract_links?: boolean;
+    extract_images?: boolean;
+  } = {}) => {
+    if (!firecrawlApiKey) {
+      toast({
+        title: "Firecrawl API Key Required",
+        description: "Please enter your Firecrawl API key to use web scraping.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (!firecrawlValidation?.valid) {
+      toast({
+        title: "Invalid Firecrawl API Key",
+        description: "Please validate your Firecrawl API key first.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      const response = await fetch(`${backendUrl}/api/v1/firecrawl`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url,
+          extract_text: options.extract_text ?? true,
+          extract_links: options.extract_links ?? false,
+          extract_images: options.extract_images ?? false,
+          apiKey: firecrawlApiKey
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || `Scraping failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Add scraping result to chat
+      const scrapingMessage: AgentMessage = {
+        role: 'assistant',
+        content: `I've scraped the webpage at ${url}. Here's what I found:\n\n**Title:** ${data.title}\n**Description:** ${data.description}\n\n**Content:**\n${data.content.substring(0, 1000)}${data.content.length > 1000 ? '...' : ''}`,
+        timestamp: new Date(),
+      };
+
+      const newMessages = [...chatMessages, scrapingMessage];
+      setChatMessages(newMessages);
+      handleConfigChange('messages', newMessages);
+
+      toast({
+        title: "Web Scraping Complete",
+        description: `Successfully scraped content from ${url}`,
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Web scraping error:', error);
+      toast({
+        title: "Web Scraping Failed",
+        description: error instanceof Error ? error.message : "Failed to scrape the webpage",
+        variant: "destructive",
+      });
+      return null;
+    }
+  }, [firecrawlApiKey, firecrawlValidation, chatMessages, handleConfigChange, toast]);
+
+  // Send message to AI service with tool support
   const sendMessage = useCallback(async (message: string) => {
     console.log('Environment variables:', {
       VITE_BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
@@ -939,6 +1110,19 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
       return;
     }
 
+    // Check if tools are enabled and Firecrawl API key is required
+    const enabledTools = config.tools.map((tool: ToolWithIcon) => tool.id);
+    const needsFirecrawlKey = enabledTools.includes('firecrawl_scraper');
+    
+    if (needsFirecrawlKey && (!firecrawlApiKey || !firecrawlValidation?.valid)) {
+      toast({
+        title: "Firecrawl API Key Required",
+        description: "Please enter and validate your Firecrawl API key to use web scraping tools.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSendingMessage(true);
 
     // Add user message to chat
@@ -958,7 +1142,9 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
       ];
 
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
-      console.log('Sending chat request to:', `${backendUrl}/api/v1/chat`);
+      const endpoint = enabledTools.length > 0 ? '/api/v1/chat-with-tools' : '/api/v1/chat';
+      
+      console.log('Sending chat request to:', `${backendUrl}${endpoint}`);
       console.log('Request payload:', {
         provider: config.provider,
         model: config.model,
@@ -966,11 +1152,13 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
         systemPrompt: config.systemPrompt,
         temperature: config.temperature,
         maxTokens: config.maxTokens,
+        tools: enabledTools,
+        firecrawlApiKey: needsFirecrawlKey ? '***' : undefined,
         apiKey: apiKey ? '***' : 'missing'
       });
 
       // Call our backend API which will proxy to the AI service
-      const response = await fetch(`${backendUrl}/api/v1/chat`, {
+      const response = await fetch(`${backendUrl}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -982,6 +1170,8 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
           systemPrompt: config.systemPrompt,
           temperature: config.temperature,
           maxTokens: config.maxTokens,
+          tools: enabledTools,
+          firecrawlApiKey: needsFirecrawlKey ? firecrawlApiKey : undefined,
           apiKey: apiKey
         })
       });
@@ -1001,6 +1191,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
         role: 'assistant',
         content: assistantContent,
         timestamp: new Date(),
+        toolCalls: data.toolCalls || []
       };
       const newMessages = [...chatMessages, userMessage, assistantMessage];
       setChatMessages(newMessages);
@@ -1523,6 +1714,77 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                     </p>
                   </div>
 
+                  {/* Firecrawl API Key Management */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      Firecrawl API Key (for Web Scraping)
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="password"
+                          value={firecrawlApiKey}
+                          onChange={(e) => {
+                            const newKey = e.target.value;
+                            setFirecrawlApiKey(newKey);
+                            // Save to localStorage
+                            localStorage.setItem('universal-agent-firecrawl-key', newKey);
+                            // Clear validation when user starts typing
+                            if (firecrawlValidation) {
+                              setFirecrawlValidation(null);
+                            }
+                          }}
+                          placeholder="Enter your Firecrawl API key"
+                          className={cn(
+                            "bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 rounded-xl pr-20",
+                            firecrawlValidation?.valid && "border-green-400/50",
+                            firecrawlValidation?.valid === false && "border-red-400/50"
+                          )}
+                        />
+                        {firecrawlValidation && (
+                          <div className={cn(
+                            "absolute right-3 top-1/2 transform -translate-y-1/2 text-xs",
+                            firecrawlValidation?.valid ? "text-green-400" : "text-red-400"
+                          )}>
+                            {firecrawlValidation?.valid ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={validateFirecrawlApiKey}
+                        disabled={isValidatingFirecrawl || !firecrawlApiKey}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl whitespace-nowrap"
+                      >
+                        {isValidatingFirecrawl ? (
+                          <Activity className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Validate'
+                        )}
+                      </Button>
+                    </div>
+                    {firecrawlValidation && (
+                      <p className={cn(
+                        "text-xs",
+                        firecrawlValidation?.valid ? "text-green-400" : "text-red-400"
+                      )}>
+                        {firecrawlValidation?.message}
+                      </p>
+                    )}
+                    <p className="text-xs text-purple-300/60">
+                      Your Firecrawl API key is stored locally and never sent to our servers. Get your API key from{' '}
+                      <a href="https://console.firecrawl.dev/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                        Firecrawl Console
+                      </a>
+                    </p>
+                  </div>
+
                   {/* Chat Interface */}
                   <div className="space-y-3">
                     <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
@@ -1550,12 +1812,40 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                               className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                                 message.role === 'user'
                                   ? 'bg-purple-600/30 text-white'
+                                  : message.role === 'tool'
+                                  ? 'bg-blue-600/30 text-white'
                                   : 'bg-slate-700/50 text-purple-100'
                               }`}
                             >
-                              <div className="whitespace-pre-wrap">{message.content}</div>
+                              <div className="whitespace-pre-wrap">
+                                {message.role === 'tool' ? (
+                                  <div>
+                                    <div className="text-blue-300 font-semibold mb-2">🔧 Tool Execution Result:</div>
+                                    <pre className="text-xs bg-slate-900/50 p-2 rounded border border-slate-700 overflow-x-auto">
+                                      {JSON.stringify(JSON.parse(message.content), null, 2)}
+                                    </pre>
+                                  </div>
+                                ) : (
+                                  message.content
+                                )}
+                              </div>
+                              {message.toolCalls && message.toolCalls.length > 0 && (
+                                <div className="mt-2 p-2 bg-slate-900/30 rounded border border-slate-700">
+                                  <div className="text-xs text-slate-400 mb-1">🛠️ Tool Calls:</div>
+                                  {message.toolCalls.map((toolCall: any, toolIndex: number) => (
+                                    <div key={toolIndex} className="text-xs text-slate-300">
+                                      <span className="text-blue-400">{toolCall.function?.name}</span>
+                                      {toolCall.function?.arguments && (
+                                        <span className="text-slate-500 ml-1">
+                                          ({JSON.stringify(JSON.parse(toolCall.function.arguments))})
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               <div className="text-xs opacity-60 mt-1">
-                                {message.timestamp.toLocaleTimeString()}
+                                {message.role === 'tool' ? 'Tool' : message.role === 'user' ? 'You' : 'Assistant'} • {message.timestamp.toLocaleTimeString()}
                               </div>
                             </div>
                           </div>
@@ -1599,6 +1889,40 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       </Button>
                     </div>
 
+                    {/* Web Scraping Quick Actions */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const url = prompt('Enter URL to scrape:');
+                          if (url) {
+                            handleWebScraping(url, { extract_text: true });
+                          }
+                        }}
+                        disabled={!firecrawlValidation?.valid}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg flex-1"
+                      >
+                        <Globe className="h-3 w-3 mr-1" />
+                        Scrape Webpage
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const url = prompt('Enter URL to scrape with links:');
+                          if (url) {
+                            handleWebScraping(url, { extract_text: true, extract_links: true });
+                          }
+                        }}
+                        disabled={!firecrawlValidation?.valid}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg flex-1"
+                      >
+                        <Globe className="h-3 w-3 mr-1" />
+                        Scrape + Links
+                      </Button>
+                    </div>
+
                     {/* Test Connection and Clear Chat Buttons */}
                     <div className="flex justify-between items-center">
                       <Button
@@ -1629,6 +1953,20 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       >
                         <Activity className="h-3 w-3 mr-1" />
                         Test Connection
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const testMessage = "Can you scrape the website https://example.com and tell me what it's about?";
+                          setCurrentMessage(testMessage);
+                        }}
+                        disabled={!firecrawlValidation?.valid}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg"
+                      >
+                        <Globe className="h-3 w-3 mr-1" />
+                        Test Web Scraping
                       </Button>
                       
                       {chatMessages.length > 0 && (
