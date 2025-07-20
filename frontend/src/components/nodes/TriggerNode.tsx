@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Zap, Play, Activity, Save } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '../ui/button';
-
+import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
@@ -26,6 +26,7 @@ interface TriggerNodeProps {
     onOutputDataChange?: (outputData: any) => void;
     isWorkflowExecution?: boolean;
     config?: {
+      name?: string;
       eventType?: string;
       eventData?: string;
       [key: string]: any;
@@ -46,10 +47,15 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
   // Get configuration from selected node or use defaults
   const selectedNode = getSelectedNode();
   const nodeConfig = selectedNode?.id === id ? selectedNode?.data?.config : data.config;
+  const triggerName = (nodeConfig as any)?.name || 'Trigger';
   const eventType = (nodeConfig as any)?.eventType || 'manual';
   const eventData = (nodeConfig as any)?.eventData || '';
 
   // Handle configuration changes
+  const handleNameChange = useCallback((newName: string) => {
+    updateNodeConfig(id, { name: newName });
+  }, [id, updateNodeConfig]);
+
   const handleEventTypeChange = useCallback((newEventType: string) => {
     updateNodeConfig(id, { eventType: newEventType });
   }, [id, updateNodeConfig]);
@@ -73,6 +79,7 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
       
       // Build the config object with current values
       const configObj = {
+        name: triggerName,
         eventType: eventType,
         eventData: eventData
       };
@@ -85,7 +92,7 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [id, currentUser, getSelectedNode, data.config, toast]);
+  }, [id, currentUser, getSelectedNode, triggerName, eventType, eventData, toast]);
 
   useEffect(() => {
     if (data.status && data.status !== localStatus) {
@@ -102,6 +109,7 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
     setTimeout(() => {
       const outputData = {
         type: 'trigger_event',
+        name: triggerName,
         eventType,
         data: eventData,
         timestamp: new Date().toISOString(),
@@ -116,7 +124,7 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
       setIsTriggering(false);
       setIsDialogOpen(false);
     }, 1000);
-  }, [eventType, eventData, id, data]);
+  }, [triggerName, eventType, eventData, id, data]);
 
   const getStatusColor = () => {
     switch (localStatus) {
@@ -127,60 +135,26 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
     }
   };
 
-
-
   return (
     <div className="relative">
-
-      
       <Handle
         type="source"
         position={Position.Right}
-        className="w-5 h-5 bg-yellow-600 border-2 border-yellow-700"
+        className="w-6 h-6 bg-yellow-600 border-2 border-yellow-700"
       />
-
-      {/* Lightning streaks animation */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-0.5 bg-gradient-to-b from-yellow-400 to-orange-500 opacity-0"
-            style={{
-              left: `${20 + i * 10}%`,
-              top: '10%',
-              height: '80%',
-              transform: `rotate(${-45 + i * 15}deg)`,
-            }}
-            animate={{
-              opacity: [0, 1, 0],
-              scaleY: [0, 1, 0],
-            }}
-            transition={{
-              duration: 0.8,
-              delay: i * 0.1,
-              repeat: Infinity,
-              repeatDelay: 2,
-            }}
-          />
-        ))}
-      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
           <motion.div
             className="relative cursor-pointer group"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {/* Outer glow */}
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-400/20 to-orange-500/20 blur-lg group-hover:blur-xl transition-all duration-300" />
-            
-            {/* Main container */}
-            <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg shadow-yellow-500/20 p-3 flex flex-col items-center justify-center group-hover:shadow-yellow-500/40 transition-all duration-300 min-w-[100px]">
+            {/* Main container - Bigger and simpler */}
+            <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg p-6 flex flex-col items-center justify-center min-w-[140px] min-h-[120px]">
               {/* Lightning bolt icon */}
               <motion.div
                 animate={{
-                  rotate: [0, 2, -2, 0],
                   scale: [1, 1.05, 1],
                 }}
                 transition={{
@@ -188,39 +162,25 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
-                className="mb-1"
+                className="mb-3"
               >
                 <Zap 
-                  className={`w-8 h-8 ${getStatusColor()} drop-shadow-lg`}
+                  className={`w-12 h-12 ${getStatusColor()} drop-shadow-lg`}
                   fill="currentColor"
                 />
               </motion.div>
               
-              {/* Trigger label */}
-              <div className="text-white text-sm font-semibold drop-shadow-md tracking-wide">
-                TRIGGER
+              {/* Trigger name - Bigger and more prominent */}
+              <div className="text-white text-lg font-bold drop-shadow-md text-center">
+                {triggerName}
               </div>
               
-              {/* Pulsing ring */}
-              <motion.div
-                className="absolute inset-0 rounded-xl border-2 border-yellow-400"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  opacity: [0.8, 0.3, 0.8],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            </div>
-
-            {/* Status indicator */}
-            <div className="absolute -top-2 -right-2">
-              <Badge variant="outline" className="bg-black/50 border-yellow-400/50 text-yellow-400 text-xs px-1 py-0">
-                {localStatus}
-              </Badge>
+              {/* Simple status indicator */}
+              <div className="mt-2">
+                <Badge variant="outline" className="bg-black/30 border-white/50 text-white text-xs px-2 py-1">
+                  {localStatus}
+                </Badge>
+              </div>
             </div>
           </motion.div>
         </DialogTrigger>
@@ -235,6 +195,17 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
           
           <Card className="bg-slate-800 border-slate-600">
             <CardContent className="p-4 space-y-4">
+              {/* Trigger Name Input */}
+              <div className="space-y-2">
+                <Label className="text-slate-200">Trigger Name</Label>
+                <Input
+                  value={triggerName}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="Enter trigger name"
+                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-yellow-400"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label className="text-slate-200">Event Type</Label>
                 <select
@@ -261,92 +232,47 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
               </div>
 
               {/* Save Configuration Button */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                variant="outline"
+                className="w-full border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-slate-900 font-semibold py-2 px-4 rounded-md transition-all duration-300"
               >
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  variant="outline"
-                  className="w-full border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-slate-900 font-semibold py-2 px-4 rounded-md transition-all duration-300"
-                >
-                  {isSaving ? (
-                    <>
-                      <Activity className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Configuration
-                    </>
-                  )}
-                </Button>
-              </motion.div>
+                {isSaving ? (
+                  <>
+                    <Activity className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Configuration
+                  </>
+                )}
+              </Button>
 
               {/* Trigger Workflow Button */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <Button
+                onClick={handleTrigger}
+                disabled={isTriggering}
+                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl"
               >
-                <Button
-                  onClick={handleTrigger}
-                  disabled={isTriggering}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  {isTriggering ? (
-                    <>
-                      <Activity className="w-4 h-4 mr-2 animate-spin" />
-                      Triggering...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 mr-2" />
-                      Trigger Workflow
-                    </>
-                  )}
-                </Button>
-              </motion.div>
+                {isTriggering ? (
+                  <>
+                    <Activity className="w-4 h-4 mr-2 animate-spin" />
+                    Triggering...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Trigger Workflow
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
         </DialogContent>
       </Dialog>
-
-      {/* Animated lightning effects for active state */}
-      <AnimatePresence>
-        {localStatus === 'running' && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-px h-8 bg-yellow-400 shadow-lg shadow-yellow-400/50"
-                style={{
-                  left: `${50}%`,
-                  top: `${50}%`,
-                  transformOrigin: '0 4px',
-                }}
-                animate={{
-                  rotate: [0, 360],
-                  scale: [0, 1, 0],
-                  opacity: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 1,
-                  delay: i * 0.125,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -47,7 +47,7 @@ export interface NodeTemplate {
 }
 
 class WorkflowGenerationService {
-  private readonly API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+  private readonly API_BASE_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
   
   // Available node templates based on current codebase
   private readonly NODE_TEMPLATES: Record<string, NodeTemplate> = {

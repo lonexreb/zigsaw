@@ -45,7 +45,7 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
       
       // Call Firecrawl API
       console.log('Calling Firecrawl API with URL:', url);
-      const response = await fetch('https://api.firecrawl.dev/scrape', {
+      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,16 +53,15 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
         },
         body: JSON.stringify({
           url: url,
-          includeHtml: false,
-          screenshot: false,
-          pdf: false,
-          metadata: true
+          formats: ['json']
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Firecrawl API error:', response.status, response.statusText, errorText);
+        console.error('Request URL:', url);
+        console.error('API Key (first 10 chars):', firecrawlApiKey.substring(0, 10) + '...');
         throw new Error(`Firecrawl API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
