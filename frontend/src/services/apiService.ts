@@ -2,7 +2,7 @@
  * Service for managing API keys with the backend
  */
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://localhost:3000';
 
 export interface ApiKeyData {
   id: string;

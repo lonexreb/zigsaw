@@ -18,7 +18,7 @@ class WorkflowPersistenceService {
   async saveWorkflow(config: WorkflowConfig, idToken: string): Promise<void> {
     try {
       console.log('Saving workflow config:', config);
-      await apiService.post('/api/user/workflow', {
+      await apiService.post('/api/v1/workflows', {
         ...config,
         lastSaved: new Date().toISOString()
       }, idToken);
@@ -35,7 +35,7 @@ class WorkflowPersistenceService {
   async loadWorkflow(idToken: string): Promise<WorkflowConfig | null> {
     try {
       console.log('Loading workflow from backend...');
-      const response = await apiService.get('/api/user/workflow', idToken);
+      const response = await apiService.get('/api/v1/workflows', idToken);
       
       console.log('Backend response:', response.data);
       
