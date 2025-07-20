@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { memo, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { 
   Bot, 
@@ -28,7 +28,10 @@ import {
   Layers,
   Trash2,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Key,
+  X,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -100,6 +103,7 @@ interface UniversalAgentNodeProps {
       temperature?: number;
       maxTokens?: number;
       systemPrompt?: string;
+      userPrompt?: string;
       messages?: AgentMessage[];
       tools?: ToolWithIcon[];
       toolPresets?: string[];
@@ -123,9 +127,9 @@ const aiProviders: AIProvider[] = [
     name: 'Anthropic Claude',
     icon: <Brain className="h-4 w-4" />,
     models: [
-      { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', contextLength: 200000, costMultiplier: 1.0, capabilities: ['text', 'vision', 'tools'] },
-      { id: 'claude-3-opus', name: 'Claude 3 Opus', contextLength: 200000, costMultiplier: 1.5, capabilities: ['text', 'vision', 'tools'] },
-      { id: 'claude-3-haiku', name: 'Claude 3 Haiku', contextLength: 200000, costMultiplier: 0.25, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', contextLength: 200000, costMultiplier: 1.0, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', contextLength: 200000, costMultiplier: 1.5, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', contextLength: 200000, costMultiplier: 0.25, capabilities: ['text', 'vision', 'tools'] },
     ],
     supportsTools: true,
     supportsVision: true,
@@ -180,8 +184,8 @@ const availableTools: ToolWithIcon[] = [
     version: '1.0.0',
     author: 'System',
     parameters: [
-      { name: 'query', type: 'string', description: 'Search query', required: true },
-      { name: 'num_results', type: 'number', description: 'Number of results', required: false, default: 10 },
+      { name: 'query', type: 'string', description: 'What to search for', required: true },
+      { name: 'num_results', type: 'number', description: 'How many results to show', required: false, default: 10 },
     ],
     required: false,
     enabled: false,
@@ -209,8 +213,8 @@ const availableTools: ToolWithIcon[] = [
     version: '1.0.0',
     author: 'System',
     parameters: [
-      { name: 'code', type: 'string', description: 'Python code to execute', required: true },
-      { name: 'timeout', type: 'number', description: 'Execution timeout (seconds)', required: false, default: 30 },
+      { name: 'code', type: 'string', description: 'Code to run', required: true },
+      { name: 'timeout', type: 'number', description: 'Time limit (seconds)', required: false, default: 30 },
     ],
     required: false,
     enabled: false,
@@ -238,8 +242,8 @@ const availableTools: ToolWithIcon[] = [
     version: '1.0.0',
     author: 'System',
     parameters: [
-      { name: 'query', type: 'string', description: 'SQL query', required: true },
-      { name: 'connection_string', type: 'string', description: 'Database connection', required: true },
+      { name: 'query', type: 'string', description: 'Database question', required: true },
+      { name: 'connection_string', type: 'string', description: 'Database location', required: true },
     ],
     required: false,
     enabled: false,
@@ -270,7 +274,7 @@ const availableTools: ToolWithIcon[] = [
     version: '1.0.0',
     author: 'System',
     parameters: [
-      { name: 'expression', type: 'string', description: 'Mathematical expression', required: true },
+      { name: 'expression', type: 'string', description: 'Math problem to solve', required: true },
     ],
     required: false,
     enabled: false,
@@ -298,9 +302,9 @@ const availableTools: ToolWithIcon[] = [
     version: '1.0.0',
     author: 'System',
     parameters: [
-      { name: 'to', type: 'string', description: 'Recipient email', required: true },
-      { name: 'subject', type: 'string', description: 'Email subject', required: true },
-      { name: 'body', type: 'string', description: 'Email body', required: true },
+      { name: 'to', type: 'string', description: 'Who to send to', required: true },
+      { name: 'subject', type: 'string', description: 'Email title', required: true },
+      { name: 'body', type: 'string', description: 'Email message', required: true },
     ],
     required: false,
     enabled: false,
@@ -332,8 +336,8 @@ const availableTools: ToolWithIcon[] = [
     version: '1.0.0',
     author: 'System',
     parameters: [
-      { name: 'action', type: 'select', description: 'Calendar action', required: true, options: ['create', 'update', 'delete', 'list'] },
-      { name: 'event_details', type: 'json', description: 'Event details', required: false },
+      { name: 'action', type: 'select', description: 'What to do', required: true, options: ['create', 'update', 'delete', 'list'] },
+      { name: 'event_details', type: 'json', description: 'Event information', required: false },
     ],
     required: false,
     enabled: false,
@@ -368,8 +372,8 @@ const availableTools: ToolWithIcon[] = [
     version: '1.0.0',
     author: 'System',
     parameters: [
-      { name: 'image_url', type: 'string', description: 'Image URL or base64', required: true },
-      { name: 'analysis_type', type: 'select', description: 'Analysis type', required: false, options: ['description', 'objects', 'text', 'faces'] },
+      { name: 'image_url', type: 'string', description: 'Picture location', required: true },
+      { name: 'analysis_type', type: 'select', description: 'What to look for', required: false, options: ['description', 'objects', 'text', 'faces'] },
     ],
     required: false,
     enabled: false,
@@ -418,13 +422,102 @@ const toolPresets = [
   { id: 'research_assistant', name: 'Research Assistant', tools: ['web_search', 'database_query', 'calculator'] },
 ];
 
+// System Prompt Presets
+const systemPromptPresets = [
+  {
+    id: 'general_assistant',
+    name: 'General Assistant',
+    prompt: 'You are a helpful AI assistant with access to various tools. Use them appropriately to help the user with their requests. Be friendly, professional, and thorough in your responses.'
+  },
+  {
+    id: 'data_analyst',
+    name: 'Data Analyst',
+    prompt: 'You are an expert data analyst with access to powerful tools for data processing, analysis, and visualization. Help users understand their data, identify patterns, and make data-driven decisions. Always explain your reasoning and provide clear insights.'
+  },
+  {
+    id: 'customer_support',
+    name: 'Customer Support',
+    prompt: 'You are a professional customer support agent. Help users with their inquiries, troubleshoot issues, and provide excellent service. Be empathetic, patient, and solution-oriented. Always aim to resolve issues efficiently while maintaining a positive tone.'
+  },
+  {
+    id: 'content_creator',
+    name: 'Content Creator',
+    prompt: 'You are a creative content creator with expertise in writing, research, and multimedia content. Help users create engaging, high-quality content for various platforms. Be creative, original, and adapt your style to different audiences and formats.'
+  },
+  {
+    id: 'developer_assistant',
+    name: 'Developer Assistant',
+    prompt: 'You are a skilled developer assistant with expertise in programming, debugging, and software development. Help users with code reviews, debugging, architecture decisions, and technical implementation. Provide clear, well-documented solutions and best practices.'
+  },
+  {
+    id: 'research_assistant',
+    name: 'Research Assistant',
+    prompt: 'You are a research assistant with access to comprehensive tools for gathering and analyzing information. Help users conduct thorough research, synthesize findings, and present well-structured conclusions. Always cite sources and maintain academic rigor.'
+  },
+  {
+    id: 'creative_writer',
+    name: 'Creative Writer',
+    prompt: 'You are a creative writer with a vivid imagination and strong storytelling abilities. Help users develop characters, plots, dialogue, and creative content. Be imaginative, engaging, and adapt your style to different genres and audiences.'
+  },
+  {
+    id: 'business_consultant',
+    name: 'Business Consultant',
+    prompt: 'You are a business consultant with expertise in strategy, operations, and market analysis. Help users with business planning, market research, competitive analysis, and strategic decision-making. Provide actionable insights and practical recommendations.'
+  }
+];
+
+// User Prompt Presets
+const userPromptPresets = [
+  {
+    id: 'general_help',
+    name: 'General Help',
+    prompt: 'Hello! How can I help you today?'
+  },
+  {
+    id: 'data_analysis',
+    name: 'Data Analysis',
+    prompt: 'I need help analyzing some data. Can you help me understand the patterns and insights?'
+  },
+  {
+    id: 'content_creation',
+    name: 'Content Creation',
+    prompt: 'I need help creating engaging content. Can you assist me with research and writing?'
+  },
+  {
+    id: 'technical_support',
+    name: 'Technical Support',
+    prompt: 'I have a technical issue that needs solving. Can you help me troubleshoot this?'
+  },
+  {
+    id: 'research_project',
+    name: 'Research Project',
+    prompt: 'I\'m working on a research project and need comprehensive information on this topic.'
+  },
+  {
+    id: 'creative_writing',
+    name: 'Creative Writing',
+    prompt: 'I want to work on a creative writing project. Can you help me develop ideas and content?'
+  },
+  {
+    id: 'business_planning',
+    name: 'Business Planning',
+    prompt: 'I need help with business strategy and planning. Can you provide insights and recommendations?'
+  },
+  {
+    id: 'custom',
+    name: 'Custom',
+    prompt: ''
+  }
+];
+
 // Default Configuration
 const defaultConfig = {
-  provider: 'anthropic',
-  model: 'claude-3-5-sonnet',
+  provider: 'groq',
+  model: 'llama3-70b',
   temperature: 0.7,
   maxTokens: 1000,
   systemPrompt: 'You are a helpful AI assistant with access to various tools. Use them appropriately to help the user.',
+  userPrompt: 'Hello! How can I help you today?',
   messages: [
     { role: 'user' as const, content: 'Hello! How can I help you today?', timestamp: new Date() }
   ],
@@ -451,6 +544,15 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
   const [isRunning, setIsRunning] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [selectedSystemPromptPreset, setSelectedSystemPromptPreset] = useState<string | null>(null);
+  const [selectedUserPromptPreset, setSelectedUserPromptPreset] = useState<string | null>(null);
+  const [apiKeys, setApiKeys] = useState<{[key: string]: string}>({});
+  const [isValidatingApiKey, setIsValidatingApiKey] = useState<{[key: string]: boolean}>({});
+  const [apiKeyValidation, setApiKeyValidation] = useState<{[key: string]: {valid: boolean, message: string}}>({});
+  const [chatMessages, setChatMessages] = useState<AgentMessage[]>([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   // Debounced save function to prevent excessive API calls
@@ -499,6 +601,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
       temperature: (nodeConfig as any)?.temperature || defaultConfig.temperature,
       maxTokens: (nodeConfig as any)?.maxTokens || defaultConfig.maxTokens,
       systemPrompt: (nodeConfig as any)?.systemPrompt || defaultConfig.systemPrompt,
+      userPrompt: (nodeConfig as any)?.userPrompt || defaultConfig.userPrompt,
       messages: (nodeConfig as any)?.messages || defaultConfig.messages,
       tools: (nodeConfig as any)?.tools || defaultConfig.tools,
       toolPresets: (nodeConfig as any)?.toolPresets || defaultConfig.toolPresets,
@@ -532,6 +635,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
         temperature: (nodeConfig as any)?.temperature || prev.temperature,
         maxTokens: (nodeConfig as any)?.maxTokens || prev.maxTokens,
         systemPrompt: (nodeConfig as any)?.systemPrompt || prev.systemPrompt,
+        userPrompt: (nodeConfig as any)?.userPrompt || prev.userPrompt,
         messages: (nodeConfig as any)?.messages || prev.messages,
         tools: (nodeConfig as any)?.tools || prev.tools,
         toolPresets: (nodeConfig as any)?.toolPresets || prev.toolPresets,
@@ -542,6 +646,33 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
       }));
     }
   }, [id, getSelectedNode, data.config]);
+
+  // Load saved API keys from localStorage
+  useEffect(() => {
+    const savedApiKeys = localStorage.getItem('universal-agent-api-keys');
+    if (savedApiKeys) {
+      try {
+        const parsedKeys = JSON.parse(savedApiKeys);
+        setApiKeys(parsedKeys);
+      } catch (error) {
+        console.error('Failed to parse saved API keys:', error);
+      }
+    }
+  }, []);
+
+  // Load chat messages from config
+  useEffect(() => {
+    if (config.messages && config.messages.length > 0) {
+      setChatMessages(config.messages);
+    }
+  }, [config.messages]);
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   // Get current provider and model
   const currentProvider = useMemo(() => 
@@ -569,6 +700,16 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     // Update local state immediately for reactive UI
     setConfig(prev => {
       const newConfig = { ...prev, [key]: value };
+      
+      // If provider is changing, clear API key validation for the old provider
+      if (key === 'provider') {
+        setApiKeyValidation(prev => {
+          const newState = { ...prev };
+          // Clear validation for the current provider before it changes
+          delete newState[config.provider];
+          return newState;
+        });
+      }
       
       // Update the workflow context with the complete config
       if (id) {
@@ -625,6 +766,280 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     });
   }, [handleConfigChange, toast]);
 
+  // Handle system prompt preset selection
+  const handleSystemPromptPresetSelection = useCallback((presetId: string) => {
+    const preset = systemPromptPresets.find(p => p.id === presetId);
+    if (!preset) return;
+    
+    if (presetId === 'custom') {
+      // For custom preset, just clear the selection to allow manual editing
+      setSelectedSystemPromptPreset(null);
+      return;
+    }
+    
+    handleConfigChange('systemPrompt', preset.prompt);
+    setSelectedSystemPromptPreset(presetId);
+    
+    toast({
+      title: "System Prompt Applied",
+      description: `${preset.name} system prompt has been applied.`,
+    });
+  }, [handleConfigChange, toast]);
+
+  // Handle user prompt preset selection
+  const handleUserPromptPresetSelection = useCallback((presetId: string) => {
+    const preset = userPromptPresets.find(p => p.id === presetId);
+    if (!preset) return;
+    
+    if (presetId === 'custom') {
+      // For custom preset, just clear the selection to allow manual editing
+      setSelectedUserPromptPreset(null);
+      return;
+    }
+    
+    handleConfigChange('userPrompt', preset.prompt);
+    setSelectedUserPromptPreset(presetId);
+    
+    toast({
+      title: "User Prompt Applied",
+      description: `${preset.name} user prompt has been applied.`,
+    });
+  }, [handleConfigChange, toast]);
+
+  // Validate API key for selected provider
+  const validateApiKey = useCallback(async (provider: string, apiKey: string) => {
+    if (!apiKey.trim()) {
+      setApiKeyValidation(prev => ({
+        ...prev,
+        [provider]: { valid: false, message: 'API key is required' }
+      }));
+      return false;
+    }
+
+    setIsValidatingApiKey(prev => ({ ...prev, [provider]: true }));
+
+    try {
+      // Simple validation - check if key has correct format
+      let isValid = false;
+      let message = '';
+
+      switch (provider) {
+        case 'anthropic':
+          // Claude API keys start with 'sk-ant-'
+          isValid = apiKey.startsWith('sk-ant-') && apiKey.length > 20;
+          message = isValid ? 'Valid Claude API key' : 'Invalid Claude API key format';
+          break;
+        case 'openai':
+          // OpenAI API keys start with 'sk-'
+          isValid = apiKey.startsWith('sk-') && apiKey.length > 20;
+          message = isValid ? 'Valid OpenAI API key' : 'Invalid OpenAI API key format';
+          break;
+        case 'groq':
+          // Groq API keys start with 'gsk_'
+          isValid = apiKey.startsWith('gsk_') && apiKey.length > 20;
+          message = isValid ? 'Valid Groq API key' : 'Invalid Groq API key format';
+          break;
+        default:
+          isValid = false;
+          message = 'Unknown provider';
+      }
+
+      setApiKeyValidation(prev => ({
+        ...prev,
+        [provider]: { valid: isValid, message }
+      }));
+
+      if (isValid) {
+        toast({
+          title: "API Key Valid",
+          description: message,
+        });
+      } else {
+        toast({
+          title: "API Key Invalid",
+          description: message,
+          variant: "destructive",
+        });
+      }
+
+      return isValid;
+    } catch (error) {
+      setApiKeyValidation(prev => ({
+        ...prev,
+        [provider]: { valid: false, message: 'Validation failed' }
+      }));
+      toast({
+        title: "Validation Error",
+        description: "Failed to validate API key",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsValidatingApiKey(prev => ({ ...prev, [provider]: false }));
+    }
+  }, [toast]);
+
+  // Handle API key change
+  const handleApiKeyChange = useCallback((provider: string, apiKey: string) => {
+    const newApiKeys = { ...apiKeys, [provider]: apiKey };
+    setApiKeys(newApiKeys);
+    
+    // Save to localStorage
+    localStorage.setItem('universal-agent-api-keys', JSON.stringify(newApiKeys));
+    
+    // Clear validation when user starts typing
+    if (apiKeyValidation[provider]) {
+      setApiKeyValidation(prev => {
+        const newState = { ...prev };
+        delete newState[provider];
+        return newState;
+      });
+    }
+  }, [apiKeys, apiKeyValidation]);
+
+  // Handle API key validation
+  const handleValidateApiKey = useCallback((provider: string) => {
+    const apiKey = apiKeys[provider] || '';
+    validateApiKey(provider, apiKey);
+  }, [apiKeys, validateApiKey]);
+
+  // Send message to AI service
+  const sendMessage = useCallback(async (message: string) => {
+    console.log('Environment variables:', {
+      VITE_BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
+      fallback: 'https://zigsaw-backend.vercel.app'
+    });
+
+    if (!currentProvider || !currentModel) {
+      toast({
+        title: "Configuration Error",
+        description: "Please select an AI service and model first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const apiKey = apiKeys[config.provider];
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: `Please enter your ${currentProvider.name} API key.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validation = apiKeyValidation[config.provider];
+    if (!validation?.valid) {
+      toast({
+        title: "Invalid API Key",
+        description: `Please validate your ${currentProvider.name} API key first.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSendingMessage(true);
+
+    // Add user message to chat
+    const userMessage: AgentMessage = {
+      role: 'user',
+      content: message,
+      timestamp: new Date(),
+    };
+    const messagesWithUser = [...chatMessages, userMessage];
+    setChatMessages(messagesWithUser);
+
+    try {
+      // Prepare messages for the API
+      const messages = [
+        { role: 'system', content: config.systemPrompt },
+        ...messagesWithUser.map(msg => ({ role: msg.role, content: msg.content }))
+      ];
+
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      console.log('Sending chat request to:', `${backendUrl}/api/v1/chat`);
+      console.log('Request payload:', {
+        provider: config.provider,
+        model: config.model,
+        messages: messages,
+        systemPrompt: config.systemPrompt,
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
+        apiKey: apiKey ? '***' : 'missing'
+      });
+
+      // Call our backend API which will proxy to the AI service
+      const response = await fetch(`${backendUrl}/api/v1/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: config.provider,
+          model: config.model,
+          messages: messages,
+          systemPrompt: config.systemPrompt,
+          temperature: config.temperature,
+          maxTokens: config.maxTokens,
+          apiKey: apiKey
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Chat API error response:', errorData);
+        throw new Error(errorData.error || `API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Chat API response:', data);
+      const assistantContent = data.content || 'No response received';
+
+      // Add assistant message to chat
+      const assistantMessage: AgentMessage = {
+        role: 'assistant',
+        content: assistantContent,
+        timestamp: new Date(),
+      };
+      const newMessages = [...chatMessages, userMessage, assistantMessage];
+      setChatMessages(newMessages);
+      
+      // Update config with new messages
+      handleConfigChange('messages', newMessages);
+
+      toast({
+        title: "Message Sent",
+        description: "Response received successfully.",
+      });
+
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send message",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingMessage(false);
+    }
+  }, [currentProvider, currentModel, apiKeys, apiKeyValidation, config, chatMessages, toast]);
+
+  // Handle send message
+  const handleSendMessage = useCallback(() => {
+    if (!currentMessage.trim() || isSendingMessage) return;
+    sendMessage(currentMessage.trim());
+    setCurrentMessage('');
+  }, [currentMessage, isSendingMessage, sendMessage]);
+
+  // Handle enter key in message input
+  const handleMessageKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }, [handleSendMessage]);
+
   // Check if current tools match a preset
   const getCurrentActivePreset = useCallback(() => {
     if (config.tools.length === 0) return null;
@@ -647,35 +1062,92 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     setActivePreset(currentPreset);
   }, [config.tools, getCurrentActivePreset]);
 
-  // Handle node execution
+  // Update active presets when prompts change
+  useEffect(() => {
+    // Check if current system prompt matches any preset
+    const currentSystemPreset = systemPromptPresets.find(p => p.prompt === config.systemPrompt);
+    setSelectedSystemPromptPreset(currentSystemPreset?.id || null);
+  }, [config.systemPrompt]);
+
+  useEffect(() => {
+    // Check if current user prompt matches any preset
+    const currentUserPreset = userPromptPresets.find(p => p.prompt === config.userPrompt);
+    setSelectedUserPromptPreset(currentUserPreset?.id || null);
+  }, [config.userPrompt]);
+
+  // Handle agent start
   const handleExecute = useCallback(async () => {
     if (!currentProvider || !currentModel) return;
+    
+    // Check if API key is provided and valid
+    const currentApiKey = apiKeys[config.provider];
+    const currentValidation = apiKeyValidation[config.provider];
+    
+    if (!currentApiKey) {
+      toast({ 
+        variant: "destructive", 
+        title: "API Key Required", 
+        description: `Please enter your ${currentProvider.name} API key before starting the agent.` 
+      });
+      return;
+    }
+
+    if (!currentValidation?.valid) {
+      toast({ 
+        variant: "destructive", 
+        title: "Invalid API Key", 
+        description: `Please validate your ${currentProvider.name} API key before starting the agent.` 
+      });
+      return;
+    }
     
     setIsRunning(true);
     
     try {
-      // TODO: Implement actual execution logic
+      // TODO: Implement actual execution logic with API key
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate execution
       
       toast({
-        title: "Execution Complete",
-        description: "Agent has finished processing your request.",
+        title: "Agent Finished",
+        description: "The agent has completed your request.",
       });
     } catch (error) {
       toast({
-        title: "Execution Error",
-        description: "An error occurred while executing the agent.",
+        title: "Agent Error",
+        description: "Something went wrong while running the agent.",
         variant: "destructive",
       });
     } finally {
       setIsRunning(false);
     }
-  }, [currentProvider, currentModel, toast]);
+  }, [currentProvider, currentModel, toast, apiKeys, apiKeyValidation, config.provider]);
 
-  // Save configuration
+  // Save settings
   const handleSaveConfig = useCallback(async () => {
     if (!currentUser || !id) {
       toast({ variant: "destructive", title: "Error", description: "User must be logged in to save configurations." });
+      return;
+    }
+
+    // Check if API key is provided and valid
+    const currentApiKey = apiKeys[config.provider];
+    const currentValidation = apiKeyValidation[config.provider];
+    
+    if (!currentApiKey) {
+      toast({ 
+        variant: "destructive", 
+        title: "API Key Required", 
+        description: `Please enter your ${currentProvider.name} API key.` 
+      });
+      return;
+    }
+
+    if (!currentValidation?.valid) {
+      toast({ 
+        variant: "destructive", 
+        title: "Invalid API Key", 
+        description: `Please validate your ${currentProvider.name} API key before saving.` 
+      });
       return;
     }
 
@@ -694,16 +1166,16 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
       await workflowPersistenceService.saveNodeConfig(id, config, 'UNIVERSAL_AGENT', idToken, position);
       setHasUnsavedChanges(false);
       toast({
-        title: "Configuration Saved",
-        description: "Agent configuration has been saved successfully.",
+        title: "Settings Saved",
+        description: "Agent settings have been saved successfully.",
       });
     } catch (error) {
       console.error('Failed to save node:', error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to save node configuration." });
+      toast({ variant: "destructive", title: "Error", description: "Failed to save agent settings." });
     } finally {
       setIsSaving(false);
     }
-  }, [id, currentUser, config, getSelectedNode, updateNodeConfig, toast]);
+  }, [id, currentUser, config, getSelectedNode, updateNodeConfig, toast, apiKeys, apiKeyValidation, currentProvider]);
 
   // Get status color
   const getStatusColor = (status: string) => {
@@ -850,7 +1322,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 </motion.div>
               </TooltipTrigger>
               <TooltipContent>
-                {isSaving ? 'Auto-saving...' : hasUnsavedChanges ? 'Auto-save pending...' : 'All changes auto-saved'}
+                {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Changes pending...' : 'All changes saved'}
               </TooltipContent>
             </Tooltip>
             
@@ -875,7 +1347,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 </motion.div>
               </TooltipTrigger>
               <TooltipContent>
-                {isRunning ? 'Running...' : 'Execute Agent'}
+                {isRunning ? 'Running...' : 'Start Agent'}
               </TooltipContent>
             </Tooltip>
             
@@ -916,24 +1388,24 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-purple-400/20 rounded-xl p-1">
                   <TabsTrigger value="config" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
-                    Configuration
+                      Settings
                   </TabsTrigger>
                   <TabsTrigger value="tools" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
                     Tools ({config.tools.length})
                   </TabsTrigger>
                   <TabsTrigger value="messages" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
-                    Messages
+                      Chat History
                   </TabsTrigger>
                 </TabsList>
                 
                 {/* Configuration Tab */}
                 <TabsContent value="config" className="space-y-6 mt-6">
-                  {/* Provider and Model Selection */}
+                  {/* AI Service and Model Selection */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                         <Brain className="h-4 w-4" />
-                        AI Provider
+                        AI Service
                       </label>
                       <Select value={config.provider} onValueChange={(value) => handleConfigChange('provider', value)}>
                         <SelectTrigger className="bg-slate-800/50 border-purple-400/30 text-white hover:border-purple-400/50 rounded-xl">
@@ -944,7 +1416,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                             <SelectItem key={provider.id} value={provider.id} className="!text-white hover:!bg-purple-600/20 focus:!bg-purple-600/30 focus:!text-white data-[highlighted]:!bg-purple-600/30 data-[highlighted]:!text-white">
                               <div className="flex items-center gap-3">
                                 {provider.icon}
-                                <span className="font-medium">{provider.name}</span>
+                                <span className="font-medium text-sm">{provider.name}</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -955,7 +1427,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                         <Cpu className="h-4 w-4" />
-                        Model
+                        AI Model
                       </label>
                       <Select value={config.model} onValueChange={(value) => handleConfigChange('model', value)}>
                         <SelectTrigger className="bg-slate-800/50 border-purple-400/30 text-white hover:border-purple-400/50 rounded-xl">
@@ -965,9 +1437,9 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                           {currentProvider.models.map(model => (
                             <SelectItem key={model.id} value={model.id} className="!text-white hover:!bg-purple-600/20 focus:!bg-purple-600/30 focus:!text-white data-[highlighted]:!bg-purple-600/30 data-[highlighted]:!text-white">
                               <div className="flex items-center justify-between w-full">
-                                <span className="font-medium">{model.name}</span>
-                                <Badge variant="secondary" className="ml-2 bg-purple-600/20 text-purple-200">
-                                  {model.contextLength.toLocaleString()} ctx
+                                <span className="font-medium text-sm">{model.name}</span>
+                                <Badge variant="secondary" className="ml-2 bg-purple-600/20 text-purple-200 text-xs">
+                                  {model.contextLength.toLocaleString()} words
                                 </Badge>
                               </div>
                             </SelectItem>
@@ -977,13 +1449,212 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                     </div>
                   </div>
 
+                  {/* API Key Management */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <Key className="h-4 w-4" />
+                      API Key for {currentProvider.name}
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="password"
+                          value={apiKeys[config.provider] || ''}
+                          onChange={(e) => handleApiKeyChange(config.provider, e.target.value)}
+                          placeholder={`Enter your ${currentProvider.name} API key`}
+                          className={cn(
+                            "bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 rounded-xl pr-20",
+                            apiKeyValidation[config.provider]?.valid && "border-green-400/50",
+                            apiKeyValidation[config.provider]?.valid === false && "border-red-400/50"
+                          )}
+                        />
+                        {apiKeyValidation[config.provider] && (
+                          <div className={cn(
+                            "absolute right-3 top-1/2 transform -translate-y-1/2 text-xs",
+                            apiKeyValidation[config.provider]?.valid ? "text-green-400" : "text-red-400"
+                          )}>
+                            {apiKeyValidation[config.provider]?.valid ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleValidateApiKey(config.provider)}
+                        disabled={isValidatingApiKey[config.provider] || !apiKeys[config.provider]}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl whitespace-nowrap"
+                      >
+                        {isValidatingApiKey[config.provider] ? (
+                          <Activity className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Validate'
+                        )}
+                      </Button>
+                    </div>
+                    {apiKeyValidation[config.provider] && (
+                      <p className={cn(
+                        "text-xs",
+                        apiKeyValidation[config.provider]?.valid ? "text-green-400" : "text-red-400"
+                      )}>
+                        {apiKeyValidation[config.provider]?.message}
+                      </p>
+                    )}
+                    <p className="text-xs text-purple-300/60">
+                      Your API key is stored locally and never sent to our servers. Get your API key from{' '}
+                      {config.provider === 'anthropic' && (
+                        <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                          Anthropic Console
+                        </a>
+                      )}
+                      {config.provider === 'openai' && (
+                        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                          OpenAI Platform
+                        </a>
+                      )}
+                      {config.provider === 'groq' && (
+                        <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                          Groq Console
+                        </a>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Chat Interface */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Test Conversation
+                    </label>
+                    
+                    {/* Chat Messages */}
+                    <div 
+                      ref={chatContainerRef}
+                      className="bg-slate-800/30 border border-purple-400/20 rounded-xl p-4 h-64 overflow-y-auto space-y-3"
+                    >
+                      {chatMessages.length === 0 ? (
+                        <div className="text-center text-purple-300/60 py-8">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">Start a conversation to test your AI agent</p>
+                        </div>
+                      ) : (
+                        chatMessages.map((message, index) => (
+                          <div
+                            key={index}
+                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                                message.role === 'user'
+                                  ? 'bg-purple-600/30 text-white'
+                                  : 'bg-slate-700/50 text-purple-100'
+                              }`}
+                            >
+                              <div className="whitespace-pre-wrap">{message.content}</div>
+                              <div className="text-xs opacity-60 mt-1">
+                                {message.timestamp.toLocaleTimeString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                      {isSendingMessage && (
+                        <div className="flex justify-start">
+                          <div className="bg-slate-700/50 text-purple-100 rounded-lg px-3 py-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-4 w-4 animate-spin" />
+                              <span>AI is thinking...</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Message Input */}
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <textarea
+                          value={currentMessage}
+                          onChange={(e) => setCurrentMessage(e.target.value)}
+                          onKeyPress={handleMessageKeyPress}
+                          placeholder="Type your message here..."
+                          disabled={isSendingMessage}
+                          className="w-full bg-slate-800/50 border border-purple-400/30 text-white placeholder:text-purple-300/40 rounded-xl px-3 py-2 text-sm resize-none focus:border-purple-400/50 focus:outline-none disabled:opacity-50"
+                          rows={2}
+                        />
+                      </div>
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={!currentMessage.trim() || isSendingMessage}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSendingMessage ? (
+                          <Activity className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Test Connection and Clear Chat Buttons */}
+                    <div className="flex justify-between items-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+                          console.log('Testing connection to:', backendUrl);
+                          fetch(`${backendUrl}/api/hello`)
+                            .then(res => res.json())
+                            .then(data => {
+                              console.log('Backend connection test:', data);
+                              toast({
+                                title: "Connection Test",
+                                description: "Backend is reachable",
+                              });
+                            })
+                            .catch(err => {
+                              console.error('Backend connection failed:', err);
+                              toast({
+                                title: "Connection Test Failed",
+                                description: err.message,
+                                variant: "destructive",
+                              });
+                            });
+                        }}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg"
+                      >
+                        <Activity className="h-3 w-3 mr-1" />
+                        Test Connection
+                      </Button>
+                      
+                      {chatMessages.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setChatMessages([]);
+                            handleConfigChange('messages', []);
+                          }}
+                          className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Clear Chat
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Temperature and Max Tokens */}
                   <div className="space-y-6">
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
                         <span className="flex items-center gap-2">
                           <Zap className="h-4 w-4" />
-                          Creativity
+                          Response Creativity
                         </span>
                         <span className="text-purple-300 font-mono">{config.temperature}</span>
                       </label>
@@ -996,8 +1667,8 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                         className="w-full cursor-pointer"
                       />
                       <div className="flex justify-between text-xs text-purple-300/60">
-                        <span>Conservative</span>
-                        <span>Creative</span>
+                        <span>Focused & Precise</span>
+                        <span>Creative & Varied</span>
                       </div>
                     </div>
 
@@ -1005,7 +1676,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
                         <span className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
-                          Max Tokens
+                          Response Length
                         </span>
                         <span className="text-purple-300 font-mono">{config.maxTokens}</span>
                       </label>
@@ -1018,33 +1689,125 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                         className="w-full cursor-pointer"
                       />
                       <div className="flex justify-between text-xs text-purple-300/60">
-                        <span>Short</span>
-                        <span>Long</span>
+                        <span>Brief</span>
+                        <span>Detailed</span>
                       </div>
                     </div>
                   </div>
 
                   {/* System Prompt */}
                   <div className="space-y-3">
+                    <div className="flex items-center justify-between">
                     <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                       <MessageSquare className="h-4 w-4" />
-                      System Prompt
+                        System Prompt (Agent Instructions)
                     </label>
+                      {selectedSystemPromptPreset && (
+                        <Badge variant="secondary" className="bg-green-600/20 text-green-300 border-green-500/30">
+                          <Check className="h-3 w-3 mr-1" />
+                          {systemPromptPresets.find(p => p.id === selectedSystemPromptPreset)?.name} Active
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* System Prompt Presets */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {systemPromptPresets.map(preset => {
+                        const isActive = selectedSystemPromptPreset === preset.id;
+                        return (
+                          <motion.div key={preset.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSystemPromptPresetSelection(preset.id)}
+                              className={cn(
+                                "w-full border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg h-auto p-2 text-xs relative",
+                                isActive && "bg-purple-600/20 border-purple-400/60 text-purple-200"
+                              )}
+                            >
+                              <div className="text-left w-full">
+                                <div className="font-medium truncate">{preset.name}</div>
+                              </div>
+                            </Button>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                    
                     <Textarea
                       value={config.systemPrompt}
-                      onChange={(e) => handleConfigChange('systemPrompt', e.target.value)}
+                      onChange={(e) => {
+                        handleConfigChange('systemPrompt', e.target.value);
+                        setSelectedSystemPromptPreset(null); // Clear preset when manually editing
+                      }}
                       placeholder="Define the agent's behavior, personality, and instructions..."
                       className="bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 min-h-[120px] rounded-xl resize-none"
                     />
+                    <p className="text-xs text-purple-300/60">
+                      This defines how the agent behaves and what it can do. It's like giving the agent its personality and capabilities.
+                    </p>
                   </div>
 
-                  {/* Advanced Options */}
+                  {/* User Prompt */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        User Prompt (Initial Message)
+                      </label>
+                      {selectedUserPromptPreset && (
+                        <Badge variant="secondary" className="bg-green-600/20 text-green-300 border-green-500/30">
+                          <Check className="h-3 w-3 mr-1" />
+                          {userPromptPresets.find(p => p.id === selectedUserPromptPreset)?.name} Active
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* User Prompt Presets */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {userPromptPresets.map(preset => {
+                        const isActive = selectedUserPromptPreset === preset.id;
+                        return (
+                          <motion.div key={preset.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleUserPromptPresetSelection(preset.id)}
+                              className={cn(
+                                "w-full border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg h-auto p-2 text-xs relative",
+                                isActive && "bg-purple-600/20 border-purple-400/60 text-purple-200"
+                              )}
+                            >
+                              <div className="text-left w-full">
+                                <div className="font-medium truncate">{preset.name}</div>
+                              </div>
+                            </Button>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                    
+                    <Textarea
+                      value={config.userPrompt}
+                      onChange={(e) => {
+                        handleConfigChange('userPrompt', e.target.value);
+                        setSelectedUserPromptPreset(null); // Clear preset when manually editing
+                      }}
+                      placeholder="Enter the initial message or question for the agent..."
+                      className="bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 min-h-[100px] rounded-xl resize-none"
+                    />
+                    <p className="text-xs text-purple-300/60">
+                      This is the initial message that will be sent to the agent when it starts. It's like the first thing you'd say to the agent.
+                    </p>
+                  </div>
+
+                  {/* Advanced Settings */}
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex items-center justify-between p-4 bg-slate-800/30 border border-purple-400/20 rounded-xl">
                         <div className="flex items-center gap-2">
                           <Activity className="h-4 w-4 text-purple-300" />
-                          <span className="text-sm font-medium text-purple-200">Stream Response</span>
+                          <span className="text-sm font-medium text-purple-200">Real-time Responses</span>
                         </div>
                         <Switch
                           checked={config.streamResponse}
@@ -1055,7 +1818,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       <div className="flex items-center justify-between p-4 bg-slate-800/30 border border-purple-400/20 rounded-xl">
                         <div className="flex items-center gap-2">
                           <RotateCcw className="h-4 w-4 text-purple-300" />
-                          <span className="text-sm font-medium text-purple-200">Auto Retry</span>
+                          <span className="text-sm font-medium text-purple-200">Automatic Retry</span>
                         </div>
                         <Switch
                           checked={config.autoRetry}
@@ -1064,14 +1827,14 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       </div>
                     </div>
                     
-                    {/* Retry Count and Timeout */}
+                    {/* Retry Attempts and Time Limit */}
                     {config.autoRetry && (
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-3">
                           <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <RotateCcw className="h-4 w-4" />
-                              Retry Count
+                              Retry Attempts
                             </span>
                             <span className="text-purple-300 font-mono">{config.retryCount}</span>
                           </label>
@@ -1089,7 +1852,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                           <label className="text-sm font-semibold text-purple-200 flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <Settings className="h-4 w-4" />
-                              Timeout (s)
+                              Response Time Limit (seconds)
                             </span>
                             <span className="text-purple-300 font-mono">{config.timeout / 1000}</span>
                           </label>
@@ -1116,7 +1879,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                     </div>
                     <div>
                       <h4 className="text-lg font-bold text-purple-200">Available Tools</h4>
-                      <p className="text-sm text-purple-300/60">{config.tools.length} tools configured</p>
+                      <p className="text-sm text-purple-300/60">{config.tools.length} tools selected</p>
                     </div>
                   </div>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -1180,7 +1943,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 <div className="space-y-3">
                   <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                     <Settings className="h-4 w-4" />
-                    Configured Tools
+                      Selected Tools
                   </label>
                   
                   {config.tools.length === 0 ? (
@@ -1193,8 +1956,8 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                         <Wrench className="h-8 w-8 text-purple-300" />
                       </div>
-                      <h5 className="text-lg font-semibold text-purple-200 mb-2">No tools configured</h5>
-                      <p className="text-sm text-purple-300/60 mb-4">Add tools to enhance your agent's capabilities</p>
+                      <h5 className="text-lg font-semibold text-purple-200 mb-2">No tools selected</h5>
+                      <p className="text-sm text-purple-300/60 mb-4">Add tools to give your agent more abilities</p>
                       <Button
                         variant="outline"
                         size="sm"
@@ -1303,7 +2066,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-purple-200">Conversation</h4>
-                    <p className="text-sm text-purple-300/60">{config.messages.length} messages</p>
+                    <p className="text-sm text-purple-300/60">{config.messages.length} chat messages</p>
                   </div>
                 </div>
                 
@@ -1343,7 +2106,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 
                 <div className="flex gap-3">
                   <Input
-                    placeholder="Type a message to test the agent..."
+                    placeholder="Type a message to chat with the agent..."
                     className="bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 flex-1 rounded-xl"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
@@ -1387,11 +2150,11 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 </div>
                 <div>
                   <span className="text-sm font-medium text-purple-200">{currentProvider.name}</span>
-                  <p className="text-xs text-purple-300/60">{currentModel.name}</p>
+                  <p className="text-xs text-purple-300/60 truncate">{currentModel.name}</p>
                 </div>
               </div>
-              <Badge variant="secondary" className="bg-purple-600/20 text-purple-200 text-xs">
-                {currentModel.contextLength.toLocaleString()} ctx
+              <Badge variant="secondary" className="bg-purple-600/20 text-purple-200 text-xs whitespace-nowrap">
+                {currentModel.contextLength.toLocaleString()} words
               </Badge>
             </div>
             
@@ -1401,7 +2164,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 <div className="flex items-center gap-2">
                   <Wrench className="h-4 w-4 text-purple-300" />
                   <span className="text-sm text-purple-200/80">
-                    {config.tools.length} tools configured
+                    {config.tools.length} tools selected
                   </span>
                 </div>
                 <div className="flex -space-x-1">
@@ -1428,8 +2191,8 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
             
             {/* Configuration Summary */}
             <div className="flex items-center justify-between text-xs text-purple-300/60">
-              <span>Temperature: {config.temperature}</span>
-              <span>Max Tokens: {config.maxTokens}</span>
+              <span>Creativity: {config.temperature}</span>
+              <span>Length: {config.maxTokens}</span>
             </div>
           </div>
         )}
@@ -1551,7 +2314,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                         <p className="text-sm text-purple-300/80 mb-4 line-clamp-3">{tool.description}</p>
                         
                         <div className="flex items-center justify-between text-xs text-purple-400/60">
-                          <span>{tool.parameters.length} parameters</span>
+                          <span>{tool.parameters.length} settings</span>
                           <span className="flex items-center gap-1">
                             <span className="text-green-400">$</span>
                             {tool.cost.toFixed(3)}
