@@ -954,7 +954,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     setIsValidatingFirecrawl(true);
 
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
       const response = await fetch(`${backendUrl}/api/v1/validate-firecrawl`, {
         method: 'POST',
         headers: {
@@ -1021,7 +1021,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     }
 
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
       const response = await fetch(`${backendUrl}/api/v1/firecrawl`, {
         method: 'POST',
         headers: {
@@ -1138,7 +1138,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
         ...messagesWithUser.map(msg => ({ role: msg.role, content: msg.content }))
       ];
 
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
       const endpoint = enabledTools.length > 0 ? '/api/v1/chat-with-tools' : '/api/v1/chat';
       
       console.log('Sending chat request to:', `${backendUrl}${endpoint}`);
@@ -1926,7 +1926,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+                          const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
                           console.log('Testing connection to:', backendUrl);
                           fetch(`${backendUrl}/api/hello`)
                             .then(res => res.json())
