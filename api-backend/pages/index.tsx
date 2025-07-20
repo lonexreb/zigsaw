@@ -51,15 +51,95 @@ const MatrixRain = () => {
   );
 };
 
-// Test POST Button Component
+// Real-time API Call Logger
+const APICallLogger = () => {
+  const [apiCalls, setApiCalls] = useState<any[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    const fetchAPICalls = async () => {
+      try {
+        const response = await fetch('/api/logs', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setApiCalls(data.logs || []);
+          setIsConnected(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch API calls:', error);
+        setIsConnected(false);
+      }
+    };
+
+    // Fetch every second for real-time updates
+    const interval = setInterval(fetchAPICalls, 1000);
+    fetchAPICalls(); // Initial fetch
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getMethodColor = (method: string) => {
+    switch (method) {
+      case 'GET': return 'var(--accent-blue)';
+      case 'POST': return 'var(--matrix-green)';
+      case 'PUT': return 'var(--accent-purple)';
+      case 'DELETE': return '#ff4444';
+      default: return 'var(--text-secondary)';
+    }
+  };
+
+  return (
+    <div className={styles.apiCallLogger}>
+      <div className={styles.loggerHeader}>
+        <h3>Real-time API Calls</h3>
+        <div className={styles.connectionStatus}>
+          <div className={`${styles.statusDot} ${isConnected ? styles.connected : styles.disconnected}`} />
+          <span>{isConnected ? 'CONNECTED' : 'DISCONNECTED'}</span>
+        </div>
+      </div>
+      <div className={styles.logsContainer}>
+        {apiCalls.length === 0 ? (
+          <div className={styles.noLogs}>No API calls yet...</div>
+        ) : (
+          apiCalls.slice(-10).reverse().map((call, index) => (
+            <div key={index} className={styles.logEntry}>
+              <div className={styles.logHeader}>
+                <span 
+                  className={styles.logMethod}
+                  style={{ color: getMethodColor(call.method) }}
+                >
+                  {call.method}
+                </span>
+                <span className={styles.logPath}>{call.path}</span>
+                <span className={styles.logTime}>{new Date(call.timestamp).toLocaleTimeString()}</span>
+              </div>
+              <div className={styles.logDetails}>
+                <span>Status: {call.status}</span>
+                <span>Duration: {call.duration}ms</span>
+                {call.source && <span>Source: {call.source}</span>}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Test POST Button Component with Real Functionality
 const TestPostButton = () => {
   const [isPressed, setIsPressed] = useState(false);
   const [lastPressed, setLastPressed] = useState<Date | null>(null);
   const [pressCount, setPressCount] = useState(0);
   const [frontendPresses, setFrontendPresses] = useState(0);
   const [lastFrontendPress, setLastFrontendPress] = useState<Date | null>(null);
+  const [testResults, setTestResults] = useState<any[]>([]);
 
-  // Poll for frontend test POST requests
+  // Poll for frontend test POST requests and API statistics
   useEffect(() => {
     const checkFrontendRequests = async () => {
       try {
@@ -96,22 +176,54 @@ const TestPostButton = () => {
     setLastPressed(new Date());
     setPressCount(prev => prev + 1);
 
-    // Simulate API call
     try {
+      const startTime = Date.now();
       const response = await fetch('/api/workflow/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           test: true,
           timestamp: new Date().toISOString(),
-          source: 'backend-dashboard'
+          source: 'backend-dashboard',
+          testData: {
+            nodes: [
+              { id: 'test-node-1', type: 'universal_agent', data: { config: { model: 'claude-3-5-sonnet' } } },
+              { id: 'test-node-2', type: 'groqllama', data: { config: { model: 'llama-3.1-8b-instant' } } }
+            ],
+            edges: [
+              { id: 'test-edge-1', source: 'test-node-1', target: 'test-node-2' }
+            ]
+          }
         }),
       });
       
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
       if (response.ok) {
+        const data = await response.json();
+        setTestResults(prev => [...prev.slice(-4), {
+          success: true,
+          timestamp: new Date().toISOString(),
+          duration,
+          response: data
+        }]);
         console.log('✅ Test POST successful from backend dashboard');
+      } else {
+        setTestResults(prev => [...prev.slice(-4), {
+          success: false,
+          timestamp: new Date().toISOString(),
+          duration,
+          error: `HTTP ${response.status}`
+        }]);
       }
     } catch (error) {
+      setTestResults(prev => [...prev.slice(-4), {
+        success: false,
+        timestamp: new Date().toISOString(),
+        duration: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }]);
       console.error('❌ Test POST failed:', error);
     }
 
@@ -147,11 +259,30 @@ const TestPostButton = () => {
           {isPressed ? 'POSTING...' : 'TEST POST'}
         </button>
       </div>
+      
+      {/* Test Results */}
+      {testResults.length > 0 && (
+        <div className={styles.testResults}>
+          <h4>Recent Test Results</h4>
+          <div className={styles.resultsList}>
+            {testResults.map((result, index) => (
+              <div key={index} className={`${styles.resultEntry} ${result.success ? styles.success : styles.error}`}>
+                <div className={styles.resultHeader}>
+                  <span>{result.success ? '✅' : '❌'}</span>
+                  <span>{new Date(result.timestamp).toLocaleTimeString()}</span>
+                  <span>{result.duration}ms</span>
+                </div>
+                {result.error && <div className={styles.resultError}>{result.error}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Dashboard stats component
+// Dashboard stats component with real data
 const DashboardStats = () => {
   const [stats, setStats] = useState({
     requests: 0,
@@ -163,16 +294,20 @@ const DashboardStats = () => {
   });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStats({
-        requests: Math.floor(Math.random() * 1000) + 500,
-        users: Math.floor(Math.random() * 100) + 50,
-        uptime: Math.floor(Math.random() * 10) + 99,
-        performance: Math.floor(Math.random() * 20) + 80,
-        workflows: Math.floor(Math.random() * 20) + 15,
-        nodes: Math.floor(Math.random() * 50) + 30,
-      });
-    }, 2000);
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      }
+    };
+
+    const interval = setInterval(fetchStats, 5000);
+    fetchStats(); // Initial fetch
 
     return () => clearInterval(interval);
   }, []);
@@ -502,6 +637,10 @@ export default function Home() {
 
           <div className={styles.testPostGrid}>
             <TestPostButton />
+          </div>
+
+          <div className={styles.loggerGrid}>
+            <APICallLogger />
           </div>
 
           <div className={styles.actions}>
