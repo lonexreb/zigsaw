@@ -17,10 +17,30 @@ interface NodeConfig {
   };
 }
 
+interface NodeResponseData {
+  node_id: string;
+  type: 'universal_agent' | 'trigger';
+  name: string;
+  description: string;
+  position: { x: number; y: number };
+  workflow_id: string;
+  config: {
+    model?: string;
+    prompt?: string;
+    tools?: string[];
+    max_iterations?: number;
+    temperature?: number;
+    trigger_type?: string;
+    eventData?: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
 interface ApiResponse {
   success: boolean;
   message: string;
-  data?: any;
+  data?: NodeResponseData;
   node_id?: string;
 }
 

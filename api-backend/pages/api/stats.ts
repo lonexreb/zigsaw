@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 // In-memory storage for statistics (in production, use a database)
 let requestCount = 0;
-let startTime = Date.now();
+const startTime = Date.now();
 
 // Function to increment request count (called from other API endpoints)
 export const incrementRequestCount = () => {

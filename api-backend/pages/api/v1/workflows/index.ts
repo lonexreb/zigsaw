@@ -1,16 +1,39 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+interface WorkflowNode {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  data: Record<string, unknown>;
+}
+
+interface WorkflowEdge {
+  id: string;
+  source: string;
+  target: string;
+  type?: string;
+}
+
 interface WorkflowConfig {
-  nodes: any[];
-  edges: any[];
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
   nodeIdCounter: number;
   lastSaved: string;
+}
+
+interface WorkflowResponseData {
+  workflow_id: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  nodeIdCounter: number;
+  lastSaved: string;
+  saved_at: string;
 }
 
 interface ApiResponse {
   success: boolean;
   message: string;
-  data?: any;
+  data?: WorkflowConfig | WorkflowResponseData;
 }
 
 export default async function handler(
