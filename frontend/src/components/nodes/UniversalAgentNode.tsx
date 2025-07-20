@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { memo, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { 
   Bot, 
@@ -28,7 +28,10 @@ import {
   Layers,
   Trash2,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Key,
+  X,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -543,6 +546,13 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [selectedSystemPromptPreset, setSelectedSystemPromptPreset] = useState<string | null>(null);
   const [selectedUserPromptPreset, setSelectedUserPromptPreset] = useState<string | null>(null);
+  const [apiKeys, setApiKeys] = useState<{[key: string]: string}>({});
+  const [isValidatingApiKey, setIsValidatingApiKey] = useState<{[key: string]: boolean}>({});
+  const [apiKeyValidation, setApiKeyValidation] = useState<{[key: string]: {valid: boolean, message: string}}>({});
+  const [chatMessages, setChatMessages] = useState<AgentMessage[]>([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   // Debounced save function to prevent excessive API calls
@@ -637,6 +647,33 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     }
   }, [id, getSelectedNode, data.config]);
 
+  // Load saved API keys from localStorage
+  useEffect(() => {
+    const savedApiKeys = localStorage.getItem('universal-agent-api-keys');
+    if (savedApiKeys) {
+      try {
+        const parsedKeys = JSON.parse(savedApiKeys);
+        setApiKeys(parsedKeys);
+      } catch (error) {
+        console.error('Failed to parse saved API keys:', error);
+      }
+    }
+  }, []);
+
+  // Load chat messages from config
+  useEffect(() => {
+    if (config.messages && config.messages.length > 0) {
+      setChatMessages(config.messages);
+    }
+  }, [config.messages]);
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
   // Get current provider and model
   const currentProvider = useMemo(() => 
     aiProviders.find(p => p.id === config.provider) || aiProviders[0], 
@@ -663,6 +700,16 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     // Update local state immediately for reactive UI
     setConfig(prev => {
       const newConfig = { ...prev, [key]: value };
+      
+      // If provider is changing, clear API key validation for the old provider
+      if (key === 'provider') {
+        setApiKeyValidation(prev => {
+          const newState = { ...prev };
+          // Clear validation for the current provider before it changes
+          delete newState[config.provider];
+          return newState;
+        });
+      }
       
       // Update the workflow context with the complete config
       if (id) {
@@ -759,6 +806,240 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     });
   }, [handleConfigChange, toast]);
 
+  // Validate API key for selected provider
+  const validateApiKey = useCallback(async (provider: string, apiKey: string) => {
+    if (!apiKey.trim()) {
+      setApiKeyValidation(prev => ({
+        ...prev,
+        [provider]: { valid: false, message: 'API key is required' }
+      }));
+      return false;
+    }
+
+    setIsValidatingApiKey(prev => ({ ...prev, [provider]: true }));
+
+    try {
+      // Simple validation - check if key has correct format
+      let isValid = false;
+      let message = '';
+
+      switch (provider) {
+        case 'anthropic':
+          // Claude API keys start with 'sk-ant-'
+          isValid = apiKey.startsWith('sk-ant-') && apiKey.length > 20;
+          message = isValid ? 'Valid Claude API key' : 'Invalid Claude API key format';
+          break;
+        case 'openai':
+          // OpenAI API keys start with 'sk-'
+          isValid = apiKey.startsWith('sk-') && apiKey.length > 20;
+          message = isValid ? 'Valid OpenAI API key' : 'Invalid OpenAI API key format';
+          break;
+        case 'groq':
+          // Groq API keys start with 'gsk_'
+          isValid = apiKey.startsWith('gsk_') && apiKey.length > 20;
+          message = isValid ? 'Valid Groq API key' : 'Invalid Groq API key format';
+          break;
+        default:
+          isValid = false;
+          message = 'Unknown provider';
+      }
+
+      setApiKeyValidation(prev => ({
+        ...prev,
+        [provider]: { valid: isValid, message }
+      }));
+
+      if (isValid) {
+        toast({
+          title: "API Key Valid",
+          description: message,
+        });
+      } else {
+        toast({
+          title: "API Key Invalid",
+          description: message,
+          variant: "destructive",
+        });
+      }
+
+      return isValid;
+    } catch (error) {
+      setApiKeyValidation(prev => ({
+        ...prev,
+        [provider]: { valid: false, message: 'Validation failed' }
+      }));
+      toast({
+        title: "Validation Error",
+        description: "Failed to validate API key",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsValidatingApiKey(prev => ({ ...prev, [provider]: false }));
+    }
+  }, [toast]);
+
+  // Handle API key change
+  const handleApiKeyChange = useCallback((provider: string, apiKey: string) => {
+    const newApiKeys = { ...apiKeys, [provider]: apiKey };
+    setApiKeys(newApiKeys);
+    
+    // Save to localStorage
+    localStorage.setItem('universal-agent-api-keys', JSON.stringify(newApiKeys));
+    
+    // Clear validation when user starts typing
+    if (apiKeyValidation[provider]) {
+      setApiKeyValidation(prev => {
+        const newState = { ...prev };
+        delete newState[provider];
+        return newState;
+      });
+    }
+  }, [apiKeys, apiKeyValidation]);
+
+  // Handle API key validation
+  const handleValidateApiKey = useCallback((provider: string) => {
+    const apiKey = apiKeys[provider] || '';
+    validateApiKey(provider, apiKey);
+  }, [apiKeys, validateApiKey]);
+
+  // Send message to AI service
+  const sendMessage = useCallback(async (message: string) => {
+    console.log('Environment variables:', {
+      VITE_BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
+      fallback: 'https://zigsaw-backend.vercel.app'
+    });
+
+    if (!currentProvider || !currentModel) {
+      toast({
+        title: "Configuration Error",
+        description: "Please select an AI service and model first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const apiKey = apiKeys[config.provider];
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: `Please enter your ${currentProvider.name} API key.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validation = apiKeyValidation[config.provider];
+    if (!validation?.valid) {
+      toast({
+        title: "Invalid API Key",
+        description: `Please validate your ${currentProvider.name} API key first.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSendingMessage(true);
+
+    // Add user message to chat
+    const userMessage: AgentMessage = {
+      role: 'user',
+      content: message,
+      timestamp: new Date(),
+    };
+    const messagesWithUser = [...chatMessages, userMessage];
+    setChatMessages(messagesWithUser);
+
+    try {
+      // Prepare messages for the API
+      const messages = [
+        { role: 'system', content: config.systemPrompt },
+        ...messagesWithUser.map(msg => ({ role: msg.role, content: msg.content }))
+      ];
+
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      console.log('Sending chat request to:', `${backendUrl}/api/v1/chat`);
+      console.log('Request payload:', {
+        provider: config.provider,
+        model: config.model,
+        messages: messages,
+        systemPrompt: config.systemPrompt,
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
+        apiKey: apiKey ? '***' : 'missing'
+      });
+
+      // Call our backend API which will proxy to the AI service
+      const response = await fetch(`${backendUrl}/api/v1/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: config.provider,
+          model: config.model,
+          messages: messages,
+          systemPrompt: config.systemPrompt,
+          temperature: config.temperature,
+          maxTokens: config.maxTokens,
+          apiKey: apiKey
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Chat API error response:', errorData);
+        throw new Error(errorData.error || `API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Chat API response:', data);
+      const assistantContent = data.content || 'No response received';
+
+      // Add assistant message to chat
+      const assistantMessage: AgentMessage = {
+        role: 'assistant',
+        content: assistantContent,
+        timestamp: new Date(),
+      };
+      const newMessages = [...chatMessages, userMessage, assistantMessage];
+      setChatMessages(newMessages);
+      
+      // Update config with new messages
+      handleConfigChange('messages', newMessages);
+
+      toast({
+        title: "Message Sent",
+        description: "Response received successfully.",
+      });
+
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send message",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingMessage(false);
+    }
+  }, [currentProvider, currentModel, apiKeys, apiKeyValidation, config, chatMessages, toast]);
+
+  // Handle send message
+  const handleSendMessage = useCallback(() => {
+    if (!currentMessage.trim() || isSendingMessage) return;
+    sendMessage(currentMessage.trim());
+    setCurrentMessage('');
+  }, [currentMessage, isSendingMessage, sendMessage]);
+
+  // Handle enter key in message input
+  const handleMessageKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }, [handleSendMessage]);
+
   // Check if current tools match a preset
   const getCurrentActivePreset = useCallback(() => {
     if (config.tools.length === 0) return null;
@@ -798,10 +1079,32 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
   const handleExecute = useCallback(async () => {
     if (!currentProvider || !currentModel) return;
     
+    // Check if API key is provided and valid
+    const currentApiKey = apiKeys[config.provider];
+    const currentValidation = apiKeyValidation[config.provider];
+    
+    if (!currentApiKey) {
+      toast({ 
+        variant: "destructive", 
+        title: "API Key Required", 
+        description: `Please enter your ${currentProvider.name} API key before starting the agent.` 
+      });
+      return;
+    }
+
+    if (!currentValidation?.valid) {
+      toast({ 
+        variant: "destructive", 
+        title: "Invalid API Key", 
+        description: `Please validate your ${currentProvider.name} API key before starting the agent.` 
+      });
+      return;
+    }
+    
     setIsRunning(true);
     
     try {
-      // TODO: Implement actual execution logic
+      // TODO: Implement actual execution logic with API key
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate execution
       
       toast({
@@ -817,12 +1120,34 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     } finally {
       setIsRunning(false);
     }
-  }, [currentProvider, currentModel, toast]);
+  }, [currentProvider, currentModel, toast, apiKeys, apiKeyValidation, config.provider]);
 
   // Save settings
   const handleSaveConfig = useCallback(async () => {
     if (!currentUser || !id) {
       toast({ variant: "destructive", title: "Error", description: "User must be logged in to save configurations." });
+      return;
+    }
+
+    // Check if API key is provided and valid
+    const currentApiKey = apiKeys[config.provider];
+    const currentValidation = apiKeyValidation[config.provider];
+    
+    if (!currentApiKey) {
+      toast({ 
+        variant: "destructive", 
+        title: "API Key Required", 
+        description: `Please enter your ${currentProvider.name} API key.` 
+      });
+      return;
+    }
+
+    if (!currentValidation?.valid) {
+      toast({ 
+        variant: "destructive", 
+        title: "Invalid API Key", 
+        description: `Please validate your ${currentProvider.name} API key before saving.` 
+      });
       return;
     }
 
@@ -850,7 +1175,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     } finally {
       setIsSaving(false);
     }
-  }, [id, currentUser, config, getSelectedNode, updateNodeConfig, toast]);
+  }, [id, currentUser, config, getSelectedNode, updateNodeConfig, toast, apiKeys, apiKeyValidation, currentProvider]);
 
   // Get status color
   const getStatusColor = (status: string) => {
@@ -1121,6 +1446,205 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+
+                  {/* API Key Management */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <Key className="h-4 w-4" />
+                      API Key for {currentProvider.name}
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="password"
+                          value={apiKeys[config.provider] || ''}
+                          onChange={(e) => handleApiKeyChange(config.provider, e.target.value)}
+                          placeholder={`Enter your ${currentProvider.name} API key`}
+                          className={cn(
+                            "bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 rounded-xl pr-20",
+                            apiKeyValidation[config.provider]?.valid && "border-green-400/50",
+                            apiKeyValidation[config.provider]?.valid === false && "border-red-400/50"
+                          )}
+                        />
+                        {apiKeyValidation[config.provider] && (
+                          <div className={cn(
+                            "absolute right-3 top-1/2 transform -translate-y-1/2 text-xs",
+                            apiKeyValidation[config.provider]?.valid ? "text-green-400" : "text-red-400"
+                          )}>
+                            {apiKeyValidation[config.provider]?.valid ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleValidateApiKey(config.provider)}
+                        disabled={isValidatingApiKey[config.provider] || !apiKeys[config.provider]}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl whitespace-nowrap"
+                      >
+                        {isValidatingApiKey[config.provider] ? (
+                          <Activity className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Validate'
+                        )}
+                      </Button>
+                    </div>
+                    {apiKeyValidation[config.provider] && (
+                      <p className={cn(
+                        "text-xs",
+                        apiKeyValidation[config.provider]?.valid ? "text-green-400" : "text-red-400"
+                      )}>
+                        {apiKeyValidation[config.provider]?.message}
+                      </p>
+                    )}
+                    <p className="text-xs text-purple-300/60">
+                      Your API key is stored locally and never sent to our servers. Get your API key from{' '}
+                      {config.provider === 'anthropic' && (
+                        <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                          Anthropic Console
+                        </a>
+                      )}
+                      {config.provider === 'openai' && (
+                        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                          OpenAI Platform
+                        </a>
+                      )}
+                      {config.provider === 'groq' && (
+                        <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                          Groq Console
+                        </a>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Chat Interface */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Test Conversation
+                    </label>
+                    
+                    {/* Chat Messages */}
+                    <div 
+                      ref={chatContainerRef}
+                      className="bg-slate-800/30 border border-purple-400/20 rounded-xl p-4 h-64 overflow-y-auto space-y-3"
+                    >
+                      {chatMessages.length === 0 ? (
+                        <div className="text-center text-purple-300/60 py-8">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">Start a conversation to test your AI agent</p>
+                        </div>
+                      ) : (
+                        chatMessages.map((message, index) => (
+                          <div
+                            key={index}
+                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                                message.role === 'user'
+                                  ? 'bg-purple-600/30 text-white'
+                                  : 'bg-slate-700/50 text-purple-100'
+                              }`}
+                            >
+                              <div className="whitespace-pre-wrap">{message.content}</div>
+                              <div className="text-xs opacity-60 mt-1">
+                                {message.timestamp.toLocaleTimeString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                      {isSendingMessage && (
+                        <div className="flex justify-start">
+                          <div className="bg-slate-700/50 text-purple-100 rounded-lg px-3 py-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-4 w-4 animate-spin" />
+                              <span>AI is thinking...</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Message Input */}
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <textarea
+                          value={currentMessage}
+                          onChange={(e) => setCurrentMessage(e.target.value)}
+                          onKeyPress={handleMessageKeyPress}
+                          placeholder="Type your message here..."
+                          disabled={isSendingMessage}
+                          className="w-full bg-slate-800/50 border border-purple-400/30 text-white placeholder:text-purple-300/40 rounded-xl px-3 py-2 text-sm resize-none focus:border-purple-400/50 focus:outline-none disabled:opacity-50"
+                          rows={2}
+                        />
+                      </div>
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={!currentMessage.trim() || isSendingMessage}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSendingMessage ? (
+                          <Activity className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Test Connection and Clear Chat Buttons */}
+                    <div className="flex justify-between items-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+                          console.log('Testing connection to:', backendUrl);
+                          fetch(`${backendUrl}/api/hello`)
+                            .then(res => res.json())
+                            .then(data => {
+                              console.log('Backend connection test:', data);
+                              toast({
+                                title: "Connection Test",
+                                description: "Backend is reachable",
+                              });
+                            })
+                            .catch(err => {
+                              console.error('Backend connection failed:', err);
+                              toast({
+                                title: "Connection Test Failed",
+                                description: err.message,
+                                variant: "destructive",
+                              });
+                            });
+                        }}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg"
+                      >
+                        <Activity className="h-3 w-3 mr-1" />
+                        Test Connection
+                      </Button>
+                      
+                      {chatMessages.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setChatMessages([]);
+                            handleConfigChange('messages', []);
+                          }}
+                          className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Clear Chat
+                        </Button>
+                      )}
                     </div>
                   </div>
 
