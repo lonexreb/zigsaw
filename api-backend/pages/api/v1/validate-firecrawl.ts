@@ -27,56 +27,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('Validating Firecrawl API key:', apiKey.substring(0, 10) + '...');
 
-    // Test with a simple request to validate the API key
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        url: 'https://example.com'
-      })
-    });
-
-    console.log('Firecrawl validation response status:', response.status);
-
-    if (response.status === 401) {
+    // Basic format validation for Firecrawl API key
+    if (!apiKey.startsWith('fc-') || apiKey.length < 10) {
       return res.status(200).json({ 
         valid: false, 
-        error: 'Invalid API key - 401 Unauthorized' 
+        error: 'Invalid API key format. Firecrawl API keys should start with "fc-"' 
       });
     }
 
-    if (response.status === 403) {
-      return res.status(200).json({ 
-        valid: false, 
-        error: 'API key forbidden - 403 Forbidden' 
-      });
-    }
-
-    if (response.status === 200) {
-      const data = await response.json();
-      return res.status(200).json({ 
-        valid: true, 
-        message: 'API key is valid',
-        sampleData: {
-          hasText: !!data.text,
-          hasLinks: !!data.links,
-          hasImages: !!data.images,
-          url: data.url
-        }
-      });
-    }
-
-    // If we get here, there might be a different issue
-    const errorText = await response.text();
-    console.log('Firecrawl validation error response:', errorText);
-    
+    // For now, accept the API key as valid if it has the correct format
+    // The actual validation will happen when making real scraping requests
     return res.status(200).json({ 
-      valid: false, 
-      error: `API validation failed: ${response.status} ${response.statusText}`,
-      details: errorText
+      valid: true, 
+      message: 'API key format is valid (will be tested on first use)',
+      note: 'Actual API validation will occur when making scraping requests'
     });
 
   } catch (error) {
