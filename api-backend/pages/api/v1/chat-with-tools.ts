@@ -133,7 +133,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } : null;
     }).filter(Boolean);
 
-    let currentMessages = [...messages];
+    // eslint-disable-next-line prefer-const
+    const currentMessages = [...messages];
     let iteration = 0;
     let finalResponse = '';
 
