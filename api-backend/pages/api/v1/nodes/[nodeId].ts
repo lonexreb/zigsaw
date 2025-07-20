@@ -8,7 +8,8 @@ interface NodeConfig {
   workflow_id: string;
   config: {
     model?: string;
-    prompt?: string;
+    system_prompt?: string;
+    user_prompt?: string;
     tools?: string[];
     max_iterations?: number;
     temperature?: number;
@@ -26,7 +27,8 @@ interface NodeResponseData {
   workflow_id: string;
   config: {
     model?: string;
-    prompt?: string;
+    system_prompt?: string;
+    user_prompt?: string;
     tools?: string[];
     max_iterations?: number;
     temperature?: number;
@@ -129,10 +131,10 @@ async function handlePutNode(
   // Validate config based on node type
   if (body.type === 'universal_agent') {
     const config = body.config;
-    if (!config.model || !config.prompt) {
+    if (!config.model || !config.system_prompt) {
       return res.status(400).json({
         success: false,
-        message: 'Universal agent config must include model and prompt'
+        message: 'Universal agent config must include model and system_prompt'
       });
     }
   } else if (body.type === 'trigger') {

@@ -98,6 +98,7 @@ class WorkflowPersistenceService {
         console.log('🔍 Extracting fields:');
         console.log('  - model:', config.model);
         console.log('  - systemPrompt:', config.systemPrompt);
+        console.log('  - userPrompt:', config.userPrompt);
         console.log('  - temperature:', config.temperature);
         console.log('  - tools:', config.tools);
         
@@ -118,7 +119,8 @@ class WorkflowPersistenceService {
           workflow_id: 'default-workflow',  // Add required workflow_id field
           config: {
             model: config.model || 'claude-3-5-sonnet-20241022',
-            prompt: config.systemPrompt || 'You are a helpful AI assistant.',
+            system_prompt: config.systemPrompt || 'You are a helpful AI assistant.',
+            user_prompt: config.userPrompt || 'Hello! How can I help you today?',
             tools: extractedTools,
             max_iterations: 10, // Default value
             temperature: config.temperature || 0.7
