@@ -37,12 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        url: url,
-        extract: {
-          text: extract_text,
-          links: extract_links,
-          images: extract_images
-        }
+        url: url
       })
     });
 

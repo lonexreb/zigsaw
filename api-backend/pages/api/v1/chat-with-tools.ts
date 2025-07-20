@@ -52,12 +52,7 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
           'Authorization': `Bearer ${firecrawlApiKey}`
         },
         body: JSON.stringify({
-          url: url,
-          extract: {
-            text: extract_text,
-            links: extract_links,
-            images: extract_images
-          }
+          url: url
         })
       });
 
