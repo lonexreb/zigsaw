@@ -36,6 +36,9 @@ interface WorkflowContextType {
   getActiveWorkflow: () => Workflow | null;
   updateActiveWorkflowNodes: (nodes: Node[]) => void;
   updateActiveWorkflowEdges: (edges: Edge[]) => void;
+  addNodes: (nodes: Node[]) => void;
+  addEdges: (edges: Edge[]) => void;
+  executeWorkflow: (nodes: Node[], edges: Edge[]) => Promise<void>;
   
   // Node management
   selectedNodeId: string | null;
@@ -226,6 +229,60 @@ export function WorkflowProvider({ children }: WorkflowProviderProps) {
     return activeWorkflow.nodes.find(node => node.id === selectedNodeId) || null;
   }, [selectedNodeId, activeWorkflowId, workflows]);
 
+  // Add nodes to the active workflow
+  const addNodes = useCallback((newNodes: Node[]) => {
+    if (!activeWorkflowId) {
+      // Create a new workflow if none exists
+      const workflowId = createWorkflow('Generated Workflow', 'Workflow created from AI');
+      setActiveWorkflowId(workflowId);
+    }
+    
+    const activeWorkflow = workflows.find(w => w.id === activeWorkflowId);
+    if (!activeWorkflow) return;
+    
+    const updatedNodes = [...activeWorkflow.nodes, ...newNodes];
+    updateWorkflow(activeWorkflowId, { nodes: updatedNodes });
+  }, [activeWorkflowId, workflows, updateWorkflow, createWorkflow]);
+
+  // Add edges to the active workflow
+  const addEdges = useCallback((newEdges: Edge[]) => {
+    if (!activeWorkflowId) return;
+    
+    const activeWorkflow = workflows.find(w => w.id === activeWorkflowId);
+    if (!activeWorkflow) return;
+    
+    const updatedEdges = [...activeWorkflow.edges, ...newEdges];
+    updateWorkflow(activeWorkflowId, { edges: updatedEdges });
+  }, [activeWorkflowId, workflows, updateWorkflow]);
+
+  // Execute workflow (placeholder implementation)
+  const executeWorkflow = useCallback(async (nodes: Node[], edges: Edge[]) => {
+    if (!activeWorkflowId) return;
+    
+    try {
+      setWorkflowExecuting(activeWorkflowId, true);
+      
+      // Import workflow execution service
+      const { workflowExecutionService } = await import('../services/workflowExecutionService');
+      
+      // Execute the workflow
+      await workflowExecutionService.executeWorkflow(
+        'generated-workflow',
+        nodes,
+        edges,
+        (update) => {
+          console.log('Workflow execution update:', update);
+        }
+      );
+      
+    } catch (error) {
+      console.error('Workflow execution failed:', error);
+      throw error;
+    } finally {
+      setWorkflowExecuting(activeWorkflowId, false);
+    }
+  }, [activeWorkflowId, setWorkflowExecuting]);
+
   const value: WorkflowContextType = {
     workflows,
     activeWorkflowId,
@@ -240,6 +297,9 @@ export function WorkflowProvider({ children }: WorkflowProviderProps) {
     getActiveWorkflow,
     updateActiveWorkflowNodes,
     updateActiveWorkflowEdges,
+    addNodes,
+    addEdges,
+    executeWorkflow,
     
     selectedNodeId,
     setSelectedNode: handleSetSelectedNode,

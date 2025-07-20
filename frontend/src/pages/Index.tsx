@@ -17,7 +17,7 @@ import {
   NodeTypes,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Activity, Zap, Database, Workflow, X, Github } from 'lucide-react';
+import { Activity, Zap, Database, Workflow, X, Github, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MetricsPanel from '../components/MetricsPanel';
 import NodePanel from '../components/NodePanel';
@@ -27,6 +27,7 @@ import MultiWorkflowProgress from '../components/MultiWorkflowProgress';
 import { workflowExecutionService, WorkflowExecutionUpdate } from '../services/workflowExecutionService';
 import { detectWorkflows } from '../lib/utils';
 import GroqLlamaNode from '../components/nodes/GroqLlamaNode';
+import NaturalLanguageWorkflowCreator from '../components/NaturalLanguageWorkflowCreator';
 
 
 
@@ -340,7 +341,7 @@ const WorkflowContent = () => {
   const [isNodePanelOpen, setIsNodePanelOpen] = useState(true);
   const [nodeIdCounter, setNodeIdCounter] = useState(2);
   const [isWorkflowLoaded, setIsWorkflowLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState('workflow');
+  const [activeTab, setActiveTab] = useState('ai-creator');
 
   const [isDeploymentModalOpen, setIsDeploymentModalOpen] = useState(false);
   const [isDeploymentMinimized, setIsDeploymentMinimized] = useState(false);
@@ -535,15 +536,21 @@ const WorkflowContent = () => {
   // Define tabs configuration
   const tabs = useMemo(() => [
     {
-      id: 'github-credentials',
-      label: 'GitHub',
-      icon: <Github className="w-3 h-3" />,
+      id: 'ai-creator',
+      label: 'AI Creator',
+      icon: <Bot className="w-3 h-3" />,
       persistent: true
     },
     {
       id: 'workflow',
       label: 'Workflow',
       icon: <Workflow className="w-3 h-3" />,
+      persistent: true
+    },
+    {
+      id: 'github-credentials',
+      label: 'GitHub',
+      icon: <Github className="w-3 h-3" />,
       persistent: true
     },
     {
@@ -1375,7 +1382,18 @@ const WorkflowContent = () => {
       {/* Main Content Area - Conditional Rendering */}
       <div className="h-full pt-16 sm:pt-20">
         <AnimatePresence mode="wait">
-          {activeTab === 'workflow' ? (
+          {activeTab === 'ai-creator' ? (
+            <motion.div
+              key="ai-creator"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="h-full w-full"
+            >
+              <NaturalLanguageWorkflowCreator />
+            </motion.div>
+          ) : activeTab === 'workflow' ? (
             <motion.div
               key="workflow"
               initial={{ opacity: 0, scale: 0.95 }}
