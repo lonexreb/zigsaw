@@ -38,19 +38,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       body: JSON.stringify({
         url: url,
-        pageOptions: {
-          onlyMainContent: extract_text,
-          includeHtml: false,
-          screenshot: false,
-          pdf: false,
-          metadata: true
-        },
-        extractorOptions: {
-          mode: "llm-extraction",
-          extractionPrompt: extract_text ? 
-            "Extract the main text content from this webpage. Focus on the most important information and key points." :
-            "Extract the main content and structure from this webpage."
-        }
+        includeHtml: false,
+        screenshot: false,
+        pdf: false,
+        metadata: true
       })
     });
 
@@ -81,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       url: url,
       title: data.metadata?.title || '',
       description: data.metadata?.description || '',
-      content: extract_text ? data.llm_extraction?.content || data.markdown || '' : '',
+      content: extract_text ? data.markdown || data.html || '' : '',
       links: extract_links ? data.links || [] : [],
       images: extract_images ? data.images || [] : [],
       metadata: data.metadata || {},
