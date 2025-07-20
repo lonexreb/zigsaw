@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Call Firecrawl API
-    const response = await fetch('https://api.firecrawl.dev/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,10 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       body: JSON.stringify({
         url: url,
-        includeHtml: false,
-        screenshot: false,
-        pdf: false,
-        metadata: true
+        formats: ['json']
       })
     });
 
