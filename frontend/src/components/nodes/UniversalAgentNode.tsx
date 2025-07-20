@@ -31,7 +31,8 @@ import {
   Minimize2,
   Key,
   X,
-  Send
+  Send,
+  TestTube
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -1975,6 +1976,86 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       >
                         <Globe className="h-3 w-3 mr-1" />
                         Test Web Scraping
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          console.log('=== FIREcrawl Test Scraping Debug ===');
+                          console.log('Firecrawl API Key:', firecrawlApiKey ? `${firecrawlApiKey.substring(0, 10)}...` : 'NOT SET');
+                          console.log('Firecrawl Validation:', firecrawlValidation);
+                          
+                          if (!firecrawlApiKey) {
+                            toast({
+                              title: "Error",
+                              description: "Firecrawl API key is required",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          try {
+                            console.log('Starting test scrape of https://httpbin.org/html...');
+                            const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
+                            console.log('Backend URL:', backendUrl);
+                            
+                            const response = await fetch(`${backendUrl}/api/v1/firecrawl`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                url: 'https://httpbin.org/html',
+                                extract_text: true,
+                                extract_links: true,
+                                extract_images: true,
+                                apiKey: firecrawlApiKey
+                              })
+                            });
+                            
+                            console.log('Response status:', response.status);
+                            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                            
+                            if (!response.ok) {
+                              const errorData = await response.json();
+                              console.error('Error response:', errorData);
+                              throw new Error(errorData.details || `Scraping failed: ${response.status}`);
+                            }
+                            
+                            const data = await response.json();
+                            console.log('Success! Scraped data:', data);
+                            
+                            // Add scraping result to chat
+                            const scrapingMessage: AgentMessage = {
+                              role: 'assistant',
+                              content: `✅ **Test Scraping Successful!**\n\n**URL:** https://httpbin.org/html\n**Title:** ${data.title || 'N/A'}\n**Description:** ${data.description || 'N/A'}\n\n**Content Preview:**\n${data.content ? data.content.substring(0, 500) + (data.content.length > 500 ? '...' : '') : 'No content'}\n\n**Links Found:** ${data.links?.length || 0}\n**Images Found:** ${data.images?.length || 0}\n\n**Full Response Data:**\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``,
+                              timestamp: new Date(),
+                            };
+                            
+                            const newMessages = [...chatMessages, scrapingMessage];
+                            setChatMessages(newMessages);
+                            handleConfigChange('messages', newMessages);
+                            
+                            toast({
+                              title: "Test Scraping Success!",
+                              description: `Successfully scraped https://httpbin.org/html`,
+                            });
+                            
+                          } catch (error) {
+                            console.error('Test scraping error:', error);
+                            toast({
+                              title: "Test Scraping Failed",
+                              description: error instanceof Error ? error.message : "Failed to scrape the test website",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        disabled={!firecrawlValidation?.valid}
+                        className="border-green-400/30 text-green-300 hover:text-green-200 hover:bg-green-500/10 rounded-lg"
+                      >
+                        <TestTube className="h-3 w-3 mr-1" />
+                        Debug Test Scrape
                       </Button>
                       
                       {chatMessages.length > 0 && (

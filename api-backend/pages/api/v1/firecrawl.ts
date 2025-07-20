@@ -18,7 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { url, extract_text = true, extract_links = false, extract_images = false, apiKey } = req.body;
 
+    console.log('=== FIREcrawl Backend Debug ===');
+    console.log('Request body:', req.body);
+    console.log('Extracted parameters:', { url, extract_text, extract_links, extract_images, apiKey: apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET' });
+
     if (!url || !apiKey) {
+      console.log('Missing parameters - URL:', !!url, 'API Key:', !!apiKey);
       return res.status(400).json({ error: 'Missing required parameters: url and apiKey' });
     }
 
@@ -30,6 +35,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Call Firecrawl API
+    console.log('Making Firecrawl API request to:', 'https://api.firecrawl.dev/v1/scrape');
+    console.log('Request payload:', { url: url });
+    
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -40,6 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         url: url
       })
     });
+    
+    console.log('Firecrawl API response status:', response.status);
+    console.log('Firecrawl API response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -62,6 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const data = await response.json();
+    console.log('Firecrawl API response data:', data);
     
     // Extract relevant data based on user preferences
     const result = {
@@ -75,6 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       timestamp: new Date().toISOString()
     };
 
+    console.log('Final result being sent to client:', result);
     res.status(200).json(result);
 
   } catch (error) {
