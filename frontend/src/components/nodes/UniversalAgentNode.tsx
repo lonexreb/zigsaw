@@ -1386,17 +1386,17 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
               transition={{ duration: 0.3 }}
             >
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                                  <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-purple-400/20 rounded-xl p-1">
-                    <TabsTrigger value="config" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
+                <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-purple-400/20 rounded-xl p-1">
+                  <TabsTrigger value="config" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
                       Settings
-                    </TabsTrigger>
-                    <TabsTrigger value="tools" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
-                      Tools ({config.tools.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="messages" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
+                  </TabsTrigger>
+                  <TabsTrigger value="tools" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
+                    Tools ({config.tools.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="messages" className="data-[state=active]:bg-purple-600/30 data-[state=active]:text-purple-200 rounded-lg transition-all">
                       Chat History
-                    </TabsTrigger>
-                  </TabsList>
+                  </TabsTrigger>
+                </TabsList>
                 
                 {/* Configuration Tab */}
                 <TabsContent value="config" className="space-y-6 mt-6">
@@ -1698,10 +1698,10 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                   {/* System Prompt */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
+                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
                         System Prompt (Agent Instructions)
-                      </label>
+                    </label>
                       {selectedSystemPromptPreset && (
                         <Badge variant="secondary" className="bg-green-600/20 text-green-300 border-green-500/30">
                           <Check className="h-3 w-3 mr-1" />
@@ -1941,10 +1941,10 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
 
                 {/* Current Tools */}
                 <div className="space-y-3">
-                                      <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
+                  <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
                       Selected Tools
-                    </label>
+                  </label>
                   
                   {config.tools.length === 0 ? (
                     <motion.div 

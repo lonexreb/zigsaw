@@ -23,7 +23,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     let response;
-    let data;
 
     switch (provider) {
       case 'anthropic':
@@ -89,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    data = await response.json();
+    const data = await response.json();
     
     // Extract response content based on provider
     let assistantContent = '';
