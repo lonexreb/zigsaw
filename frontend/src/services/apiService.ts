@@ -26,7 +26,13 @@ class ApiService {
    * Generic HTTP request method
    */
   private async request(endpoint: string, options: RequestInit = {}, idToken?: string): Promise<Response> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Ensure we don't have double slashes
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${API_BASE_URL}${cleanEndpoint}`;
+    
+    console.log('🌐 Making request to:', url);
+    console.log('🔧 API_BASE_URL:', API_BASE_URL);
+    console.log('🔧 Environment variable:', import.meta.env.VITE_BACKEND_URL);
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
