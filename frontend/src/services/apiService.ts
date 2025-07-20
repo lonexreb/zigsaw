@@ -2,7 +2,7 @@
  * Service for managing API keys with the backend
  */
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
 
 export interface ApiKeyData {
   id: string;
@@ -28,9 +28,9 @@ class ApiService {
   private async request(endpoint: string, options: RequestInit = {}, idToken?: string): Promise<Response> {
     const url = `${API_BASE_URL}${endpoint}`;
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (idToken) {
@@ -49,8 +49,8 @@ class ApiService {
       // Show detailed validation errors
       if (Array.isArray(errorData.detail)) {
         console.error('🔍 Detailed validation errors:');
-        errorData.detail.forEach((err: any, index: number) => {
-          console.error(`  ${index + 1}. Field: "${err.loc?.join('.')}", Error: "${err.msg}", Type: "${err.type}", Input: ${JSON.stringify(err.input)}`);
+        errorData.detail.forEach((err: Record<string, unknown>, index: number) => {
+          console.error(`  ${index + 1}. Field: "${(err.loc as string[])?.join('.')}", Error: "${err.msg}", Type: "${err.type}", Input: ${JSON.stringify(err.input)}`);
         });
       }
       
@@ -61,8 +61,8 @@ class ApiService {
         if (typeof errorData.detail === 'string') {
           errorMessage = errorData.detail;
         } else if (Array.isArray(errorData.detail)) {
-          errorMessage = errorData.detail.map(err => 
-            typeof err === 'string' ? err : err.msg || JSON.stringify(err)
+          errorMessage = errorData.detail.map((err: unknown) => 
+            typeof err === 'string' ? err : (err as Record<string, unknown>).msg || JSON.stringify(err)
           ).join(', ');
         } else {
           errorMessage = JSON.stringify(errorData.detail);
