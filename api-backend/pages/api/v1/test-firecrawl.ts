@@ -44,7 +44,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
           body: JSON.stringify({
             url: url,
-            formats: ['json']
+            extract: {
+              text: true,
+              links: false,
+              images: false,
+              metadata: true
+            }
           })
         });
 

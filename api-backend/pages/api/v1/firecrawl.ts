@@ -38,7 +38,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       body: JSON.stringify({
         url: url,
-        formats: ['json']
+        extract: {
+          text: true,
+          links: extract_links,
+          images: extract_images,
+          metadata: true
+        }
       })
     });
 
@@ -69,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       url: url,
       title: data.metadata?.title || '',
       description: data.metadata?.description || '',
-      content: extract_text ? data.markdown || data.html || '' : '',
+      content: extract_text ? data.text || data.markdown || data.html || '' : '',
       links: extract_links ? data.links || [] : [],
       images: extract_images ? data.images || [] : [],
       metadata: data.metadata || {},
