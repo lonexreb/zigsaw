@@ -52,8 +52,7 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
           'Authorization': `Bearer ${firecrawlApiKey}`
         },
         body: JSON.stringify({
-          url: url,
-          formats: ['json']
+          url: url
         })
       });
 
@@ -69,9 +68,9 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
       
       return {
         url: url,
-        title: data.metadata?.title || '',
-        description: data.metadata?.description || '',
-        content: extract_text ? data.markdown || data.html || '' : '',
+        title: data.title || '',
+        description: data.description || '',
+        content: extract_text ? data.text || data.markdown || data.html || '' : '',
         links: extract_links ? data.links || [] : [],
         images: extract_images ? data.images || [] : [],
         metadata: data.metadata || {},

@@ -37,8 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        url: url,
-        formats: ['json']
+        url: url
       })
     });
 
@@ -67,9 +66,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Extract relevant data based on user preferences
     const result = {
       url: url,
-      title: data.metadata?.title || '',
-      description: data.metadata?.description || '',
-      content: extract_text ? data.markdown || data.html || '' : '',
+      title: data.title || '',
+      description: data.description || '',
+      content: extract_text ? data.text || data.markdown || data.html || '' : '',
       links: extract_links ? data.links || [] : [],
       images: extract_images ? data.images || [] : [],
       metadata: data.metadata || {},

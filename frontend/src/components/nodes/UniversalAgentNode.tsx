@@ -954,34 +954,31 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     setIsValidatingFirecrawl(true);
 
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
-      const response = await fetch(`${backendUrl}/api/v1/firecrawl`, {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
+      const response = await fetch(`${backendUrl}/api/v1/validate-firecrawl`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: 'https://example.com',
-          extract_text: true,
-          extract_links: false,
-          extract_images: false,
           apiKey: firecrawlApiKey
         })
       });
 
-      if (response.ok) {
-        setFirecrawlValidation({ valid: true, message: 'Valid Firecrawl API key' });
+      const data = await response.json();
+
+      if (data.valid) {
+        setFirecrawlValidation({ valid: true, message: data.message || 'Valid Firecrawl API key' });
         toast({
           title: "Firecrawl API Key Valid",
           description: "Your Firecrawl API key is working correctly.",
         });
         return true;
       } else {
-        const errorData = await response.json();
-        setFirecrawlValidation({ valid: false, message: errorData.details || 'Invalid API key' });
+        setFirecrawlValidation({ valid: false, message: data.error || 'Invalid API key' });
         toast({
           title: "Firecrawl API Key Invalid",
-          description: errorData.details || "Please check your Firecrawl API key.",
+          description: data.error || "Please check your Firecrawl API key.",
           variant: "destructive",
         });
         return false;
@@ -1024,7 +1021,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     }
 
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
       const response = await fetch(`${backendUrl}/api/v1/firecrawl`, {
         method: 'POST',
         headers: {
@@ -1141,7 +1138,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
         ...messagesWithUser.map(msg => ({ role: msg.role, content: msg.content }))
       ];
 
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
       const endpoint = enabledTools.length > 0 ? '/api/v1/chat-with-tools' : '/api/v1/chat';
       
       console.log('Sending chat request to:', `${backendUrl}${endpoint}`);
@@ -1929,7 +1926,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app';
+                          const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
                           console.log('Testing connection to:', backendUrl);
                           fetch(`${backendUrl}/api/hello`)
                             .then(res => res.json())
@@ -1953,6 +1950,17 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       >
                         <Activity className="h-3 w-3 mr-1" />
                         Test Connection
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={validateFirecrawlApiKey}
+                        disabled={!firecrawlApiKey.trim() || isValidatingFirecrawl}
+                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-lg"
+                      >
+                        <Activity className="h-3 w-3 mr-1" />
+                        {isValidatingFirecrawl ? 'Validating...' : 'Test Firecrawl API'}
                       </Button>
                       
                       <Button
