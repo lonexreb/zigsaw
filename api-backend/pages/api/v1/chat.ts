@@ -82,9 +82,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`API request failed: ${response.status} ${response.statusText}`, errorText);
+      
+      // Try to parse error details for better user feedback
+      let errorDetails = errorText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error?.message) {
+          errorDetails = errorJson.error.message;
+        }
+      } catch (e) {
+        // If parsing fails, use the raw error text
+      }
+      
       return res.status(response.status).json({ 
         error: `API request failed: ${response.status} ${response.statusText}`,
-        details: errorText
+        details: errorDetails
       });
     }
 

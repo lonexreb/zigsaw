@@ -127,9 +127,9 @@ const aiProviders: AIProvider[] = [
     name: 'Anthropic Claude',
     icon: <Brain className="h-4 w-4" />,
     models: [
-      { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', contextLength: 200000, costMultiplier: 1.0, capabilities: ['text', 'vision', 'tools'] },
-      { id: 'claude-3-opus', name: 'Claude 3 Opus', contextLength: 200000, costMultiplier: 1.5, capabilities: ['text', 'vision', 'tools'] },
-      { id: 'claude-3-haiku', name: 'Claude 3 Haiku', contextLength: 200000, costMultiplier: 0.25, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', contextLength: 200000, costMultiplier: 1.0, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', contextLength: 200000, costMultiplier: 1.5, capabilities: ['text', 'vision', 'tools'] },
+      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', contextLength: 200000, costMultiplier: 0.25, capabilities: ['text', 'vision', 'tools'] },
     ],
     supportsTools: true,
     supportsVision: true,
