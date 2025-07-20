@@ -39,10 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({
         url: url,
         extract: {
-          text: true,
+          text: extract_text,
           links: extract_links,
-          images: extract_images,
-          metadata: true
+          images: extract_images
         }
       })
     });
@@ -72,8 +71,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Extract relevant data based on user preferences
     const result = {
       url: url,
-      title: data.metadata?.title || '',
-      description: data.metadata?.description || '',
+      title: data.title || '',
+      description: data.description || '',
       content: extract_text ? data.text || data.markdown || data.html || '' : '',
       links: extract_links ? data.links || [] : [],
       images: extract_images ? data.images || [] : [],

@@ -47,8 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             extract: {
               text: true,
               links: false,
-              images: false,
-              metadata: true
+              images: false
             }
           })
         });

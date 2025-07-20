@@ -54,10 +54,9 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
         body: JSON.stringify({
           url: url,
           extract: {
-            text: true,
+            text: extract_text,
             links: extract_links,
-            images: extract_images,
-            metadata: true
+            images: extract_images
           }
         })
       });
@@ -74,8 +73,8 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
       
       return {
         url: url,
-        title: data.metadata?.title || '',
-        description: data.metadata?.description || '',
+        title: data.title || '',
+        description: data.description || '',
         content: extract_text ? data.text || data.markdown || data.html || '' : '',
         links: extract_links ? data.links || [] : [],
         images: extract_images ? data.images || [] : [],
