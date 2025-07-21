@@ -1569,7 +1569,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
         <AnimatePresence>
           {isExpanded && (
             <motion.div 
-              className="relative p-4"
+              className="relative p-4 max-h-[500px] overflow-y-auto"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -1589,10 +1589,10 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 </TabsList>
                 
                 {/* Configuration Tab */}
-                <TabsContent value="config" className="space-y-6 mt-6">
+                <TabsContent value="config" className="space-y-4 mt-4">
                   {/* AI Service and Model Selection */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                         <Brain className="h-4 w-4" />
                         AI Service
@@ -1614,7 +1614,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       </Select>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                         <Cpu className="h-4 w-4" />
                         AI Model
@@ -1640,7 +1640,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                   </div>
 
                   {/* API Key Management */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                       <Key className="h-4 w-4" />
                       API Key for {currentProvider.name}
@@ -1714,7 +1714,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                   </div>
 
                   {/* Firecrawl API Key Management */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                       <Globe className="h-4 w-4" />
                       Firecrawl API Key (for Web Scraping)
@@ -1785,7 +1785,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                   </div>
 
                   {/* Chat Interface */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                       <MessageSquare className="h-4 w-4" />
                       Test Conversation
@@ -1794,7 +1794,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                     {/* Chat Messages */}
                     <div 
                       ref={chatContainerRef}
-                      className="bg-slate-800/30 border border-purple-400/20 rounded-xl p-4 h-64 overflow-y-auto space-y-3"
+                      className="bg-slate-800/30 border border-purple-400/20 rounded-xl p-4 h-48 overflow-y-auto space-y-3"
                     >
                       {chatMessages.length === 0 ? (
                         <div className="text-center text-purple-300/60 py-8">
@@ -2382,7 +2382,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 </TabsContent>
 
               {/* Tools Tab */}
-              <TabsContent value="tools" className="space-y-6 mt-6">
+                              <TabsContent value="tools" className="space-y-4 mt-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-2 rounded-lg">
@@ -2407,7 +2407,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 </div>
 
                 {/* Tool Presets */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                       <Star className="h-4 w-4" />
@@ -2451,7 +2451,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                 </div>
 
                 {/* Current Tools */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
                     <Settings className="h-4 w-4" />
                       Selected Tools
@@ -2570,7 +2570,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
               </TabsContent>
 
               {/* Messages Tab */}
-              <TabsContent value="messages" className="space-y-6 mt-6">
+                              <TabsContent value="messages" className="space-y-4 mt-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-2 rounded-lg">
                     <MessageSquare className="h-5 w-5 text-purple-300" />
@@ -2581,7 +2581,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                   </div>
                 </div>
                 
-                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                <div className="space-y-2 max-h-[350px] overflow-y-auto">
                   {config.messages.map((message: AgentMessage, index: number) => (
                     <motion.div
                       key={index}
@@ -2652,7 +2652,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
 
         {/* Compact View */}
         {!isExpanded && (
-          <div className="relative p-4 space-y-3">
+          <div className="relative p-4 space-y-2">
             {/* Provider Info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
