@@ -1,25 +1,86 @@
-import React from 'react'
-import { Zap, Layers, Clock, CheckCircle, Cpu, Repeat, Share2, Bot, Play } from 'lucide-react'
+import React, { useRef, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Zap, Layers, Clock, CheckCircle, Cpu, Bot, User, ArrowRight, GitMerge, Database, Shield } from 'lucide-react'
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
+import * as THREE from 'three'
+
+function AnimatedGlobe() {
+  const mountRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!mountRef.current) return
+
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(75, mountRef.current.clientWidth / mountRef.current.clientHeight, 0.1, 1000)
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight)
+    mountRef.current.appendChild(renderer.domElement)
+
+    const geometry = new THREE.SphereGeometry(5, 32, 32)
+    const texture = new THREE.TextureLoader().load('https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/earthmap1k.jpg')
+    const material = new THREE.MeshBasicMaterial({ map: texture, color: 0xaaaaaa })
+    const sphere = new THREE.Mesh(geometry, material)
+    scene.add(sphere)
+
+    camera.position.z = 10
+
+    const animate = function () {
+      requestAnimationFrame(animate)
+      sphere.rotation.y += 0.001
+      renderer.render(scene, camera)
+    }
+
+    animate()
+
+    const handleResize = () => {
+      if (mountRef.current) {
+        camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      mountRef.current?.removeChild(renderer.domElement)
+    }
+  }, [])
+
+  return <div ref={mountRef} className="absolute top-0 left-0 w-full h-full z-0 opacity-30" />
+}
 
 function Navbar() {
   return (
-    <nav className="w-full flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur border-b border-gray-200 sticky top-0 z-50">
+    <motion.nav 
+      className="w-full flex items-center justify-between px-8 py-4 bg-black/50 backdrop-blur border-b border-gray-800 sticky top-0 z-50"
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex items-center gap-2">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
-        <span className="font-mono font-bold text-2xl text-gray-800">zigsaw</span>
+        <span className="font-mono font-bold text-2xl text-white">zigsaw</span>
       </div>
-      <div className="hidden md:flex gap-8 text-gray-700 font-mono text-base">
-        <a href="#features" className="hover:text-blue-600 transition">Features</a>
-        <a href="#pricing" className="hover:text-blue-600 transition">Pricing</a>
-        <a href="#community" className="hover:text-blue-600 transition">Community</a>
-        <a href="#docs" className="hover:text-blue-600 transition">Docs</a>
+      <div className="hidden md:flex gap-8 text-gray-300 font-mono text-base">
+        <a href="#features" className="hover:text-blue-400 transition">Features</a>
+        <a href="#pricing" className="hover:text-blue-400 transition">Pricing</a>
+        <a href="#community" className="hover:text-blue-400 transition">Community</a>
+        <a href="#docs" className="hover:text-blue-400 transition">Docs</a>
       </div>
-      <a href="#get-started" className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition">Get Started</a>
-    </nav>
+      <motion.a 
+        href="#get-started" 
+        className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        Get Started
+      </motion.a>
+    </motion.nav>
   )
 }
 
@@ -67,67 +128,100 @@ function Hero() {
   }
 
   return (
-    <section className="relative w-full flex flex-col items-center justify-center py-24 px-4 bg-white overflow-hidden">
-      {/* Blurred Node Icons Background + Animated Connections */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-        <div className="relative w-full h-full flex items-center justify-center">
-          {/* Loop Node */}
-          <div className="absolute left-1/4 top-1/2 -translate-y-1/2 w-32 h-32 bg-blue-200 rounded-2xl flex items-center justify-center blur opacity-60">
-            <Repeat className="w-16 h-16 text-blue-400 opacity-70" />
-          </div>
-          {/* Router Node */}
-          <div className="absolute right-1/4 top-1/3 w-28 h-28 bg-green-200 rounded-full flex items-center justify-center blur opacity-50">
-            <Share2 className="w-12 h-12 text-green-500 opacity-70" />
-          </div>
-          {/* Agent Node */}
-          <div className="absolute left-1/3 bottom-1/4 w-24 h-24 bg-purple-200 rounded-xl flex items-center justify-center blur opacity-50">
-            <Bot className="w-10 h-10 text-purple-500 opacity-70" />
-          </div>
-          {/* Trigger Node */}
-          <div className="absolute right-1/3 bottom-1/3 w-20 h-20 bg-yellow-200 rounded-full flex items-center justify-center blur opacity-40">
-            <Play className="w-8 h-8 text-yellow-500 opacity-70" />
-          </div>
+    <section className="relative w-full flex flex-col items-center justify-center py-24 px-4 overflow-hidden min-h-[90vh]">
+      <AnimatedGlobe />
+      <div className="absolute inset-0 bg-black/70 z-10" />
+      
+      {/* Hero Content */}
+      <div className="relative z-20 flex flex-col items-center text-center w-full max-w-4xl">
+        <motion.h1
+          className="text-5xl md:text-7xl font-bold mb-6 text-white"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
+        >
+          The Developer Platform for <span className="text-blue-400">Reliable AI Agents</span>
+        </motion.h1>
+        <motion.p
+          className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9 }}
+        >
+          Trace, debug, and deploy reliable AI agents. Zigsaw integrates with any agent framework and over 400+ LLMs.
+        </motion.p>
+        
+        {/* Login Form */}
+        <motion.div
+          className="w-full max-w-md bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+        >
+          <form onSubmit={handleLogin} className="w-full flex flex-col items-center gap-4">
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-6 h-6 text-blue-400" />
+              <span className="font-bold text-xl text-white">Get Started</span>
+            </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              autoComplete="email"
+              required
+              disabled={isLoading}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              autoComplete="current-password"
+              required
+              disabled={isLoading}
+            />
+            {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+            <div className="flex gap-4 w-full justify-center">
+              <motion.button 
+                type="submit" 
+                disabled={isLoading} 
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </motion.button>
+              <motion.button 
+                type="button" 
+                onClick={handleSignUp} 
+                disabled={isLoading} 
+                className="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition w-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isLoading ? 'Signing Up...' : 'Sign Up'}
+              </motion.button>
+            </div>
+          </form>
+        </motion.div>
+
+        <div className="flex gap-8 mt-12 text-gray-300">
+          <motion.div whileHover={{ scale: 1.1, y: -5 }} className="flex flex-col items-center">
+            <GitMerge className="w-8 h-8 text-green-400 mb-1" />
+            <span className="text-xs">Integrations</span>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.1, y: -5 }} className="flex flex-col items-center">
+            <Database className="w-8 h-8 text-purple-400 mb-1" />
+            <span className="text-xs">Fine-tuning</span>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.1, y: -5 }} className="flex flex-col items-center">
+            <Shield className="w-8 h-8 text-yellow-400 mb-1" />
+            <span className="text-xs">Security</span>
+          </motion.div>
         </div>
-      </div>
-      {/* Hero Text and Login Form */}
-      <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 relative z-10">
-        Build AI Agents <span className="text-blue-600">Visually</span>
-      </h1>
-      <div className="relative z-10 w-full flex flex-col items-center">
-        <form onSubmit={handleLogin} className="w-full max-w-xs bg-white/80 border border-gray-200 rounded-2xl shadow-lg p-4 flex flex-col items-center gap-4 mb-8 backdrop-blur">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-            autoComplete="email"
-            required
-            disabled={isLoading}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-            autoComplete="current-password"
-            required
-            disabled={isLoading}
-          />
-          {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
-          <div className="flex gap-4 w-full justify-center">
-            <button type="submit" disabled={isLoading} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-1/2">Sign In</button>
-            <button type="button" onClick={handleSignUp} disabled={isLoading} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition w-1/2">Sign Up</button>
-          </div>
-        </form>
-      </div>
-      <p className="text-xl md:text-2xl text-gray-600 text-center mb-8 max-w-2xl relative z-10">
-        Open source agentic systems development platform
-      </p>
-      <div className="flex gap-4 relative z-10">
-        <a href="#get-started" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition">Get Started</a>
-        <a href="#github" className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold shadow hover:bg-gray-300 transition">GitHub</a>
       </div>
     </section>
   )
@@ -135,10 +229,9 @@ function Hero() {
 
 function TrustedBy() {
   return (
-    <section className="w-full py-8 bg-gray-50 flex flex-col items-center">
+    <section className="w-full py-12 bg-black flex flex-col items-center">
       <div className="uppercase text-xs text-gray-500 tracking-widest mb-4">Trusted by teams at</div>
       <div className="flex flex-wrap gap-8 justify-center items-center">
-        {/* Placeholder logos */}
         <span className="font-bold text-gray-400 text-lg">AWS</span>
         <span className="font-bold text-gray-400 text-lg">Accenture</span>
         <span className="font-bold text-gray-400 text-lg">Deloitte</span>
@@ -153,201 +246,69 @@ function TrustedBy() {
 function Features() {
   const features = [
     {
-      icon: <Zap className="w-8 h-8 text-blue-600" />,
+      icon: <Zap className="w-8 h-8 text-blue-400" />,
       title: 'Agentflow',
       desc: 'Build multi-agent systems with workflow orchestration distributed across multiple coordinated agents.'
     },
     {
-      icon: <Layers className="w-8 h-8 text-green-600" />,
+      icon: <Layers className="w-8 h-8 text-green-400" />,
       title: 'Chat Assistants',
       desc: 'Build single-agent systems and chatbots with support for tool calling and knowledge retrieval (RAG) from various data sources.'
     },
     {
-      icon: <CheckCircle className="w-8 h-8 text-yellow-500" />,
+      icon: <CheckCircle className="w-8 h-8 text-yellow-400" />,
       title: 'Human in the Loop',
       desc: 'Allow humans to review tasks performed by agents within the feedback loop.'
     },
     {
-      icon: <Cpu className="w-8 h-8 text-purple-600" />,
+      icon: <Cpu className="w-8 h-8 text-purple-400" />,
       title: 'Observability',
       desc: 'Full execution traces, support Prometheus, OpenTelemetry and other observability tools.'
     },
     {
-      icon: <Clock className="w-8 h-8 text-pink-500" />,
+      icon: <Clock className="w-8 h-8 text-pink-400" />,
       title: 'API, SDK, Embed',
       desc: 'Extend and integrate to your applications using APIs, SDK and Embedded Chat.'
     },
     {
-      icon: <Layers className="w-8 h-8 text-blue-400" />,
+      icon: <Layers className="w-8 h-8 text-blue-300" />,
       title: 'Enterprise Ready',
       desc: 'Deploy and scale your AI applications with enterprise-grade infrastructure, support for both cloud and on-premises environments.'
     },
   ]
   return (
-    <section id="features" className="w-full py-20 bg-white flex flex-col items-center">
+    <section id="features" className="w-full py-20 bg-gray-900 text-white flex flex-col items-center">
       <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">Features</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
         {features.map((f, i) => (
-          <div key={i} className="flex flex-col items-center bg-gray-50 rounded-2xl p-8 shadow hover:shadow-lg transition">
-            {f.icon}
+          <motion.div 
+            key={i} 
+            className="flex flex-col items-center bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-blue-500/20 transition"
+            whileHover={{ y: -10, boxShadow: '0px 15px 30px rgba(0, 0, 0, 0.2)' }}
+          >
+            <div className="p-3 bg-gray-700 rounded-full mb-4">{f.icon}</div>
             <h3 className="text-xl font-semibold mt-4 mb-2 text-center">{f.title}</h3>
-            <p className="text-gray-600 text-center">{f.desc}</p>
-          </div>
+            <p className="text-gray-400 text-center">{f.desc}</p>
+          </motion.div>
         ))}
       </div>
     </section>
   )
 }
 
-function Testimonials() {
-  return (
-    <section className="w-full py-20 bg-gray-50 flex flex-col items-center">
-      <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">Customer Success Stories</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
-        <div className="bg-white rounded-2xl p-8 shadow flex flex-col items-center">
-          <span className="font-bold text-blue-600 mb-2">InsightSoftware</span>
-          <p className="text-gray-600 text-center mb-2">“Flowise allows us to supercharge our existing embedded analytics platform with built-in AI features that our clients absolutely love.”</p>
-          <span className="text-xs text-gray-400">Terrence Sheflin, Director of Engineering</span>
-        </div>
-        <div className="bg-white rounded-2xl p-8 shadow flex flex-col items-center">
-          <span className="font-bold text-green-600 mb-2">UneeQ Digital Humans</span>
-          <p className="text-gray-600 text-center mb-2">“Flowise has been able to dramatically decrease the resources required to deploy our digital human experiences.”</p>
-          <span className="text-xs text-gray-400">Tyler Merritt, CTO, UneeQ</span>
-        </div>
-        <div className="bg-white rounded-2xl p-8 shadow flex flex-col items-center">
-          <span className="font-bold text-yellow-600 mb-2">Qmic</span>
-          <p className="text-gray-600 text-center mb-2">“Integrating Flowise with many other components and utilizing the function-calling capability of LLMs significantly enhanced the quality and efficiency of our new copilot feature.”</p>
-          <span className="text-xs text-gray-400">Dr. Fethi Filali, Director of Technology & Applied Research</span>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Pricing() {
-  const navigate = useNavigate();
-
-  const handleGetStarted = (plan: string) => {
-    if (plan === 'free') {
-      // For free plan, redirect to signup
-      const signUpSection = document.getElementById('signup');
-      if (signUpSection) {
-        signUpSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      // For paid plans, redirect to subscription page with plan parameter
-      navigate(`/subscription?plan=${plan}`);
-    }
-  };
-
-  return (
-    <section id="pricing" className="w-full py-20 bg-white flex flex-col items-center">
-      <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">Pricing</h2>
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl justify-center">
-        {/* Free */}
-        <div className="flex-1 max-w-sm">
-          <div className="rounded-2xl border border-gray-200 shadow-md p-8 flex flex-col items-center bg-gray-50">
-            <h3 className="text-xl font-semibold mb-2">Free</h3>
-            <div className="text-4xl font-bold mb-2">$0</div>
-            <div className="text-gray-500 mb-4">per month</div>
-            <ul className="text-gray-700 text-sm mb-6 space-y-2">
-              <li>2 Flows & Assistants</li>
-              <li>100 Predictions / month</li>
-              <li>5MB Storage</li>
-              <li>Community Support</li>
-            </ul>
-            <button 
-              onClick={() => handleGetStarted('free')} 
-              className="w-full py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-        {/* Starter */}
-        <div className="flex-1 max-w-sm">
-          <div className="rounded-2xl border-2 border-blue-500 shadow-lg p-8 flex flex-col items-center bg-white relative">
-            <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">Most Popular</span>
-            <h3 className="text-xl font-semibold mb-2">Starter</h3>
-            <div className="text-4xl font-bold mb-2">$35</div>
-            <div className="text-gray-500 mb-4">per month</div>
-            <ul className="text-gray-700 text-sm mb-6 space-y-2">
-              <li>Unlimited Flows & Assistants</li>
-              <li>10,000 Predictions / month</li>
-              <li>1GB Storage</li>
-              <li>Community Support</li>
-            </ul>
-            <button 
-              onClick={() => handleGetStarted('starter')} 
-              className="w-full py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-        {/* Pro */}
-        <div className="flex-1 max-w-sm">
-          <div className="rounded-2xl border border-gray-200 shadow-md p-8 flex flex-col items-center bg-gray-50">
-            <h3 className="text-xl font-semibold mb-2">Pro</h3>
-            <div className="text-4xl font-bold mb-2">$65</div>
-            <div className="text-gray-500 mb-4">per month</div>
-            <ul className="text-gray-700 text-sm mb-6 space-y-2">
-              <li>50,000 Predictions / month</li>
-              <li>10GB Storage</li>
-              <li>Unlimited Workspaces</li>
-              <li>Priority Support</li>
-            </ul>
-            <button 
-              onClick={() => handleGetStarted('pro')} 
-              className="w-full py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-        {/* Enterprise */}
-        <div className="flex-1 max-w-sm">
-          <div className="rounded-2xl border border-gray-200 shadow-md p-8 flex flex-col items-center bg-gray-50">
-            <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
-            <div className="text-4xl font-bold mb-2">Contact Us</div>
-            <div className="text-gray-500 mb-4">Custom pricing</div>
-            <ul className="text-gray-700 text-sm mb-6 space-y-2">
-              <li>On-Premise Deployment</li>
-              <li>99.99% Uptime SLA</li>
-              <li>Personalized Support</li>
-              <li>SSO, SAML, RBAC</li>
-            </ul>
-            <button className="w-full py-2 rounded-lg bg-gray-800 text-white font-semibold hover:bg-gray-900 transition">Contact Sales</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Community() {
-  return (
-    <section id="community" className="w-full py-20 bg-blue-50 flex flex-col items-center">
-      <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center">Community</h2>
-      <p className="text-lg text-blue-900 mb-8 text-center max-w-2xl">Open source community is the heart of Zigsaw. Join our Discord and see why developers love and build using Zigsaw.</p>
-      <a href="#discord" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition">Join Discord</a>
-    </section>
-  )
-}
-
 function Footer() {
   return (
-    <footer className="w-full bg-gray-100 border-t border-gray-200 py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4 mt-8">
+    <footer className="w-full bg-black border-t border-gray-800 py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-2">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
-        <span className="font-mono font-bold text-lg text-gray-800">zigsaw</span>
+        <span className="font-mono font-bold text-lg text-white">zigsaw</span>
       </div>
-      <nav className="flex gap-6 text-gray-600 text-sm">
-        <a href="#about" className="hover:text-gray-900 transition">About</a>
-        <a href="#docs" className="hover:text-gray-900 transition">Docs</a>
-        <a href="#contact" className="hover:text-gray-900 transition">Contact</a>
+      <nav className="flex gap-6 text-gray-400 text-sm">
+        <a href="#about" className="hover:text-white transition">About</a>
+        <a href="#docs" className="hover:text-white transition">Docs</a>
+        <a href="#contact" className="hover:text-white transition">Contact</a>
       </nav>
       <div className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Zigsaw. All rights reserved.</div>
     </footer>
@@ -356,15 +317,12 @@ function Footer() {
 
 export default function Login() {
   return (
-    <>
+    <div className="bg-black">
       <Navbar />
       <Hero />
       <TrustedBy />
       <Features />
-      <Testimonials />
-      <Pricing />
-      <Community />
       <Footer />
-    </>
+    </div>
   )
 }
