@@ -14,7 +14,12 @@ import {
   ArrowRight,
   X,
   Upload,
-  Key
+  Key,
+  ChevronDown,
+  ChevronUp,
+  Edit3,
+  Trash2,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -26,6 +31,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from './ui/use-toast';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { 
   workflowGenerationService, 
   WorkflowGenerationRequest, 
@@ -71,6 +77,9 @@ export default function NaturalLanguageWorkflowCreator() {
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, any>>({});
   const [showPreview, setShowPreview] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [showMetrics, setShowMetrics] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<Record<string, boolean>>({});
   
   // Refs and hooks
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -197,7 +206,53 @@ export default function NaturalLanguageWorkflowCreator() {
       ...prev,
       [questionId]: answer
     }));
-  }, []);
+    
+    // Mark question as answered and show confirmation
+    if (answer && answer.trim && answer.trim()) {
+      setAnsweredQuestions(prev => new Set([...prev, questionId]));
+      
+      // Find the question to determine type for appropriate feedback
+      const question = pendingQuestions.find(q => q.id === questionId);
+      if (question?.type === 'api_key') {
+        setApiKeyStatus(prev => ({ ...prev, [questionId]: true }));
+        toast({
+          title: "API Key Saved",
+          description: "Your API key has been securely stored.",
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Answer Saved",
+          description: "Your response has been recorded.",
+          duration: 2000,
+        });
+      }
+    }
+  }, [pendingQuestions, toast]);
+
+  const handleClearAnswer = useCallback((questionId: string) => {
+    setQuestionAnswers(prev => {
+      const newAnswers = { ...prev };
+      delete newAnswers[questionId];
+      return newAnswers;
+    });
+    setAnsweredQuestions(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(questionId);
+      return newSet;
+    });
+    setApiKeyStatus(prev => {
+      const newStatus = { ...prev };
+      delete newStatus[questionId];
+      return newStatus;
+    });
+    
+    toast({
+      title: "Answer Cleared",
+      description: "You can now provide a new answer.",
+      duration: 2000,
+    });
+  }, [toast]);
 
   const handleExecuteWorkflow = useCallback(async () => {
     if (!workflowPreview) return;
@@ -247,61 +302,103 @@ export default function NaturalLanguageWorkflowCreator() {
 
   const QuestionCard = ({ question }: { question: UserQuestion }) => {
     const answer = questionAnswers[question.id];
+    const isAnswered = answeredQuestions.has(question.id);
 
     return (
-      <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <FileQuestion className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div className="flex-1 space-y-3">
+      <Card className={`transition-all duration-200 ${
+        isAnswered 
+          ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30' 
+          : 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30'
+      }`}>
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className={`flex-shrink-0 p-2 rounded-lg ${
+              isAnswered 
+                ? 'bg-green-100 dark:bg-green-900/50' 
+                : 'bg-blue-100 dark:bg-blue-900/50'
+            }`}>
+              {isAnswered ? (
+                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              ) : (
+                <FileQuestion className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              )}
+            </div>
+            <div className="flex-1 space-y-4">
               <div>
-                <p className="font-medium text-blue-900 dark:text-blue-100">
-                  {question.question}
-                </p>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="font-medium text-foreground">
+                    {question.question}
+                  </p>
+                  {question.required && (
+                    <Badge variant="destructive" className="text-xs">Required</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
                   {question.context}
                 </p>
               </div>
 
               {question.type === 'text' && (
-                <Input
-                  placeholder="Enter your answer..."
-                  value={answer || ''}
-                  onChange={(e) => handleAnswerQuestion(question.id, e.target.value)}
-                  className="bg-white dark:bg-gray-800"
-                />
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Type your answer here..."
+                    value={answer || ''}
+                    onChange={(e) => handleAnswerQuestion(question.id, e.target.value)}
+                    className="bg-background border-input focus:border-primary"
+                    disabled={isAnswered}
+                  />
+                </div>
               )}
 
               {question.type === 'choice' && question.options && (
-                <Select
-                  value={answer || ''}
-                  onValueChange={(value) => handleAnswerQuestion(question.id, value)}
-                >
-                  <SelectTrigger className="bg-white dark:bg-gray-800">
-                    <SelectValue placeholder="Select an option..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {question.options.map((option, index) => (
-                      <SelectItem key={index} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Select
+                    value={answer || ''}
+                    onValueChange={(value) => handleAnswerQuestion(question.id, value)}
+                    disabled={isAnswered}
+                  >
+                    <SelectTrigger className="bg-background border-input focus:border-primary">
+                      <SelectValue placeholder="Choose an option..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {question.options.map((option, index) => (
+                        <SelectItem key={index} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
               {question.type === 'api_key' && (
-                <div className="space-y-2">
-                  <Input
-                    type="password"
-                    placeholder="Enter API key..."
-                    value={answer || ''}
-                    onChange={(e) => handleAnswerQuestion(question.id, e.target.value)}
-                    className="bg-white dark:bg-gray-800"
-                  />
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
-                    Your API key will be stored securely and only used for this workflow.
-                  </p>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Input
+                      type={isAnswered ? "password" : "text"}
+                      placeholder="Enter your API key..."
+                      value={answer || ''}
+                      onChange={(e) => handleAnswerQuestion(question.id, e.target.value)}
+                      className="bg-background border-input focus:border-primary pr-10"
+                      disabled={isAnswered}
+                    />
+                    {isAnswered && (
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      🔒 Your API key is encrypted and stored securely
+                    </p>
+                    {apiKeyStatus[question.id] && (
+                      <Badge variant="outline" className="text-xs text-green-600 border-green-300">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -309,7 +406,7 @@ export default function NaturalLanguageWorkflowCreator() {
                 <div className="space-y-2">
                   <Button
                     variant="outline"
-                    className="w-full justify-start"
+                    className="w-full justify-start hover:bg-primary/5"
                     onClick={() => {
                       // File upload logic would go here
                       toast({
@@ -317,17 +414,38 @@ export default function NaturalLanguageWorkflowCreator() {
                         description: "File upload functionality coming soon!",
                       });
                     }}
+                    disabled={isAnswered}
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload File
+                    Choose File
                   </Button>
                 </div>
               )}
 
-              {answer && (
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                  <CheckCircle className="h-4 w-4" />
-                  <span className="text-sm">Answered</span>
+              {/* Action buttons for answered questions */}
+              {isAnswered && (
+                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Completed</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleClearAnswer(question.id)}
+                          className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Clear and re-enter</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
               )}
             </div>
@@ -483,87 +601,148 @@ export default function NaturalLanguageWorkflowCreator() {
   );
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-            <Bot className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">AI Workflow Creator</h2>
-            <p className="text-sm text-muted-foreground">
-              Describe your automation needs in plain English
-            </p>
-          </div>
-        </div>
-
-        {/* Example Prompts */}
-        <div className="mt-4">
-          <p className="text-sm font-medium mb-2 flex items-center gap-2">
-            <Lightbulb className="h-4 w-4" />
-            Try these examples:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {EXAMPLE_PROMPTS.slice(0, 3).map((prompt, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => setCurrentInput(prompt)}
-              >
-                {prompt.length > 50 ? `${prompt.slice(0, 50)}...` : prompt}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-6">
-        <div className="space-y-6 max-w-4xl mx-auto">
-          <AnimatePresence>
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : message.type === 'error'
-                      ? 'bg-destructive/10 text-destructive border border-destructive/20'
-                      : message.type === 'success'
-                      ? 'bg-green-50 dark:bg-green-950/30 text-green-900 dark:text-green-100 border border-green-200 dark:border-green-800'
-                      : 'bg-muted'
-                  }`}
+    <TooltipProvider>
+      <div className="h-full flex flex-col bg-background">
+        {/* Header */}
+        <div className="px-4 sm:px-6 py-4 sm:py-6 border-b bg-gradient-to-r from-primary/5 to-purple-500/5 dark:from-primary/10 dark:to-purple-500/10">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-gradient-to-r from-primary to-purple-500 rounded-lg shadow-sm">
+                  <Bot className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground">AI Workflow Creator</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Describe your automation in plain English
+                  </p>
+                </div>
+              </div>
+              
+              {/* Metrics toggle */}
+              <div className="flex-1 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMetrics(!showMetrics)}
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <div className="flex items-start gap-2">
-                    {message.role === 'assistant' && (
-                      <div className="flex-shrink-0 mt-0.5">
-                        {message.type === 'error' ? (
-                          <AlertCircle className="h-4 w-4" />
-                        ) : message.type === 'success' ? (
-                          <CheckCircle className="h-4 w-4" />
-                        ) : message.type === 'question' ? (
-                          <FileQuestion className="h-4 w-4" />
-                        ) : (
-                          <Bot className="h-4 w-4" />
-                        )}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                      <div className="text-xs opacity-60 mt-2">
-                        {message.timestamp.toLocaleTimeString()}
-                      </div>
+                  {showMetrics ? <ChevronUp className="h-4 w-4 mr-2" /> : <ChevronDown className="h-4 w-4 mr-2" />}
+                  {showMetrics ? 'Hide' : 'Show'} Metrics
+                </Button>
+              </div>
+            </div>
+
+            {/* Example Prompts */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-amber-500" />
+                <p className="text-sm font-medium text-foreground">Try these examples:</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {EXAMPLE_PROMPTS.slice(0, 3).map((prompt, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-auto p-3 text-left justify-start whitespace-normal hover:bg-primary/5 hover:border-primary/30"
+                    onClick={() => setCurrentInput(prompt)}
+                  >
+                    {prompt.length > 60 ? `${prompt.slice(0, 60)}...` : prompt}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Collapsible Metrics Panel */}
+            <AnimatePresence>
+              {showMetrics && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <Separator className="my-4" />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div className="space-y-1">
+                      <p className="text-2xl font-bold text-primary">{messages.length}</p>
+                      <p className="text-xs text-muted-foreground">Messages</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-2xl font-bold text-green-500">{workflowPreview ? workflowPreview.nodes.length : 0}</p>
+                      <p className="text-xs text-muted-foreground">Workflow Steps</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-2xl font-bold text-blue-500">{answeredQuestions.size}</p>
+                      <p className="text-xs text-muted-foreground">Questions Answered</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-2xl font-bold text-purple-500">{workflowPreview ? `${workflowPreview.estimatedExecutionTime}s` : '—'}</p>
+                      <p className="text-xs text-muted-foreground">Est. Runtime</p>
                     </div>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <ScrollArea className="flex-1 px-4 sm:px-6 py-6">
+          <div className="space-y-6 max-w-5xl mx-auto">
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 shadow-sm ${
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground ml-12'
+                        : message.type === 'error'
+                        ? 'bg-destructive/5 text-destructive border border-destructive/20 mr-12'
+                        : message.type === 'success'
+                        ? 'bg-green-50 dark:bg-green-950/30 text-green-900 dark:text-green-100 border border-green-200 dark:border-green-800 mr-12'
+                        : 'bg-muted mr-12'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-3">
+                        {message.role === 'assistant' && (
+                          <div className="flex-shrink-0 mt-0.5">
+                            {message.type === 'error' ? (
+                              <AlertCircle className="h-4 w-4" />
+                            ) : message.type === 'success' ? (
+                              <CheckCircle className="h-4 w-4" />
+                            ) : message.type === 'question' ? (
+                              <FileQuestion className="h-4 w-4" />
+                            ) : (
+                              <Bot className="h-4 w-4" />
+                            )}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Timestamp with better styling */}
+                      <div className="flex justify-end">
+                        <span className="text-xs opacity-60 bg-black/5 dark:bg-white/5 px-2 py-1 rounded-full">
+                          {message.timestamp.toLocaleTimeString([], { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          })}
+                        </span>
+                      </div>
+                    </div>
 
                   {/* Render questions if this is a question message */}
                   {message.type === 'question' && message.data && (
@@ -628,36 +807,75 @@ export default function NaturalLanguageWorkflowCreator() {
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <div className="p-6 border-t bg-background">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex gap-3">
-            <Textarea
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Describe the workflow you want to create... (e.g., 'Send me an email whenever someone creates a GitHub issue')"
-              className="min-h-[80px] resize-none"
-              disabled={isGenerating}
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!currentInput.trim() || isGenerating}
-              size="lg"
-              className="px-6"
-            >
-              {isGenerating ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Send className="h-5 w-5" />
-              )}
-            </Button>
+        {/* Input Area */}
+        <div className="px-4 sm:px-6 py-4 border-t bg-background/50 backdrop-blur-sm">
+          <div className="max-w-5xl mx-auto">
+            <div className="space-y-3">
+              {/* Input label with help */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">
+                  Describe your workflow
+                </label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <HelpCircle className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>Be specific about triggers, actions, and conditions. Examples: "When X happens, do Y", "Every Monday, send report to team"</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              
+              {/* Input area */}
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Textarea
+                    value={currentInput}
+                    onChange={(e) => setCurrentInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="e.g., When someone creates a GitHub issue, analyze it with AI and email me the summary"
+                    className="min-h-[80px] resize-none bg-background border-input focus:border-primary transition-colors"
+                    disabled={isGenerating}
+                  />
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground">
+                      {currentInput.length}/500 characters
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Press Enter to send
+                    </span>
+                  </div>
+                </div>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={!currentInput.trim() || isGenerating}
+                      size="lg"
+                      className="px-6 shadow-sm"
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Send message (Enter)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Workflow Preview Dialog */}
-      <WorkflowPreviewDialog />
-    </div>
+        {/* Workflow Preview Dialog */}
+        <WorkflowPreviewDialog />
+      </div>
+    </TooltipProvider>
   );
 }

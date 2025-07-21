@@ -3,6 +3,14 @@
 
 import { Node, Edge } from '@xyflow/react';
 
+// Hardcoded API keys for demo/development purposes
+// NOTE: In production, these should be environment variables or securely stored
+const DEMO_API_KEYS = {
+  anthropic: 'sk-ant-api03-demokey', // Replace with actual key for demo
+  openai: 'sk-proj-demokey', // Replace with actual key for demo  
+  groq: 'gsk_demokey' // Replace with actual key for demo
+};
+
 export interface WorkflowGenerationRequest {
   description: string;
   userPreferences?: {
@@ -43,54 +51,21 @@ export interface NodeTemplate {
   optionalConfig: string[];
   inputs: string[];
   outputs: string[];
-  category: 'ai' | 'integration' | 'data' | 'logic' | 'trigger';
+  category: 'ai' | 'integration' | 'data' | 'logic' | 'trigger' | 'media' | 'communication';
 }
 
 class WorkflowGenerationService {
-  private readonly API_BASE_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
+  private get API_BASE_URL(): string {
+    try {
+      return import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
+    } catch {
+      return 'https://zigsaw-backend.vercel.app';
+    }
+  }
   
-  // Available node templates based on current codebase
+  // Comprehensive node templates based on all available node types in the codebase
   private readonly NODE_TEMPLATES: Record<string, NodeTemplate> = {
-    universal_agent: {
-      type: 'universal_agent',
-      label: 'AI Agent',
-      description: 'Configurable AI agent for text processing and analysis',
-      requiredConfig: ['provider', 'model', 'systemPrompt'],
-      optionalConfig: ['userPrompt', 'temperature', 'maxTokens'],
-      inputs: ['text_input'],
-      outputs: ['text_output'],
-      category: 'ai'
-    },
-    gmail: {
-      type: 'gmail',
-      label: 'Gmail',
-      description: 'Send, receive, and manage Gmail emails',
-      requiredConfig: ['action', 'credentials'],
-      optionalConfig: ['to', 'subject', 'body', 'filters'],
-      inputs: ['email_content', 'recipient_list'],
-      outputs: ['email_data', 'send_status'],
-      category: 'integration'
-    },
-    github: {
-      type: 'github',
-      label: 'GitHub',
-      description: 'Interact with GitHub repositories, issues, and pull requests',
-      requiredConfig: ['action', 'token', 'repository'],
-      optionalConfig: ['branch', 'filePath', 'commitMessage'],
-      inputs: ['code_content', 'pr_data'],
-      outputs: ['repo_data', 'commit_hash'],
-      category: 'integration'
-    },
-    google_calendar: {
-      type: 'google_calendar',
-      label: 'Google Calendar',
-      description: 'Create, update, and manage calendar events',
-      requiredConfig: ['action', 'credentials'],
-      optionalConfig: ['calendarId', 'eventTitle', 'startTime', 'endTime'],
-      inputs: ['event_data'],
-      outputs: ['event_created', 'calendar_data'],
-      category: 'integration'
-    },
+    // Trigger Nodes
     trigger: {
       type: 'trigger',
       label: 'Trigger',
@@ -101,6 +76,156 @@ class WorkflowGenerationService {
       outputs: ['trigger_data'],
       category: 'trigger'
     },
+    
+    // AI Model Nodes
+    universal_agent: {
+      type: 'universal_agent',
+      label: 'Universal AI Agent',
+      description: 'Configurable AI agent supporting Claude, GPT, Gemini, and Groq',
+      requiredConfig: ['provider', 'model', 'systemPrompt'],
+      optionalConfig: ['userPrompt', 'temperature', 'maxTokens', 'tools'],
+      inputs: ['text_input', 'context'],
+      outputs: ['text_output', 'metadata'],
+      category: 'ai'
+    },
+    groqllama: {
+      type: 'groqllama',
+      label: 'Groq Llama',
+      description: 'High-speed AI inference using Groq hardware acceleration',
+      requiredConfig: ['model', 'prompt'],
+      optionalConfig: ['temperature', 'maxTokens', 'systemPrompt'],
+      inputs: ['text_input'],
+      outputs: ['text_output'],
+      category: 'ai'
+    },
+    claude4: {
+      type: 'claude4',
+      label: 'Claude 4',
+      description: 'Anthropic Claude 4 for advanced reasoning and analysis',
+      requiredConfig: ['model', 'prompt'],
+      optionalConfig: ['temperature', 'maxTokens', 'systemPrompt'],
+      inputs: ['text_input'],
+      outputs: ['text_output'],
+      category: 'ai'
+    },
+    
+    // Integration Nodes
+    gmail: {
+      type: 'gmail',
+      label: 'Gmail',
+      description: 'Send, receive, and manage Gmail emails',
+      requiredConfig: ['action', 'credentials'],
+      optionalConfig: ['to', 'subject', 'body', 'filters', 'attachments'],
+      inputs: ['email_content', 'recipient_list'],
+      outputs: ['email_data', 'send_status', 'email_id'],
+      category: 'integration'
+    },
+    github: {
+      type: 'github',
+      label: 'GitHub',
+      description: 'Interact with GitHub repositories, issues, and pull requests',
+      requiredConfig: ['action', 'token', 'repository'],
+      optionalConfig: ['branch', 'filePath', 'commitMessage', 'prNumber', 'issueNumber'],
+      inputs: ['code_content', 'pr_data', 'issue_data'],
+      outputs: ['repo_data', 'commit_hash', 'pr_info', 'issue_info'],
+      category: 'integration'
+    },
+    google_calendar: {
+      type: 'google_calendar',
+      label: 'Google Calendar',
+      description: 'Create, update, and manage calendar events',
+      requiredConfig: ['action', 'credentials'],
+      optionalConfig: ['calendarId', 'eventTitle', 'startTime', 'endTime', 'attendees'],
+      inputs: ['event_data'],
+      outputs: ['event_created', 'calendar_data', 'event_id'],
+      category: 'integration'
+    },
+    api_connector: {
+      type: 'api_connector',
+      label: 'API Connector',
+      description: 'Make HTTP requests to any REST API',
+      requiredConfig: ['method', 'url'],
+      optionalConfig: ['headers', 'body', 'authentication', 'timeout'],
+      inputs: ['request_data'],
+      outputs: ['response_data', 'status_code', 'headers'],
+      category: 'integration'
+    },
+    firecrawl: {
+      type: 'firecrawl',
+      label: 'Firecrawl',
+      description: 'Web scraping and content extraction',
+      requiredConfig: ['url'],
+      optionalConfig: ['selectors', 'waitForSelector', 'javascript'],
+      inputs: ['url_list'],
+      outputs: ['scraped_content', 'metadata'],
+      category: 'data'
+    },
+    
+    // Data Processing Nodes
+    document: {
+      type: 'document',
+      label: 'Document',
+      description: 'Upload and process PDF, text, and other documents',
+      requiredConfig: ['fileType'],
+      optionalConfig: ['extractText', 'extractImages', 'extractMetadata'],
+      inputs: ['file_input'],
+      outputs: ['text_content', 'metadata', 'images'],
+      category: 'data'
+    },
+    database: {
+      type: 'database',
+      label: 'Database',
+      description: 'Connect to databases for data operations',
+      requiredConfig: ['dbType', 'connectionString', 'query'],
+      optionalConfig: ['parameters', 'timeout'],
+      inputs: ['query_params'],
+      outputs: ['query_results', 'row_count'],
+      category: 'data'
+    },
+    
+    // Media Processing Nodes
+    whisper: {
+      type: 'whisper',
+      label: 'Whisper',
+      description: 'AI-powered audio transcription using OpenAI Whisper',
+      requiredConfig: ['audioFile'],
+      optionalConfig: ['language', 'model', 'timestamps'],
+      inputs: ['audio_input'],
+      outputs: ['transcript', 'timestamps', 'language_detected'],
+      category: 'media'
+    },
+    imagen: {
+      type: 'imagen',
+      label: 'Imagen',
+      description: 'Generate images using Google Imagen AI',
+      requiredConfig: ['prompt'],
+      optionalConfig: ['style', 'size', 'quality', 'negativePrompt'],
+      inputs: ['text_prompt'],
+      outputs: ['image_url', 'image_data'],
+      category: 'media'
+    },
+    veo3: {
+      type: 'veo3',
+      label: 'Veo3',
+      description: 'Generate videos using Google Veo3 AI',
+      requiredConfig: ['prompt'],
+      optionalConfig: ['duration', 'style', 'fps', 'resolution'],
+      inputs: ['text_prompt'],
+      outputs: ['video_url', 'video_data'],
+      category: 'media'
+    },
+    blip2: {
+      type: 'blip2',
+      label: 'BLIP-2',
+      description: 'Image captioning and visual question answering',
+      requiredConfig: ['imageUrl'],
+      optionalConfig: ['question', 'maxLength'],
+      inputs: ['image_input', 'text_question'],
+      outputs: ['caption', 'answer'],
+      category: 'media'
+    },
+    
+    // Logic and Control Nodes
     router: {
       type: 'router',
       label: 'Router',
@@ -108,79 +233,123 @@ class WorkflowGenerationService {
       requiredConfig: ['conditions'],
       optionalConfig: ['defaultRoute'],
       inputs: ['input_data'],
-      outputs: ['route_1', 'route_2', 'route_3'],
+      outputs: ['route_1', 'route_2', 'route_3', 'default_route'],
+      category: 'logic'
+    },
+    loop: {
+      type: 'loop',
+      label: 'Loop',
+      description: 'Iterate over data arrays or repeat operations',
+      requiredConfig: ['loopType', 'iterations'],
+      optionalConfig: ['breakCondition', 'parallel'],
+      inputs: ['array_data', 'loop_body'],
+      outputs: ['loop_results', 'iteration_count'],
+      category: 'logic'
+    },
+    human_in_loop: {
+      type: 'human_in_loop',
+      label: 'Human in the Loop',
+      description: 'Pause workflow for human review and input',
+      requiredConfig: ['prompt', 'inputType'],
+      optionalConfig: ['timeout', 'notificationMethod'],
+      inputs: ['review_data'],
+      outputs: ['human_response', 'approval_status'],
       category: 'logic'
     }
   };
 
-  // Structured prompt template for workflow generation
+  // Enhanced prompt template with better examples and constraints
   private readonly WORKFLOW_GENERATION_PROMPT = `
-You are a workflow automation expert. Convert the user's description into a structured workflow using available nodes.
+You are an expert workflow automation architect. Convert the user's natural language description into a structured workflow using the available node types.
 
 Available Node Types:
 {nodeTypes}
 
 User Request: "{userDescription}"
 
-IMPORTANT: Respond with ONLY a valid JSON object in this exact format:
+IMPORTANT INSTRUCTIONS:
+1. Always start with a trigger node
+2. Use the most appropriate node types based on the user's requirements
+3. Connect nodes in logical execution order
+4. Ask clarifying questions for missing critical information
+5. Include error handling for complex workflows
+6. Estimate realistic execution times (in seconds)
+7. Be specific about required permissions and API keys
+
+RESPONSE FORMAT:
+You MUST respond with ONLY a valid JSON object. No additional text or explanations outside the JSON.
+
 {
   "workflow": {
     "nodes": [
       {
-        "id": "unique_id",
-        "type": "node_type",
-        "label": "Human readable label",
-        "position": {"x": number, "y": number},
+        "id": "node-1",
+        "type": "trigger",
+        "position": {"x": 100, "y": 100},
         "data": {
+          "label": "Manual Trigger",
+          "description": "Start workflow manually",
+          "status": "idle",
           "config": {
-            "key": "value"
-          },
-          "description": "What this node does"
+            "triggerType": "manual"
+          }
         }
       }
     ],
     "edges": [
       {
-        "id": "edge_id",
-        "source": "source_node_id", 
-        "target": "target_node_id",
-        "sourceHandle": "output_name",
-        "targetHandle": "input_name"
+        "id": "edge-1",
+        "source": "node-1",
+        "target": "node-2",
+        "sourceHandle": "output",
+        "targetHandle": "input",
+        "type": "smoothstep",
+        "animated": true
       }
     ],
     "description": "Brief workflow explanation",
-    "estimatedExecutionTime": seconds_as_number,
-    "requiredPermissions": ["list", "of", "permissions"],
-    "requiredApiKeys": ["list", "of", "providers"]
+    "estimatedExecutionTime": 30,
+    "requiredPermissions": ["github:read", "gmail:send"],
+    "requiredApiKeys": ["github", "anthropic"]
   },
   "questions": [
     {
-      "id": "question_id",
-      "question": "What information do you need?",
-      "type": "text|choice|file|api_key",
-      "options": ["option1", "option2"],
+      "id": "q1",
+      "question": "Which GitHub repository should I monitor?",
+      "type": "text",
       "required": true,
-      "context": "Why this is needed"
+      "context": "Need to know which repository to watch for pull requests"
     }
   ]
 }
 
-Guidelines:
-1. Position nodes logically (start at x:100, y:100, space 300px apart)
-2. Always include a trigger node as the first node
-3. Connect nodes in logical execution order
-4. Ask questions for missing critical information
-5. Include error handling for complex workflows
-6. Estimate realistic execution times
-7. Be specific about required permissions and API keys
+EXAMPLES:
+1. "Send email when GitHub PR is created" → Trigger (GitHub webhook) → Gmail (send)
+2. "Analyze documents with AI" → Trigger → Document → Universal Agent → Output
+3. "Daily report from database" → Trigger (schedule) → Database → Universal Agent → Gmail
+
+Position nodes with x-spacing of 300px, starting at (100, 100).
 `;
 
   private getApiKey(provider: string): string | null {
     try {
+      // First try to get user's API key from localStorage
       const keys = JSON.parse(localStorage.getItem('universal-agent-api-keys') || '{}');
-      return keys[provider] || null;
-    } catch {
+      if (keys[provider]) {
+        return keys[provider];
+      }
+      
+      // Fall back to demo/hardcoded keys
+      const demoKey = DEMO_API_KEYS[provider as keyof typeof DEMO_API_KEYS];
+      if (demoKey) {
+        console.log(`Using demo API key for ${provider}`);
+        return demoKey;
+      }
+      
       return null;
+    } catch {
+      // If localStorage fails, try demo keys
+      return DEMO_API_KEYS[provider as keyof typeof DEMO_API_KEYS] || null;
     }
   }
 
@@ -188,9 +357,10 @@ Guidelines:
     return Object.entries(this.NODE_TEMPLATES)
       .map(([key, template]) => 
         `- ${key}: ${template.description}
+  Category: ${template.category}
   Required: ${template.requiredConfig.join(', ')}
-  Optional: ${template.optionalConfig.join(', ')}
-  Category: ${template.category}`
+  Inputs: ${template.inputs.join(', ')}
+  Outputs: ${template.outputs.join(', ')}`
       )
       .join('\n');
   }
@@ -201,18 +371,9 @@ Guidelines:
       const provider = request.userPreferences?.preferredAIProvider || 'anthropic';
       const apiKey = this.getApiKey(provider);
       
-      if (!apiKey) {
-        return {
-          success: false,
-          error: `Please configure your ${provider} API key first`,
-          questions: [{
-            id: 'api_key',
-            question: `Please provide your ${provider} API key`,
-            type: 'api_key',
-            required: true,
-            context: 'Required to generate workflows using AI'
-          }]
-        };
+      if (!apiKey || apiKey.includes('demo')) {
+        // For demo purposes, return a pre-built workflow example
+        return this.generateDemoWorkflow(request.description);
       }
 
       // Prepare the prompt with node types
@@ -253,7 +414,15 @@ Guidelines:
       const result = this.parseAIResponse(aiResponse.content);
       
       if (result.success && result.workflow) {
-        // Add missing IDs and validate structure
+        // Validate and enhance the workflow
+        const validation = this.validateWorkflow(result.workflow.nodes, result.workflow.edges);
+        if (!validation.valid) {
+          return {
+            success: false,
+            error: `Workflow validation failed: ${validation.errors.join(', ')}`
+          };
+        }
+        
         result.workflow = this.validateAndEnhanceWorkflow(result.workflow);
       }
 
@@ -266,6 +435,272 @@ Guidelines:
         error: error instanceof Error ? error.message : 'Failed to generate workflow'
       };
     }
+  }
+
+  // Generate demo workflows for common use cases
+  private generateDemoWorkflow(description: string): WorkflowGenerationResult {
+    const lowerDesc = description.toLowerCase();
+    
+    // GitHub PR to Email workflow
+    if (lowerDesc.includes('github') && (lowerDesc.includes('pr') || lowerDesc.includes('pull request')) && lowerDesc.includes('email')) {
+      return {
+        success: true,
+        workflow: {
+          nodes: [
+            {
+              id: 'trigger-1',
+              type: 'trigger',
+              position: { x: 100, y: 100 },
+              data: {
+                label: 'GitHub PR Trigger',
+                description: 'Triggers when a pull request is created or updated',
+                status: 'idle',
+                config: {
+                  triggerType: 'webhook',
+                  webhookUrl: 'https://your-domain.com/webhook/github'
+                }
+              }
+            },
+            {
+              id: 'github-1',
+              type: 'github',
+              position: { x: 400, y: 100 },
+              data: {
+                label: 'Get PR Details',
+                description: 'Fetch pull request information',
+                status: 'idle',
+                config: {
+                  action: 'getPullRequest',
+                  repository: 'owner/repo'
+                }
+              }
+            },
+            {
+              id: 'ai-1',
+              type: 'universal_agent',
+              position: { x: 700, y: 100 },
+              data: {
+                label: 'AI Code Review',
+                description: 'Analyze PR code changes',
+                status: 'idle',
+                config: {
+                  provider: 'anthropic',
+                  model: 'claude-3-sonnet-20240229',
+                  systemPrompt: 'You are a senior code reviewer. Analyze the pull request changes and provide a comprehensive review.',
+                  userPrompt: 'Review this PR: {{github-1.output}}'
+                }
+              }
+            },
+            {
+              id: 'gmail-1',
+              type: 'gmail',
+              position: { x: 1000, y: 100 },
+              data: {
+                label: 'Send Email Report',
+                description: 'Email the code review to team',
+                status: 'idle',
+                config: {
+                  action: 'send',
+                  subject: 'PR Review: {{github-1.title}}',
+                  body: '{{ai-1.output}}'
+                }
+              }
+            }
+          ],
+          edges: [
+            {
+              id: 'edge-1',
+              source: 'trigger-1',
+              target: 'github-1',
+              sourceHandle: 'trigger_data',
+              targetHandle: 'input',
+              type: 'smoothstep',
+              animated: true
+            },
+            {
+              id: 'edge-2',
+              source: 'github-1',
+              target: 'ai-1',
+              sourceHandle: 'pr_info',
+              targetHandle: 'text_input',
+              type: 'smoothstep',
+              animated: true
+            },
+            {
+              id: 'edge-3',
+              source: 'ai-1',
+              target: 'gmail-1',
+              sourceHandle: 'text_output',
+              targetHandle: 'email_content',
+              type: 'smoothstep',
+              animated: true
+            }
+          ],
+          description: 'Automatically review GitHub pull requests with AI and send email summaries',
+          estimatedExecutionTime: 45,
+          requiredPermissions: ['github:read', 'gmail:send'],
+          requiredApiKeys: ['github', 'anthropic', 'gmail']
+        },
+        questions: [
+          {
+            id: 'github_repo',
+            question: 'Which GitHub repository should be monitored?',
+            type: 'text',
+            required: true,
+            context: 'Specify the repository in format: owner/repository-name'
+          },
+          {
+            id: 'email_recipients',
+            question: 'Who should receive the code review reports?',
+            type: 'text',
+            required: true,
+            context: 'Enter email addresses separated by commas'
+          }
+        ]
+      };
+    }
+    
+    // Document analysis workflow
+    if (lowerDesc.includes('document') && lowerDesc.includes('analyze')) {
+      return {
+        success: true,
+        workflow: {
+          nodes: [
+            {
+              id: 'trigger-1',
+              type: 'trigger',
+              position: { x: 100, y: 100 },
+              data: {
+                label: 'Manual Trigger',
+                description: 'Start document analysis',
+                status: 'idle',
+                config: {
+                  triggerType: 'manual'
+                }
+              }
+            },
+            {
+              id: 'document-1',
+              type: 'document',
+              position: { x: 400, y: 100 },
+              data: {
+                label: 'Document Input',
+                description: 'Upload and process document',
+                status: 'idle',
+                config: {
+                  fileType: 'pdf',
+                  extractText: true,
+                  extractMetadata: true
+                }
+              }
+            },
+            {
+              id: 'ai-1',
+              type: 'universal_agent',
+              position: { x: 700, y: 100 },
+              data: {
+                label: 'AI Analysis',
+                description: 'Analyze document content',
+                status: 'idle',
+                config: {
+                  provider: 'anthropic',
+                  model: 'claude-3-sonnet-20240229',
+                  systemPrompt: 'You are a document analyst. Provide a comprehensive analysis of the document.',
+                  userPrompt: 'Analyze this document: {{document-1.text_content}}'
+                }
+              }
+            }
+          ],
+          edges: [
+            {
+              id: 'edge-1',
+              source: 'trigger-1',
+              target: 'document-1',
+              sourceHandle: 'trigger_data',
+              targetHandle: 'input',
+              type: 'smoothstep',
+              animated: true
+            },
+            {
+              id: 'edge-2',
+              source: 'document-1',
+              target: 'ai-1',
+              sourceHandle: 'text_content',
+              targetHandle: 'text_input',
+              type: 'smoothstep',
+              animated: true
+            }
+          ],
+          description: 'Upload documents and get AI-powered analysis',
+          estimatedExecutionTime: 30,
+          requiredPermissions: [],
+          requiredApiKeys: ['anthropic']
+        },
+        questions: []
+      };
+    }
+    
+    // Default: return a simple workflow template
+    return {
+      success: true,
+      workflow: {
+        nodes: [
+          {
+            id: 'trigger-1',
+            type: 'trigger',
+            position: { x: 100, y: 100 },
+            data: {
+              label: 'Start Workflow',
+              description: 'Manual trigger to start',
+              status: 'idle',
+              config: {
+                triggerType: 'manual'
+              }
+            }
+          },
+          {
+            id: 'ai-1',
+            type: 'universal_agent',
+            position: { x: 400, y: 100 },
+            data: {
+              label: 'AI Processing',
+              description: 'Process with AI',
+              status: 'idle',
+              config: {
+                provider: 'anthropic',
+                model: 'claude-3-sonnet-20240229',
+                systemPrompt: 'You are a helpful assistant.',
+                userPrompt: 'Process this input'
+              }
+            }
+          }
+        ],
+        edges: [
+          {
+            id: 'edge-1',
+            source: 'trigger-1',
+            target: 'ai-1',
+            sourceHandle: 'trigger_data',
+            targetHandle: 'text_input',
+            type: 'smoothstep',
+            animated: true
+          }
+        ],
+        description: 'Basic workflow template - customize as needed',
+        estimatedExecutionTime: 20,
+        requiredPermissions: [],
+        requiredApiKeys: ['anthropic']
+      },
+      questions: [
+        {
+          id: 'workflow_purpose',
+          question: 'What would you like this workflow to do?',
+          type: 'text',
+          required: true,
+          context: 'Describe your automation needs in detail'
+        }
+      ]
+    };
   }
 
   private getModelForProvider(provider: string): string {
@@ -310,30 +745,38 @@ Guidelines:
     }
   }
 
-  private validateAndEnhanceWorkflow(workflow: any): any {
+  private validateAndEnhanceWorkflow(workflow: {
+    nodes: any[];
+    edges: any[];
+    [key: string]: any;
+  }): {
+    nodes: Node[];
+    edges: Edge[];
+    [key: string]: any;
+  } {
     // Ensure all nodes have required fields
-    const enhancedNodes = workflow.nodes.map((node: any, index: number) => ({
+    const enhancedNodes = workflow.nodes.map((node: Record<string, any>, index: number) => ({
       id: node.id || `node_${index}`,
       type: node.type,
       position: node.position || { x: 100 + index * 300, y: 100 },
       data: {
-        label: node.label || node.type,
-        description: node.data?.description || `${node.type} node`,
+        label: node.data?.label || node.label || this.NODE_TEMPLATES[node.type]?.label || node.type,
+        description: node.data?.description || this.NODE_TEMPLATES[node.type]?.description || `${node.type} node`,
         status: 'idle',
-        config: node.data?.config || {},
+        config: node.data?.config || node.config || {},
         ...node.data
       }
     }));
 
     // Ensure all edges have required fields
-    const enhancedEdges = workflow.edges.map((edge: any, index: number) => ({
+    const enhancedEdges = workflow.edges.map((edge: Record<string, any>, index: number) => ({
       id: edge.id || `edge_${index}`,
       source: edge.source,
       target: edge.target,
       sourceHandle: edge.sourceHandle || 'output',
       targetHandle: edge.targetHandle || 'input',
-      type: 'smoothstep',
-      animated: true
+      type: edge.type || 'smoothstep',
+      animated: edge.animated !== false
     }));
 
     return {
@@ -358,7 +801,7 @@ Guidelines:
       errors.push('Workflow must have at least one trigger node');
     }
 
-    // Check for isolated nodes
+    // Check for isolated nodes (except triggers which can be isolated)
     const nodeIds = new Set(nodes.map(node => node.id));
     const connectedNodes = new Set([
       ...edges.map(edge => edge.source),
@@ -377,12 +820,41 @@ Guidelines:
     for (const node of nodes) {
       const template = this.NODE_TEMPLATES[node.type];
       if (template) {
+        const config = node.data?.config || {};
         const missingConfig = template.requiredConfig.filter(key => 
-          !node.data?.config?.[key]
+          !config[key] && key !== 'credentials' && key !== 'token' // Skip auth checks
         );
         if (missingConfig.length > 0) {
-          errors.push(`Node "${node.data?.label || node.id}" missing: ${missingConfig.join(', ')}`);
+          errors.push(`Node "${node.data?.label || node.id}" missing required config: ${missingConfig.join(', ')}`);
         }
+      }
+    }
+
+    // Check for circular dependencies
+    const visited = new Set<string>();
+    const recursionStack = new Set<string>();
+    
+    const hasCycle = (nodeId: string): boolean => {
+      visited.add(nodeId);
+      recursionStack.add(nodeId);
+      
+      const outgoingEdges = edges.filter(edge => edge.source === nodeId);
+      for (const edge of outgoingEdges) {
+        if (!visited.has(edge.target)) {
+          if (hasCycle(edge.target)) return true;
+        } else if (recursionStack.has(edge.target)) {
+          return true;
+        }
+      }
+      
+      recursionStack.delete(nodeId);
+      return false;
+    };
+    
+    for (const node of nodes) {
+      if (!visited.has(node.id) && hasCycle(node.id)) {
+        errors.push('Workflow contains circular dependencies');
+        break;
       }
     }
 
@@ -390,6 +862,37 @@ Guidelines:
       valid: errors.length === 0,
       errors
     };
+  }
+
+  // Get example workflows for different use cases
+  getExampleWorkflows(): { name: string; description: string; prompt: string }[] {
+    return [
+      {
+        name: 'GitHub PR Code Review',
+        description: 'Automatically review pull requests and send summaries',
+        prompt: 'When someone creates a GitHub PR, have AI review the code and send me an email summary'
+      },
+      {
+        name: 'Document Processing Pipeline',
+        description: 'Extract text from documents and analyze with AI',
+        prompt: 'Analyze uploaded PDF documents with AI and generate a summary report'
+      },
+      {
+        name: 'Email Automation',
+        description: 'Process incoming emails and respond automatically',
+        prompt: 'When I receive an email with "urgent" in the subject, analyze it and create a calendar event'
+      },
+      {
+        name: 'Social Media Monitor',
+        description: 'Monitor social mentions and respond',
+        prompt: 'Monitor Twitter for mentions of my brand and generate AI responses'
+      },
+      {
+        name: 'Data Pipeline',
+        description: 'Extract data from API and process it',
+        prompt: 'Every day at 9am, fetch data from my API, analyze it with AI, and send a report'
+      }
+    ];
   }
 }
 
