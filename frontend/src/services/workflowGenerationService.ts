@@ -367,7 +367,21 @@ Position nodes with x-spacing of 300px, starting at (100, 100).
 
   async generateWorkflow(request: WorkflowGenerationRequest): Promise<WorkflowGenerationResult> {
     try {
-      // For document → AI → calendar workflows, use hardcoded successful workflow
+      // Enhanced AI Integration with fallback strategy
+      const provider = request.userPreferences?.preferredAIProvider || 'anthropic';
+      const apiKey = this.getApiKey(provider);
+      
+      // Real API integration when key is available
+      if (apiKey && !apiKey.includes('demo') && apiKey.length > 20) {
+        try {
+          return await this.generateWithAI(request, provider, apiKey);
+        } catch (aiError) {
+          console.warn('AI service failed, falling back to templates:', aiError);
+          // Continue to fallback logic below
+        }
+      }
+      
+      // Smart fallback based on workflow type
       const isDocumentWorkflow = request.description.toLowerCase().includes('document') ||
                                  request.description.toLowerCase().includes('calendar') ||
                                  request.description.toLowerCase().includes('pdf') ||
@@ -377,14 +391,8 @@ Position nodes with x-spacing of 300px, starting at (100, 100).
         return this.generateDocumentCalendarWorkflow(request.description);
       }
       
-      // Get API key for AI provider
-      const provider = request.userPreferences?.preferredAIProvider || 'anthropic';
-      const apiKey = this.getApiKey(provider);
-      
-      if (!apiKey || apiKey.includes('demo')) {
-        // For demo purposes, return a pre-built workflow example
-        return this.generateDemoWorkflow(request.description);
-      }
+      // General demo workflow fallback
+      return this.generateDemoWorkflow(request.description);
 
       // Prepare the prompt with node types
       const prompt = this.WORKFLOW_GENERATION_PROMPT
@@ -445,6 +453,98 @@ Position nodes with x-spacing of 300px, starting at (100, 100).
         error: error instanceof Error ? error.message : 'Failed to generate workflow'
       };
     }
+  }
+
+  // Enhanced AI generation with robust prompt engineering
+  private async generateWithAI(request: WorkflowGenerationRequest, provider: string, apiKey: string): Promise<WorkflowGenerationResult> {
+    // Robust prompt engineering with clear constraints
+    const enhancedPrompt = `You are a workflow automation expert. Create a JSON workflow from the user description.
+
+STRICT REQUIREMENTS:
+1. Response MUST be valid JSON only, no explanations
+2. Use ONLY these node types: ${Object.keys(this.NODE_TEMPLATES).join(', ')}
+3. Every workflow MUST start with a "trigger" node
+4. Node IDs must be unique (format: type-number, e.g., "trigger-1")
+5. Positions must be in 300px increments horizontally (100, 400, 700, 1000...)
+6. All nodes must have complete data.config objects
+
+RESPONSE FORMAT:
+{
+  "nodes": [...],
+  "edges": [...],
+  "description": "Brief workflow description",
+  "estimatedExecutionTime": number_in_seconds,
+  "requiredPermissions": ["permission1", "permission2"],
+  "requiredApiKeys": ["provider1", "provider2"]
+}
+
+USER REQUEST: "${request.description}"
+
+Available node types with configs:
+${this.formatNodeTypesForPrompt()}
+
+Generate workflow:`;
+
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/api/v1/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider,
+          model: this.getModelForProvider(provider),
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a workflow automation expert. Respond only with valid JSON.'
+            },
+            {
+              role: 'user',
+              content: enhancedPrompt
+            }
+          ],
+          temperature: 0.1,
+          maxTokens: 2000,
+          apiKey
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI service error: ${response.status}`);
+      }
+
+      const aiResponse = await response.json();
+      const result = this.parseAIResponse(aiResponse.content);
+      
+      if (result.success && result.workflow) {
+        // Enhanced workflow validation
+        const validation = this.validateWorkflow(result.workflow.nodes, result.workflow.edges);
+        if (!validation.valid) {
+          throw new Error(`Invalid workflow: ${validation.errors.join(', ')}`);
+        }
+        
+        // Enhance workflow with missing data
+        result.workflow = this.enhanceWorkflow(result.workflow);
+        
+        return result;
+      } else {
+        throw new Error('AI response parsing failed');
+      }
+    } catch (error) {
+      console.error('AI generation failed:', error);
+      throw error;
+    }
+  }
+
+  // Enhance workflow with missing required data
+  private enhanceWorkflow(workflow: any) {
+    return {
+      ...workflow,
+      estimatedExecutionTime: workflow.estimatedExecutionTime || 30,
+      requiredPermissions: workflow.requiredPermissions || [],
+      requiredApiKeys: workflow.requiredApiKeys || ['anthropic']
+    };
   }
 
   // Generate hardcoded document calendar workflow  

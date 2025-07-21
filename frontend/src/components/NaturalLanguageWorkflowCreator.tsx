@@ -241,12 +241,32 @@ export default function NaturalLanguageWorkflowCreator() {
     }
   }, [currentInput, isGenerating, addMessage]);
 
+  // Enhanced keyboard navigation with accessibility
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   }, [handleSendMessage]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleGlobalKeyPress = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Enter to send from anywhere
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSendMessage();
+      }
+      
+      // Escape to clear input
+      if (e.key === 'Escape' && !isGenerating) {
+        setCurrentInput('');
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyPress);
+    return () => document.removeEventListener('keydown', handleGlobalKeyPress);
+  }, [handleSendMessage, isGenerating]);
 
   const handleAnswerQuestion = useCallback((questionId: string, answer: any) => {
     setQuestionAnswers(prev => ({
@@ -650,17 +670,17 @@ export default function NaturalLanguageWorkflowCreator() {
   return (
     <TooltipProvider>
       <div className="h-full flex flex-col bg-background">
-        {/* Header */}
-        <div className="px-4 sm:px-6 py-4 sm:py-6 border-b bg-gradient-to-r from-primary/5 to-purple-500/5 dark:from-primary/10 dark:to-purple-500/10">
+        {/* Mobile-Optimized Header */}
+        <div className="px-3 sm:px-6 py-3 sm:py-6 border-b bg-gradient-to-r from-primary/5 to-purple-500/5 dark:from-primary/10 dark:to-purple-500/10">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-r from-primary to-purple-500 rounded-lg shadow-sm">
-                  <Bot className="h-5 w-5 text-white" />
+            <div className="flex flex-col gap-3 sm:gap-4 mb-3 sm:mb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 sm:p-2.5 bg-gradient-to-r from-primary to-purple-500 rounded-lg shadow-sm">
+                  <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground">AI Workflow Creator</h2>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">AI Workflow Creator</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                     Describe your automation in plain English
                   </p>
                 </div>
@@ -741,9 +761,9 @@ export default function NaturalLanguageWorkflowCreator() {
           </div>
         </div>
 
-        {/* Messages */}
+        {/* Messages - Accessible */}
         <ScrollArea className="flex-1 px-4 sm:px-6 py-6">
-          <div className="space-y-6 max-w-5xl mx-auto">
+          <div className="space-y-6 max-w-5xl mx-auto" role="log" aria-label="Conversation with AI" aria-live="polite">
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div
@@ -752,6 +772,8 @@ export default function NaturalLanguageWorkflowCreator() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  role="article"
+                  aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}`}
                 >
                   <div
                     className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 shadow-sm ${
@@ -904,44 +926,54 @@ export default function NaturalLanguageWorkflowCreator() {
               </div>
               
               {/* Input area */}
-              <div className="flex gap-3">
+              {/* Mobile-Optimized Input Area */}
+              <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
                   <Textarea
                     value={currentInput}
                     onChange={(e) => setCurrentInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="e.g., When someone creates a GitHub issue, analyze it with AI and email me the summary"
-                    className="min-h-[80px] resize-none bg-background border-input focus:border-primary transition-colors"
+                    placeholder="e.g., Analyze uploaded documents and create calendar events"
+                    className="min-h-[60px] sm:min-h-[80px] resize-none bg-background border-input focus:border-primary transition-colors text-sm sm:text-base"
                     disabled={isGenerating}
+                    aria-label="Describe your workflow"
+                    aria-describedby="input-help"
                   />
-                  <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center justify-between mt-1 sm:mt-2">
                     <span className="text-xs text-muted-foreground">
-                      {currentInput.length}/500 characters
+                      {currentInput.length}/500
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {!draftSaved && <span className="text-amber-500">Saving draft...</span>}
-                      {draftSaved && <span>Press Enter to send</span>}
+                      {!draftSaved && <span className="text-amber-500">Saving...</span>}
+                      {draftSaved && <span className="hidden sm:inline">Press Enter to send</span>}
                     </div>
                   </div>
                 </div>
                 
+                {/* Touch-Friendly Send Button */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={handleSendMessage}
                       disabled={!currentInput.trim() || isGenerating}
                       size="lg"
-                      className="px-6 shadow-sm"
+                      className="px-4 sm:px-6 py-3 sm:py-2 shadow-sm min-h-[44px] sm:min-h-auto"
                     >
                       {isGenerating ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <>
+                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                          <span className="ml-2 sm:hidden">Generating...</span>
+                        </>
                       ) : (
-                        <Send className="h-5 w-5" />
+                        <>
+                          <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <span className="ml-2 sm:hidden">Send</span>
+                        </>
                       )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Send message (Enter)</p>
+                    <p>Send message</p>
                   </TooltipContent>
                 </Tooltip>
               </div>

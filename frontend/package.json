@@ -12,6 +12,8 @@
     "test": "jest",
     "test:ai-creator": "tsx tests/test-ai-creator.ts",
     "test:phase2": "tsx tests/test-phase2-improvements.ts",
+    "test:phase3": "tsx tests/test-phase3-advanced.ts",
+    "test:all": "npm run test:ai-creator && npm run test:phase2 && npm run test:phase3",
     "start": "serve -s dist -l ${PORT:-4173} -H 0.0.0.0",
     "serve": "serve -s dist"
   },
