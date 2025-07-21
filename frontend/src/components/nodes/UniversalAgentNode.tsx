@@ -908,9 +908,15 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
     validateApiKey(provider, apiKey);
   }, [apiKeys, validateApiKey]);
 
-
-
-
+  function formatTimestamp(ts: any): string {
+    if (!ts) return ''
+    if (typeof ts === 'object' && typeof ts.toDate === 'function') return ts.toDate().toLocaleTimeString()
+    try {
+      return new Date(ts).toLocaleTimeString()
+    } catch {
+      return ''
+    }
+  }
 
   // Send message to AI service with tool support
   const sendMessage = useCallback(async (message: string) => {
@@ -1602,7 +1608,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                                 </div>
                               )}
                               <div className="text-xs opacity-60 mt-1">
-                                {message.role === 'tool' ? 'Tool' : message.role === 'user' ? 'You' : 'Assistant'} • {message.timestamp.toLocaleTimeString()}
+                                {message.role === 'tool' ? 'Tool' : message.role === 'user' ? 'You' : 'Assistant'} • {formatTimestamp(message.timestamp)}
                               </div>
                             </div>
                           </div>
@@ -2141,7 +2147,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                               {message.role === 'user' ? 'You' : 'Agent'}
                             </Badge>
                             <span className="text-xs text-purple-300/60">
-                              {message.timestamp.toLocaleTimeString()}
+                              {formatTimestamp(message.timestamp)}
                             </span>
                           </div>
                           <p className="text-sm leading-relaxed">{message.content}</p>
