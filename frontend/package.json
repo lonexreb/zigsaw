@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "jest",
     "test:ai-creator": "tsx tests/test-ai-creator.ts",
+    "test:phase2": "tsx tests/test-phase2-improvements.ts",
     "start": "serve -s dist -l ${PORT:-4173} -H 0.0.0.0",
     "serve": "serve -s dist"
   },

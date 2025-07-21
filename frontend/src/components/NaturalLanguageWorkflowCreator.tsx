@@ -40,6 +40,7 @@ import {
 } from '../services/workflowGenerationService';
 import { useWorkflow } from '../contexts/WorkflowContext';
 import { Node, Edge } from '@xyflow/react';
+import { WorkflowMiniCanvas } from './WorkflowMiniCanvas';
 
 interface ChatMessage {
   id: string;
@@ -80,6 +81,7 @@ export default function NaturalLanguageWorkflowCreator() {
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
   const [showMetrics, setShowMetrics] = useState(false);
   const [apiKeyStatus, setApiKeyStatus] = useState<Record<string, boolean>>({});
+  const [draftSaved, setDraftSaved] = useState(true);
   
   // Refs and hooks
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -91,16 +93,50 @@ export default function NaturalLanguageWorkflowCreator() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Add initial welcome message
+  // Add initial welcome message and load draft
   useEffect(() => {
-    setMessages([{
-      id: '1',
-      role: 'assistant',
-      content: 'Welcome! I can help you create automated workflows using natural language. Just describe what you want to automate, and I\'ll build it for you.',
-      timestamp: new Date(),
-      type: 'success'
-    }]);
+    // Load saved draft if exists
+    const savedDraft = localStorage.getItem('ai-creator-draft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        setMessages(draft.messages || []);
+        setCurrentInput(draft.currentInput || '');
+        if (draft.workflowPreview) {
+          setWorkflowPreview(draft.workflowPreview);
+        }
+      } catch (error) {
+        console.warn('Failed to load draft:', error);
+      }
+    } else {
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: 'Welcome! I can help you create automated workflows using natural language. Just describe what you want to automate, and I\'ll build it for you.',
+        timestamp: new Date(),
+        type: 'success'
+      }]);
+    }
   }, []);
+
+  // Auto-save draft every few seconds
+  useEffect(() => {
+    setDraftSaved(false); // Mark as unsaved when content changes
+    
+    const autosave = () => {
+      const draft = {
+        messages,
+        currentInput,
+        workflowPreview,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('ai-creator-draft', JSON.stringify(draft));
+      setDraftSaved(true); // Mark as saved
+    };
+
+    const timer = setTimeout(autosave, 2000); // Save after 2 seconds of inactivity
+    return () => clearTimeout(timer);
+  }, [messages, currentInput, workflowPreview]);
 
   const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
     const newMessage: ChatMessage = {
@@ -174,10 +210,21 @@ export default function NaturalLanguageWorkflowCreator() {
         });
 
       } else {
-        // Handle error
+        // Handle error with specific recovery suggestions
+        const errorMessage = result.error || 'Unknown error occurred';
+        let suggestion = '';
+        
+        if (errorMessage.includes('API')) {
+          suggestion = 'Try using one of the example prompts below, or check your internet connection.';
+        } else if (errorMessage.includes('key')) {
+          suggestion = 'No worries! You can still use demo workflows - try the examples below.';
+        } else {
+          suggestion = 'Try being more specific about your automation goal. For example: "When X happens, do Y"';
+        }
+        
         addMessage({
           role: 'assistant',
-          content: `I couldn't generate a workflow from that description. ${result.error || 'Please try rephrasing your request or be more specific about what you want to automate.'}`,
+          content: `I couldn't generate a workflow from that description. ${suggestion}`,
           type: 'error'
         });
       }
@@ -274,8 +321,8 @@ export default function NaturalLanguageWorkflowCreator() {
       });
 
       toast({
-        title: "Workflow Executed",
-        description: "Your workflow has been added to the canvas and executed.",
+        title: "Workflow Created",
+        description: "Your workflow is ready! You can see it below and edit it further.",
       });
 
       // Close preview
@@ -633,26 +680,31 @@ export default function NaturalLanguageWorkflowCreator() {
               </div>
             </div>
 
-            {/* Example Prompts */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-amber-500" />
-                <p className="text-sm font-medium text-foreground">Try these examples:</p>
+            {/* Simplified Example Prompts - Progressive Disclosure */}
+            {messages.length <= 1 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                  <p className="text-sm font-medium text-foreground">Try these examples:</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    "Analyze uploaded documents and create calendar events",
+                    "When I receive urgent emails, send me instant notifications"
+                  ].map((prompt, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-auto p-3 text-left justify-start whitespace-normal hover:bg-primary/5 hover:border-primary/30"
+                      onClick={() => setCurrentInput(prompt)}
+                    >
+                      {prompt}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {EXAMPLE_PROMPTS.slice(0, 3).map((prompt, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs h-auto p-3 text-left justify-start whitespace-normal hover:bg-primary/5 hover:border-primary/30"
-                    onClick={() => setCurrentInput(prompt)}
-                  >
-                    {prompt.length > 60 ? `${prompt.slice(0, 60)}...` : prompt}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            )}
             
             {/* Collapsible Metrics Panel */}
             <AnimatePresence>
@@ -753,19 +805,42 @@ export default function NaturalLanguageWorkflowCreator() {
                     </div>
                   )}
 
-                  {/* Render workflow preview button if this is a success message with workflow */}
+                  {/* Render workflow mini canvas if this is a success message with workflow */}
                   {message.type === 'success' && message.data && (
-                    <div className="mt-4">
-                      <Button
-                        onClick={() => setShowPreview(true)}
-                        variant="outline"
-                        size="sm"
-                        className="bg-white dark:bg-gray-800"
-                      >
-                        <Workflow className="h-4 w-4 mr-2" />
-                        View Workflow
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
+                    <div className="mt-4 space-y-3">
+                      <WorkflowMiniCanvas 
+                        nodes={message.data.nodes || []}
+                        edges={message.data.edges || []}
+                        title="Your Generated Workflow"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleExecuteWorkflow}
+                          disabled={isExecuting}
+                          size="sm"
+                          className="flex-1"
+                        >
+                          {isExecuting ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Adding to Canvas...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4 mr-2" />
+                              Add to Canvas & Execute
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          onClick={() => setShowPreview(true)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Settings className="h-4 w-4 mr-2" />
+                          Configure
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -843,9 +918,10 @@ export default function NaturalLanguageWorkflowCreator() {
                     <span className="text-xs text-muted-foreground">
                       {currentInput.length}/500 characters
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      Press Enter to send
-                    </span>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {!draftSaved && <span className="text-amber-500">Saving draft...</span>}
+                      {draftSaved && <span>Press Enter to send</span>}
+                    </div>
                   </div>
                 </div>
                 

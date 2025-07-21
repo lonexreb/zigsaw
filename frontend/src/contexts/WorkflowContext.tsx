@@ -229,22 +229,34 @@ export function WorkflowProvider({ children }: WorkflowProviderProps) {
     return activeWorkflow.nodes.find(node => node.id === selectedNodeId) || null;
   }, [selectedNodeId, activeWorkflowId, workflows]);
 
-  // Add nodes to the active workflow
+  // Add nodes to the active workflow - FIXED VERSION
   const addNodes = useCallback((newNodes: Node[]) => {
     if (!activeWorkflowId) {
-      // Create a new workflow if none exists
+      // Create a new workflow if none exists and add nodes immediately
       const workflowId = createWorkflow('Generated Workflow', 'Workflow created from AI');
-      setActiveWorkflowId(workflowId);
+      
+      // Update workflows state directly to add nodes immediately
+      setWorkflows(prev => {
+        const updatedWorkflows = prev.map(w => 
+          w.id === workflowId 
+            ? { ...w, nodes: [...w.nodes, ...newNodes] }
+            : w
+        );
+        return updatedWorkflows;
+      });
+      
+      return;
     }
     
+    // Add nodes to existing active workflow
     const activeWorkflow = workflows.find(w => w.id === activeWorkflowId);
     if (!activeWorkflow) return;
     
     const updatedNodes = [...activeWorkflow.nodes, ...newNodes];
     updateWorkflow(activeWorkflowId, { nodes: updatedNodes });
-  }, [activeWorkflowId, workflows, updateWorkflow, createWorkflow]);
+  }, [activeWorkflowId, workflows, updateWorkflow, createWorkflow, setWorkflows]);
 
-  // Add edges to the active workflow
+  // Add edges to the active workflow - FIXED VERSION
   const addEdges = useCallback((newEdges: Edge[]) => {
     if (!activeWorkflowId) return;
     

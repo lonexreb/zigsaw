@@ -73,7 +73,7 @@ import {
 import { auth as firebaseAuth } from '@/lib/firebase';
 import { WorkflowHeader } from '../components/workflow/WorkflowHeader'
 import { WorkflowCanvas } from '../components/workflow/WorkflowCanvas'
-import { WorkflowProvider } from '../contexts/WorkflowContext';
+import { WorkflowProvider, useWorkflow } from '../contexts/WorkflowContext';
 
 async function getAuthToken(): Promise<string | null> {
   const user = firebaseAuth.currentUser;
@@ -329,14 +329,38 @@ const WorkflowContent = () => {
   const { screenToFlowPosition, getNode } = useReactFlow();
   const { isDark, toggleTheme, backgroundEffectsEnabled } = useTheme();
   const { signOut, currentUser } = useAuth();
+  const { getActiveWorkflow, updateActiveWorkflowNodes, updateActiveWorkflowEdges } = useWorkflow();
   const navigate = useNavigate();
   
   // Debug auth state
   useEffect(() => {
     console.log('Auth state changed - Current user:', currentUser ? currentUser.uid : 'No user');
   }, [currentUser]);
+  
+  // Use workflow context state and sync with local state
+  const activeWorkflow = getActiveWorkflow();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  
+  // Monitor workflow state changes
+  useEffect(() => {
+    if (activeWorkflow?.nodes?.length !== nodes.length) {
+      // Sync workflow context to local state when workflow has nodes
+      if (activeWorkflow && activeWorkflow.nodes.length > 0) {
+        setNodes(activeWorkflow.nodes);
+        setEdges(activeWorkflow.edges);
+      }
+    }
+  }, [activeWorkflow?.nodes?.length, activeWorkflow?.edges?.length, nodes.length, setNodes, setEdges]);
+  
+  // Sync local changes back to workflow context when user modifies canvas
+  useEffect(() => {
+    if (activeWorkflow && nodes.length > 0 && 
+        (nodes.length !== activeWorkflow.nodes.length || edges.length !== activeWorkflow.edges.length)) {
+      updateActiveWorkflowNodes(nodes);
+      updateActiveWorkflowEdges(edges);
+    }
+  }, [nodes, edges, activeWorkflow, updateActiveWorkflowNodes, updateActiveWorkflowEdges]);
   // Metrics are now handled by MetricsPanel component directly
   const [isNodePanelOpen, setIsNodePanelOpen] = useState(true);
   const [nodeIdCounter, setNodeIdCounter] = useState(2);
