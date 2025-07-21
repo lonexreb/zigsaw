@@ -43,37 +43,122 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
       
       const { url, extract_text = true, extract_links = false, extract_images = false } = arguments_;
       
-      // Call Firecrawl API
-      console.log('Calling Firecrawl API with URL:', url);
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${firecrawlApiKey}`
-        },
-        body: JSON.stringify({
-          url: url
-        })
-      });
+      // Validate API key format
+      if (!firecrawlApiKey.startsWith('fc-')) {
+        throw new Error('Invalid Firecrawl API key format. Should start with "fc-"');
+      }
+      
+      // Try multiple Firecrawl API endpoints (updated with correct endpoints)
+      const endpoints = [
+        'https://api.firecrawl.dev/scrape',
+        'https://api.firecrawl.dev/v1/scrape',
+        'https://api.firecrawl.dev/api/scrape',
+        'https://api.firecrawl.dev/v1/extract',
+        'https://api.firecrawl.dev/extract'
+      ];
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Firecrawl API error:', response.status, response.statusText, errorText);
-        console.error('Request URL:', url);
-        console.error('API Key (first 10 chars):', firecrawlApiKey.substring(0, 10) + '...');
-        throw new Error(`Firecrawl API error: ${response.status} ${response.statusText} - ${errorText}`);
+      let lastError = null;
+      let data = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log('Calling Firecrawl API with URL:', url, 'endpoint:', endpoint);
+          
+          // Different payload structures for different endpoints
+          let requestPayload;
+          
+          if (endpoint.includes('/extract')) {
+            // For extract endpoints
+            requestPayload = {
+              url: url,
+              extraction_prompt: "Extract the main content, title, and description from this webpage",
+              output_format: "markdown"
+            };
+          } else {
+            // For scrape endpoints
+            requestPayload = {
+              url: url,
+              // Add optional parameters based on user preferences
+              ...(extract_text && { extract_text: true }),
+              ...(extract_links && { extract_links: true }),
+              ...(extract_images && { extract_images: true }),
+              // Add common Firecrawl parameters
+              format: 'markdown',
+              only_main_content: true
+            };
+          }
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${firecrawlApiKey}`
+            },
+            body: JSON.stringify(requestPayload)
+          });
+
+          if (response.ok) {
+            data = await response.json();
+            console.log('Success with endpoint:', endpoint);
+            break;
+          } else {
+            const errorText = await response.text();
+            console.error('Firecrawl API error:', response.status, response.statusText, errorText);
+            console.error('Request URL:', url);
+            console.error('API Key (first 10 chars):', firecrawlApiKey.substring(0, 10) + '...');
+            
+            let errorDetails = errorText;
+            try {
+              const errorJson = JSON.parse(errorText);
+              if (errorJson.error?.message) {
+                errorDetails = errorJson.error.message;
+              } else if (errorJson.message) {
+                errorDetails = errorJson.message;
+              }
+            } catch (e) {
+              // If parsing fails, use the raw error text
+            }
+            
+            lastError = {
+              status: response.status,
+              statusText: response.statusText,
+              details: errorDetails,
+              endpoint: endpoint
+            };
+            
+            // If this is the last endpoint, throw the error
+            if (endpoint === endpoints[endpoints.length - 1]) {
+              throw new Error(`All Firecrawl endpoints failed. Last error: ${response.status} ${response.statusText} - ${errorDetails}`);
+            }
+          }
+        } catch (error) {
+          console.error('Exception with endpoint:', endpoint, error);
+          lastError = {
+            status: 500,
+            statusText: 'Internal Error',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            endpoint: endpoint
+          };
+          
+          // If this is the last endpoint, throw the error
+          if (endpoint === endpoints[endpoints.length - 1]) {
+            throw error;
+          }
+        }
       }
 
-      const data = await response.json();
+      if (!data) {
+        throw new Error(`Firecrawl API request failed: ${lastError?.details || 'Unknown error'}`);
+      }
       
       return {
         url: url,
-        title: data.title || '',
-        description: data.description || '',
-        content: extract_text ? data.text || data.markdown || data.html || '' : '',
-        links: extract_links ? data.links || [] : [],
-        images: extract_images ? data.images || [] : [],
-        metadata: data.metadata || {},
+        title: data.title || data.metadata?.title || data.extracted_data?.title || '',
+        description: data.description || data.metadata?.description || data.extracted_data?.description || '',
+        content: extract_text ? (data.text || data.markdown || data.html || data.content || data.extracted_data?.content || '') : '',
+        links: extract_links ? (data.links || data.extracted_data?.links || []) : [],
+        images: extract_images ? (data.images || data.extracted_data?.images || []) : [],
+        metadata: data.metadata || data.extracted_data?.metadata || {},
         timestamp: new Date().toISOString()
       };
 

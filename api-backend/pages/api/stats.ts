@@ -44,7 +44,14 @@ export default async function handler(
       workflows: Math.floor(Math.random() * 5) + 2,
       nodes: Math.floor(Math.random() * 10) + 5,
       totalRequests: requestCount,
-      serverStartTime: new Date(startTime).toISOString()
+      serverStartTime: new Date(startTime).toISOString(),
+      uptimeMinutes: uptimeMinutes,
+      uptimeSeconds: uptime,
+      uptimeHours: uptime / 3600000,
+      uptimeDays: uptime / 86400000,
+      uptimeWeeks: uptime / 604800000,
+      uptimeMonths: uptime / 2592000000,
+      uptimeYears: uptime / 31536000000,
     };
     
     return res.status(200).json(stats);
