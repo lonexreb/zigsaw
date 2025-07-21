@@ -35,9 +35,86 @@ interface NodeType {
     glow: string;
   };
   category: string;
+  type?: 'trigger' | 'action' | 'node' | 'tool';
 }
 
 const nodeTypes: NodeType[] = [
+  // TRIGGER NODES - Event-Based
+  {
+    id: 'trigger_gmail',
+    label: 'Gmail Trigger',
+    description: 'Start workflow when a new email is received',
+    icon: <MessageSquare className="w-5 h-5" />, // Lucide
+    color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
+    category: 'Trigger Nodes',
+    type: 'trigger',
+  },
+  {
+    id: 'trigger_google_calendar',
+    label: 'Google Calendar Trigger',
+    description: 'Start workflow when an event is about to start',
+    icon: <Calendar className="w-5 h-5" />, // Lucide
+    color: { primary: 'blue', secondary: 'green', glow: 'blue-400/20' },
+    category: 'Trigger Nodes',
+    type: 'trigger',
+  },
+  {
+    id: 'trigger_slack',
+    label: 'Slack Trigger',
+    description: 'Start workflow when a new Slack message is received',
+    icon: <MessageSquare className="w-5 h-5" />, // Lucide (chat bubble)
+    color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
+    category: 'Trigger Nodes',
+    type: 'trigger',
+  },
+  {
+    id: 'trigger_notion',
+    label: 'Notion Trigger',
+    description: 'Start workflow when a Notion database item is updated',
+    icon: <FileText className="w-5 h-5" />, // Lucide (document)
+    color: { primary: 'black', secondary: 'slate', glow: 'slate-400/20' },
+    category: 'Trigger Nodes',
+    type: 'trigger',
+  },
+
+  // ACTION NODES - Perform a Task
+  {
+    id: 'action_gmail',
+    label: 'Gmail: Send Email',
+    description: 'Send an email to one or more people',
+    icon: <MessageSquare className="w-5 h-5" />, // Lucide
+    color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
+    category: 'Action Nodes',
+    type: 'action',
+  },
+  {
+    id: 'action_google_calendar',
+    label: 'Google Calendar: Create Event',
+    description: 'Create or update a calendar event',
+    icon: <Calendar className="w-5 h-5" />, // Lucide
+    color: { primary: 'blue', secondary: 'green', glow: 'blue-400/20' },
+    category: 'Action Nodes',
+    type: 'action',
+  },
+  {
+    id: 'action_slack',
+    label: 'Slack: Send Message',
+    description: 'Post a message to a Slack channel or DM',
+    icon: <MessageSquare className="w-5 h-5" />, // Lucide
+    color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
+    category: 'Action Nodes',
+    type: 'action',
+  },
+  {
+    id: 'action_notion',
+    label: 'Notion: Create Page',
+    description: 'Log data into a Notion database',
+    icon: <FileText className="w-5 h-5" />, // Lucide
+    color: { primary: 'black', secondary: 'slate', glow: 'slate-400/20' },
+    category: 'Action Nodes',
+    type: 'action',
+  },
+
   // NODES - Core Workflow Components
   {
     id: 'trigger',
@@ -182,6 +259,7 @@ const colorClasses: { [key: string]: { bg: string; text: string; ring: string } 
   yellow: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', ring: 'ring-yellow-500/30' },
   slate: { bg: 'bg-slate-500/10', text: 'text-slate-400', ring: 'ring-slate-500/30' },
   red: { bg: 'bg-red-500/10', text: 'text-red-400', ring: 'ring-red-500/30' },
+  black: { bg: 'bg-black/10', text: 'text-black', ring: 'ring-slate-500/30' },
 };
 
 interface NodePanelProps {
@@ -335,6 +413,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({
 
 const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [triggerExpanded, setTriggerExpanded] = useState(true);
+  const [actionExpanded, setActionExpanded] = useState(true);
   const [nodesExpanded, setNodesExpanded] = useState(true);
   const [toolsExpanded, setToolsExpanded] = useState(true);
 
@@ -343,10 +423,20 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  // Split nodeTypes into nodes and tools based on category
+  // Split nodeTypes into categories
+  const triggerNodes = nodeTypes.filter(node => node.category === 'Trigger Nodes');
+  const actionNodes = nodeTypes.filter(node => node.category === 'Action Nodes');
   const nodeNodes = nodeTypes.filter(node => node.category === 'Nodes');
   const toolNodes = nodeTypes.filter(node => node.category === 'Tools');
 
+  const filteredTriggerNodes = triggerNodes.filter(node =>
+    node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    node.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const filteredActionNodes = actionNodes.filter(node =>
+    node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    node.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   const filteredNodeNodes = nodeNodes.filter(node =>
     node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
     node.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -491,6 +581,28 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
           autoHideDuration={200}
         >
           <div className="p-4 space-y-4">
+            {/* Trigger Nodes Category */}
+            <CategorySection
+              title="Trigger Nodes"
+              icon={<Zap className="w-4 h-4" />}
+              nodes={filteredTriggerNodes}
+              colorTheme="yellow"
+              isOpen={triggerExpanded}
+              onToggle={() => setTriggerExpanded(!triggerExpanded)}
+              isDark={isDark}
+              onDragStart={onDragStart}
+            />
+            {/* Action Nodes Category */}
+            <CategorySection
+              title="Action Nodes"
+              icon={<Cpu className="w-4 h-4" />}
+              nodes={filteredActionNodes}
+              colorTheme="purple"
+              isOpen={actionExpanded}
+              onToggle={() => setActionExpanded(!actionExpanded)}
+              isDark={isDark}
+              onDragStart={onDragStart}
+            />
             {/* Nodes Category */}
             <CategorySection
               title="Workflow Nodes"
@@ -502,7 +614,6 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
               isDark={isDark}
               onDragStart={onDragStart}
             />
-
             {/* Tools Category */}
             <CategorySection
               title="Integration Tools"
@@ -514,9 +625,8 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
               isDark={isDark}
               onDragStart={onDragStart}
             />
-
             {/* Empty State */}
-            {filteredNodeNodes.length === 0 && filteredToolNodes.length === 0 && searchTerm && (
+            {filteredTriggerNodes.length === 0 && filteredActionNodes.length === 0 && filteredNodeNodes.length === 0 && filteredToolNodes.length === 0 && searchTerm && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -539,6 +649,8 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
+        <span>{filteredTriggerNodes.length} Triggers</span>
+        <span>{filteredActionNodes.length} Actions</span>
         <span>{filteredNodeNodes.length} Nodes</span>
         <span>{filteredToolNodes.length} Tools</span>
       </motion.div>
