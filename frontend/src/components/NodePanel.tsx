@@ -21,7 +21,11 @@ import {
   Layers,
   Wrench,
   Database,
-  Globe
+  Globe,
+  ShoppingCart,
+  Trash2,
+  Download,
+  Tag
 } from 'lucide-react';
 
 interface NodeType {
@@ -42,8 +46,8 @@ const nodeTypes: NodeType[] = [
   // TRIGGER NODES - Event-Based
   {
     id: 'trigger_gmail',
-    label: 'Gmail Trigger',
-    description: 'Start workflow when a new email is received',
+    label: 'When email received',
+    description: 'Start when a new email arrives in your Gmail inbox',
     icon: <MessageSquare className="w-5 h-5" />, // Lucide
     color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
     category: 'Trigger Nodes',
@@ -51,8 +55,8 @@ const nodeTypes: NodeType[] = [
   },
   {
     id: 'trigger_google_calendar',
-    label: 'Google Calendar Trigger',
-    description: 'Start workflow when an event is about to start',
+    label: 'When calendar event starts',
+    description: 'Start when a Google Calendar event is about to begin',
     icon: <Calendar className="w-5 h-5" />, // Lucide
     color: { primary: 'blue', secondary: 'green', glow: 'blue-400/20' },
     category: 'Trigger Nodes',
@@ -60,18 +64,18 @@ const nodeTypes: NodeType[] = [
   },
   {
     id: 'trigger_slack',
-    label: 'Slack Trigger',
-    description: 'Start workflow when a new Slack message is received',
-    icon: <MessageSquare className="w-5 h-5" />, // Lucide (chat bubble)
+    label: 'When Slack message received',
+    description: 'Start when a new message is posted in a Slack channel',
+    icon: <MessageSquare className="w-5 h-5" />, // Lucide
     color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
     category: 'Trigger Nodes',
     type: 'trigger',
   },
   {
     id: 'trigger_notion',
-    label: 'Notion Trigger',
-    description: 'Start workflow when a Notion database item is updated',
-    icon: <FileText className="w-5 h-5" />, // Lucide (document)
+    label: 'When Notion item updated',
+    description: 'Start when a Notion database item is updated',
+    icon: <FileText className="w-5 h-5" />, // Lucide
     color: { primary: 'black', secondary: 'slate', glow: 'slate-400/20' },
     category: 'Trigger Nodes',
     type: 'trigger',
@@ -79,36 +83,36 @@ const nodeTypes: NodeType[] = [
 
   // ACTION NODES - Perform a Task
   {
-    id: 'action_gmail',
-    label: 'Gmail: Send Email',
-    description: 'Send an email to one or more people',
+    id: 'action_gmail_send_email',
+    label: 'Send email',
+    description: 'Send an email to one or more recipients using Gmail',
     icon: <MessageSquare className="w-5 h-5" />, // Lucide
     color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
     category: 'Action Nodes',
     type: 'action',
   },
   {
-    id: 'action_google_calendar',
-    label: 'Google Calendar: Create Event',
-    description: 'Create or update a calendar event',
+    id: 'action_google_calendar_event',
+    label: 'Create calendar event',
+    description: 'Create or update a Google Calendar event',
     icon: <Calendar className="w-5 h-5" />, // Lucide
     color: { primary: 'blue', secondary: 'green', glow: 'blue-400/20' },
     category: 'Action Nodes',
     type: 'action',
   },
   {
-    id: 'action_slack',
-    label: 'Slack: Send Message',
-    description: 'Post a message to a Slack channel or DM',
+    id: 'action_slack_send_message',
+    label: 'Send Slack message',
+    description: 'Send a message to a Slack channel or direct message',
     icon: <MessageSquare className="w-5 h-5" />, // Lucide
     color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
     category: 'Action Nodes',
     type: 'action',
   },
   {
-    id: 'action_notion',
-    label: 'Notion: Create Page',
-    description: 'Log data into a Notion database',
+    id: 'action_notion_create_page',
+    label: 'Create Notion page',
+    description: 'Create a new page or log data in a Notion database',
     icon: <FileText className="w-5 h-5" />, // Lucide
     color: { primary: 'black', secondary: 'slate', glow: 'slate-400/20' },
     category: 'Action Nodes',
