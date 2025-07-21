@@ -32,7 +32,8 @@ import {
   Key,
   X,
   Send,
-  TestTube
+  TestTube,
+  Bug
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -2056,6 +2057,89 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                       >
                         <TestTube className="h-3 w-3 mr-1" />
                         Debug Test Scrape
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          if (!firecrawlApiKey) {
+                            toast({
+                              title: "Error",
+                              description: "Firecrawl API key is required",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          try {
+                            console.log('Starting comprehensive debug session...');
+                            const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://zigsaw-backend.vercel.app');
+                            
+                            const response = await fetch(`${backendUrl}/api/v1/debug-firecrawl`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                apiKey: firecrawlApiKey,
+                                url: 'https://httpbin.org/html'
+                              })
+                            });
+                            
+                            const data = await response.json();
+                            console.log('Debug response:', data);
+                            
+                            if (data.success) {
+                              // Add debug result to chat
+                              const debugMessage: AgentMessage = {
+                                role: 'assistant',
+                                content: `🔧 **Firecrawl Debug Results**\n\n✅ **API Key Valid!**\n\n**Working Endpoint:** ${data.workingEndpoint}\n**Working Payload:** \`\`\`json\n${JSON.stringify(data.workingPayload, null, 2)}\n\`\`\`\n**Response Time:** ${data.responseTime}ms\n\n**All Test Results:**\n\`\`\`json\n${JSON.stringify(data.allResults, null, 2)}\n\`\`\``,
+                                timestamp: new Date(),
+                              };
+                              
+                              const newMessages = [...chatMessages, debugMessage];
+                              setChatMessages(newMessages);
+                              handleConfigChange('messages', newMessages);
+                              
+                              toast({
+                                title: "Debug Successful",
+                                description: `Found working endpoint: ${data.workingEndpoint}`,
+                              });
+                            } else {
+                              // Add debug failure to chat
+                              const debugMessage: AgentMessage = {
+                                role: 'assistant',
+                                content: `❌ **Firecrawl Debug Failed**\n\n**Error:** ${data.error}\n\n**Recommendations:**\n${data.recommendations?.map((rec: string) => `• ${rec}`).join('\n')}\n\n**All Test Results:**\n\`\`\`json\n${JSON.stringify(data.results, null, 2)}\n\`\`\``,
+                                timestamp: new Date(),
+                              };
+                              
+                              const newMessages = [...chatMessages, debugMessage];
+                              setChatMessages(newMessages);
+                              handleConfigChange('messages', newMessages);
+                              
+                              toast({
+                                title: "Debug Failed",
+                                description: data.error || "All endpoints failed",
+                                variant: "destructive",
+                              });
+                            }
+                            
+                            // Log detailed results to console for debugging
+                            console.log('Detailed debug results:', data);
+                          } catch (error) {
+                            console.error('Debug error:', error);
+                            toast({
+                              title: "Debug Error",
+                              description: error instanceof Error ? error.message : "Failed to run debug",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        className="border-orange-400/30 text-orange-300 hover:text-orange-200 hover:bg-orange-500/10 rounded-lg"
+                      >
+                        <Bug className="h-3 w-3 mr-1" />
+                        Debug API
                       </Button>
                       
                       {chatMessages.length > 0 && (
