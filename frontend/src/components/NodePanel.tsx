@@ -21,7 +21,13 @@ import {
   Layers,
   Wrench,
   Database,
-  Globe
+  Globe,
+  Phone,
+  Upload,
+  AtSign,
+  Twitter,
+  Clock,
+  Mail
 } from 'lucide-react';
 
 interface NodeType {
@@ -169,6 +175,37 @@ const nodeTypes: NodeType[] = [
     color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
     category: 'Tools'
   }
+];
+
+// Action Node Presets
+const actionPresets: NodeType[] = [
+  { id: 'send_slack_message', label: 'Send Slack Message', description: 'Send a message to a Slack channel or user.', icon: <MessageSquare className="w-5 h-5 text-blue-500" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Action Presets' },
+  { id: 'send_gmail_email', label: 'Send Gmail Email', description: 'Send an email via Gmail.', icon: <Mail className="w-5 h-5 text-red-500" />, color: { primary: 'red', secondary: 'red', glow: 'red-400/20' }, category: 'Action Presets' },
+  { id: 'send_sms', label: 'Send SMS', description: 'Send a text message via Twilio or similar.', icon: <Phone className="w-5 h-5 text-green-500" />, color: { primary: 'green', secondary: 'green', glow: 'green-400/20' }, category: 'Action Presets' },
+  { id: 'create_gcal_event', label: 'Create Google Calendar Event', description: 'Add an event to Google Calendar.', icon: <Calendar className="w-5 h-5 text-blue-400" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Action Presets' },
+  { id: 'update_gcal_event', label: 'Update Google Calendar Event', description: 'Change details of an existing event.', icon: <Calendar className="w-5 h-5 text-blue-600" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Action Presets' },
+  { id: 'find_free_time', label: 'Find Free Time Slot', description: 'Search for open slots in a calendar.', icon: <Clock className="w-5 h-5 text-yellow-500" />, color: { primary: 'yellow', secondary: 'yellow', glow: 'yellow-400/20' }, category: 'Action Presets' },
+  { id: 'create_notion_page', label: 'Create Notion Page', description: 'Add a new page to a Notion workspace.', icon: <FileText className="w-5 h-5 text-black" />, color: { primary: 'slate', secondary: 'slate', glow: 'slate-400/20' }, category: 'Action Presets' },
+  { id: 'update_notion_db', label: 'Update Notion Database', description: 'Modify a row in a Notion database.', icon: <Database className="w-5 h-5 text-black" />, color: { primary: 'slate', secondary: 'slate', glow: 'slate-400/20' }, category: 'Action Presets' },
+  { id: 'append_google_sheet', label: 'Append to Google Sheet', description: 'Add a row to a Google Sheet.', icon: <FileText className="w-5 h-5 text-green-600" />, color: { primary: 'green', secondary: 'green', glow: 'green-400/20' }, category: 'Action Presets' },
+  { id: 'summarize_text', label: 'Summarize Text', description: 'Use an LLM to summarize input.', icon: <Zap className="w-5 h-5 text-purple-500" />, color: { primary: 'purple', secondary: 'purple', glow: 'purple-400/20' }, category: 'Action Presets' },
+  { id: 'extract_entities', label: 'Extract Entities', description: 'Pull out names, dates, etc. from text.', icon: <Search className="w-5 h-5 text-orange-500" />, color: { primary: 'orange', secondary: 'orange', glow: 'orange-400/20' }, category: 'Action Presets' },
+  { id: 'generate_image', label: 'Generate Image', description: 'Use DALL-E/Stable Diffusion to create an image.', icon: <Image className="w-5 h-5 text-pink-500" />, color: { primary: 'pink', secondary: 'pink', glow: 'pink-400/20' }, category: 'Action Presets' },
+  { id: 'post_tweet', label: 'Post Tweet', description: 'Send a tweet from a connected Twitter/X account.', icon: <Twitter className="w-5 h-5 text-blue-400" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Action Presets' },
+  { id: 'create_jira_ticket', label: 'Create Jira Ticket', description: 'Open a new issue in Jira.', icon: <Layers className="w-5 h-5 text-blue-700" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Action Presets' },
+  { id: 'upload_dropbox', label: 'Upload File to Dropbox', description: 'Save a file to Dropbox.', icon: <Upload className="w-5 h-5 text-blue-800" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Action Presets' },
+];
+
+// Trigger Node Presets
+const triggerPresets: NodeType[] = [
+  { id: 'new_gmail_email', label: 'New Gmail Email', description: 'Trigger when a new email arrives (optionally filter by label, sender, etc.).', icon: <Mail className="w-5 h-5 text-red-500" />, color: { primary: 'red', secondary: 'red', glow: 'red-400/20' }, category: 'Trigger Presets' },
+  { id: 'new_email_attachment', label: 'New Email Attachment', description: 'Trigger when an email with an attachment is received.', icon: <Mail className="w-5 h-5 text-yellow-500" />, color: { primary: 'yellow', secondary: 'yellow', glow: 'yellow-400/20' }, category: 'Trigger Presets' },
+  { id: 'new_slack_message', label: 'New Slack Message', description: 'Trigger when a message is posted in a channel or DM.', icon: <MessageSquare className="w-5 h-5 text-blue-500" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Trigger Presets' },
+  { id: 'new_slack_mention', label: 'New Slack Mention', description: 'Trigger when the bot/user is mentioned.', icon: <AtSign className="w-5 h-5 text-blue-400" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Trigger Presets' },
+  { id: 'upcoming_gcal_event', label: 'Upcoming Google Calendar Event', description: 'Trigger X minutes before an event starts.', icon: <Calendar className="w-5 h-5 text-blue-400" />, color: { primary: 'blue', secondary: 'blue', glow: 'blue-400/20' }, category: 'Trigger Presets' },
+  { id: 'new_calendar_invite', label: 'New Calendar Invite', description: 'Trigger when a new event is added.', icon: <Calendar className="w-5 h-5 text-green-500" />, color: { primary: 'green', secondary: 'green', glow: 'green-400/20' }, category: 'Trigger Presets' },
+  { id: 'new_notion_page', label: 'New Notion Page', description: 'Trigger when a new page is created in a database.', icon: <FileText className="w-5 h-5 text-black" />, color: { primary: 'slate', secondary: 'slate', glow: 'slate-400/20' }, category: 'Trigger Presets' },
+  { id: 'notion_db_updated', label: 'Notion Database Updated', description: 'Trigger when a row is updated.', icon: <Database className="w-5 h-5 text-black" />, color: { primary: 'slate', secondary: 'slate', glow: 'slate-400/20' }, category: 'Trigger Presets' },
 ];
 
 const colorClasses: { [key: string]: { bg: string; text: string; ring: string } } = {
@@ -491,6 +528,30 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
           autoHideDuration={200}
         >
           <div className="p-4 space-y-4">
+            {/* Action Presets Category */}
+            <CategorySection
+              title="Action Presets"
+              icon={<Wrench className="w-4 h-4" />}
+              nodes={actionPresets}
+              colorTheme="purple"
+              isOpen={toolsExpanded} // Assuming toolsExpanded controls this section
+              onToggle={() => setToolsExpanded(!toolsExpanded)}
+              isDark={isDark}
+              onDragStart={onDragStart}
+            />
+
+            {/* Trigger Presets Category */}
+            <CategorySection
+              title="Trigger Presets"
+              icon={<Search className="w-4 h-4" />}
+              nodes={triggerPresets}
+              colorTheme="blue"
+              isOpen={nodesExpanded} // Assuming nodesExpanded controls this section
+              onToggle={() => setNodesExpanded(!nodesExpanded)}
+              isDark={isDark}
+              onDragStart={onDragStart}
+            />
+
             {/* Nodes Category */}
             <CategorySection
               title="Workflow Nodes"
