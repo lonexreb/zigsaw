@@ -32,8 +32,13 @@ const TierIndicator: React.FC<TierIndicatorProps> = ({ isDark = false }) => {
         const response = await apiService.get('/api/user/plan', idToken);
         console.log('TierIndicator: Got user plan:', response.data);
         setUserPlan(response.data);
-      } catch (error) {
-        console.error('TierIndicator: Error fetching user plan:', error);
+      } catch (error: any) {
+        // Gracefully handle 404 (plan not found)
+        if (error?.response?.status === 404) {
+          setUserPlan({ plan: 'free', api_requests_count: 0, api_limit: 100 });
+        } else {
+          console.error('TierIndicator: Error fetching user plan:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -42,8 +47,22 @@ const TierIndicator: React.FC<TierIndicatorProps> = ({ isDark = false }) => {
     fetchUserPlan();
   }, [currentUser]);
 
-  if (loading || !userPlan) {
-    return null;
+  if (loading) return null;
+  if (!userPlan) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`p-2 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg ${
+          isDark 
+            ? 'bg-gray-800/80 border-gray-600/30 text-white' 
+            : 'bg-gray-100/80 border-gray-400/50 text-black'
+        }`}
+        title="No plan information available"
+      >
+        <Zap className="w-4 h-4 text-gray-400" />
+      </motion.div>
+    )
   }
 
   const isPremium = userPlan.plan === 'premium';
