@@ -17,26 +17,31 @@ export function ChatWorkflowAssistant({ onWorkflowGenerated }: ChatWorkflowAssis
     setMessages(msgs => [...msgs, { role: 'user', content: input }])
     setIsLoading(true)
     setInput('')
-    // Use provided Claude API key
-    const CLAUDE_API_URL = 'https://zigsaw-backend.app.vercel.app/api/claude-chat'
+    const CLAUDE_API_URL = 'https://zigsaw-backend.app.vercel.app/api/v1/claude-chat'
+    const requestBody = {
+      messages: [
+        ...messages,
+        { role: 'user', content: input }
+      ]
+    }
+    console.log('[ChatWorkflowAssistant] Sending message:', input)
+    console.log('[ChatWorkflowAssistant] POSTing to:', CLAUDE_API_URL)
+    console.log('[ChatWorkflowAssistant] Request body:', requestBody)
     try {
       const res = await fetch(CLAUDE_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          messages: [
-            ...messages,
-            { role: 'user', content: input }
-          ]
-        })
+        body: JSON.stringify(requestBody)
       })
+      console.log('[ChatWorkflowAssistant] Response status:', res.status)
       const data = await res.json()
-      // Expecting Claude to return { reply: string, workflow?: object }
+      console.log('[ChatWorkflowAssistant] Response data:', data)
       setMessages(msgs => [...msgs, { role: 'assistant', content: data.reply }])
       if (data.workflow) onWorkflowGenerated(data.workflow)
     } catch (e) {
+      console.error('[ChatWorkflowAssistant] Error sending message:', e)
       setMessages(msgs => [...msgs, { role: 'assistant', content: 'Sorry, there was an error.' }])
     } finally {
       setIsLoading(false)
