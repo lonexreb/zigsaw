@@ -1477,9 +1477,20 @@ const WorkflowContent = () => {
     {/* Enhanced Metrics Panel or Chat Workflow Assistant */}
     {activeTab === 'workflow' ? (
       <ChatWorkflowAssistant onWorkflowGenerated={(workflow) => {
-        // TODO: Implement logic to load workflow JSON onto canvas
-        // Example: addNodesAndEdgesFromWorkflow(workflow)
-        console.log('Workflow JSON from Claude:', workflow)
+        // Expecting workflow = { nodes: Node[], edges: Edge[] }
+        if (!workflow || !Array.isArray(workflow.nodes) || !Array.isArray(workflow.edges)) {
+          alert('Invalid workflow format from Claude.');
+          return;
+        }
+        setNodes(workflow.nodes)
+        setEdges(workflow.edges)
+        // Optionally update nodeIdCounter to avoid ID collisions
+        const maxId = workflow.nodes.reduce((max, n) => {
+          const match = /-(\d+)$/.exec(n.id)
+          const num = match ? parseInt(match[1], 10) : 0
+          return Math.max(max, num)
+        }, 0)
+        setNodeIdCounter(maxId + 1)
       }} />
     ) : (
       <MetricsPanel isDark={isDark} />

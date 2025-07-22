@@ -21,12 +21,7 @@ import {
   Layers,
   Wrench,
   Database,
-  Globe,
-  ShoppingCart,
-  Trash2,
-  Download,
-  Tag
-} from 'lucide-react';
+  Globe} from 'lucide-react';
 
 interface NodeType {
   id: string;

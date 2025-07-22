@@ -19,13 +19,11 @@ export function ChatWorkflowAssistant({ onWorkflowGenerated }: ChatWorkflowAssis
     setInput('')
     // Use provided Claude API key
     const CLAUDE_API_URL = 'https://zigsaw-backend.app.vercel.app/api/claude-chat'
-    const CLAUDE_API_KEY = process.env.NEXT_PUBLIC_CLAUDE_API_KEY || ''
     try {
       const res = await fetch(CLAUDE_API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${CLAUDE_API_KEY}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           messages: [

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Handle, Position, NodeResizer } from '@xyflow/react'
 import { MessageSquare } from 'lucide-react'
 
@@ -13,7 +12,7 @@ interface GmailSendEmailNodeProps {
   selected?: boolean
 }
 
-export function GmailSendEmailNode({ id, data, selected }: GmailSendEmailNodeProps) {
+export function GmailSendEmailNode({ data, selected }: GmailSendEmailNodeProps) {
   function getStatusColor() {
     switch (data.status) {
       case 'running': return 'border-red-400/60 bg-red-500/10'

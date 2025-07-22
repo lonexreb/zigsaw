@@ -4,7 +4,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
   if (req.method === 'OPTIONS') {
     res.status(200).end()
@@ -16,9 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return
   }
 
-  const apiKey = req.headers.authorization?.replace('Bearer ', '')
+  const apiKey = process.env.CLAUDE_API_KEY
   if (!apiKey) {
-    res.status(401).json({ error: 'Missing API key' })
+    res.status(401).json({ error: 'Missing Claude API key in backend env' })
     return
   }
 
