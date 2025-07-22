@@ -18,9 +18,16 @@ export function ChatWorkflowAssistant({ onWorkflowGenerated }: ChatWorkflowAssis
     setIsLoading(true)
     setInput('')
     const CLAUDE_API_URL = 'https://zigsaw-backend.vercel.app/api/v1/claude-chat'
+    // Always send only two messages: instruction and user request
+    const workflowInstruction = {
+      role: 'user',
+      content: `You are a workflow generator. Given a user request, output ONLY a JSON object describing a workflow for a drag-and-drop canvas. The JSON must have this format:\n\n{\n  \"nodes\": [ ... ],\n  \"edges\": [ ... ]\n}\n\nDo not include any explanation, markdown, or code block. Only output the JSON object.`
+    }
     const requestBody = {
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1024,
       messages: [
-        ...messages,
+        workflowInstruction,
         { role: 'user', content: input }
       ]
     }
@@ -38,11 +45,30 @@ export function ChatWorkflowAssistant({ onWorkflowGenerated }: ChatWorkflowAssis
       console.log('[ChatWorkflowAssistant] Response status:', res.status)
       const data = await res.json()
       console.log('[ChatWorkflowAssistant] Response data:', data)
-      setMessages(msgs => [...msgs, { role: 'assistant', content: data.reply }])
-      if (data.workflow) onWorkflowGenerated(data.workflow)
+      let workflow = null
+      if (
+        data &&
+        Array.isArray(data.content) &&
+        data.content[0]?.type === 'text' &&
+        data.content[0]?.text
+      ) {
+        try {
+          workflow = JSON.parse(data.content[0].text)
+        } catch (e) {
+          console.error('Failed to parse workflow JSON from Claude:', e, data.content[0].text)
+        }
+      }
+      if (workflow && workflow.nodes && workflow.edges) {
+        onWorkflowGenerated(workflow)
+      } else {
+        setMessages(msgs => [
+          ...msgs,
+          { role: 'assistant', content: 'Sorry, I could not generate a valid workflow. Please try rephrasing your request.' }
+        ])
+      }
     } catch (e) {
       console.error('[ChatWorkflowAssistant] Error sending message:', e)
-      setMessages(msgs => [...msgs, { role: 'assistant', content: 'Sorry, there was an error.' }])
+      setMessages(msgs => [...msgs, { role: 'assistant', content: 'Sorry, there was a server error. Please try again later.' }])
     } finally {
       setIsLoading(false)
     }
