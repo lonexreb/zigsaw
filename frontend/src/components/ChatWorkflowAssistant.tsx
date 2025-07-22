@@ -17,7 +17,7 @@ export function ChatWorkflowAssistant({ onWorkflowGenerated }: ChatWorkflowAssis
     setMessages(msgs => [...msgs, { role: 'user', content: input }])
     setIsLoading(true)
     setInput('')
-    const CLAUDE_API_URL = 'https://zigsaw-backend.app.vercel.app/api/v1/claude-chat'
+    const CLAUDE_API_URL = 'https://zigsaw-backend.vercel.app/api/v1/claude-chat'
     const requestBody = {
       messages: [
         ...messages,
