@@ -17,7 +17,7 @@ import {
   NodeTypes,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Activity, Zap, Database, Workflow, X, Github, Bot } from 'lucide-react';
+import { Activity, Zap, Database, Workflow, X, Github, Bot, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MetricsPanel from '../components/MetricsPanel';
 import { ChatWorkflowAssistant } from '../components/ChatWorkflowAssistant';
@@ -75,6 +75,7 @@ import { auth as firebaseAuth } from '@/lib/firebase';
 import { WorkflowHeader } from '../components/workflow/WorkflowHeader'
 import { WorkflowCanvas } from '../components/workflow/WorkflowCanvas'
 import { WorkflowProvider } from '../contexts/WorkflowContext';
+import WorkflowTemplatesPanel from '../components/WorkflowTemplatesPanel';
 
 async function getAuthToken(): Promise<string | null> {
   const user = firebaseAuth.currentUser;
@@ -341,6 +342,7 @@ const WorkflowContent = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   // Metrics are now handled by MetricsPanel component directly
   const [isNodePanelOpen, setIsNodePanelOpen] = useState(true);
+  const [isTemplatesPanelOpen, setIsTemplatesPanelOpen] = useState(false);
   const [nodeIdCounter, setNodeIdCounter] = useState(2);
   const [isWorkflowLoaded, setIsWorkflowLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState('workflow');
@@ -1483,7 +1485,33 @@ const WorkflowContent = () => {
 
     {/* Floating Node Panel Toggle Button */}
     <AnimatePresence>
-      {!isNodePanelOpen && activeTab !== 'knowledge-graph' && activeTab !== 'networking' && (
+      {!isTemplatesPanelOpen && !isNodePanelOpen && activeTab !== 'knowledge-graph' && activeTab !== 'networking' && (
+        <motion.button
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -100, opacity: 0 }}
+          transition={{ duration: 0.3, type: "spring", damping: 25 }}
+          onClick={() => setIsTemplatesPanelOpen(true)}
+          whileHover={{ 
+            scale: 1.1, 
+            boxShadow: isDark ? "0 0 25px rgba(168, 85, 247, 0.4)" : "0 0 25px rgba(236, 72, 153, 0.4)",
+            x: 10
+          }}
+          whileTap={{ scale: 0.9 }}
+          className={`fixed left-4 top-[calc(50%-80px)] z-50 p-4 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 backdrop-blur-xl border shadow-2xl bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white border-purple-500/40`}
+        >
+          <Layers className="w-6 h-6" />
+          <motion.div
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            transition={{ delay: 0.1 }}
+            className="overflow-hidden"
+          >
+            <span className="whitespace-nowrap">Templates</span>
+          </motion.div>
+        </motion.button>
+      )}
+      {!isTemplatesPanelOpen && !isNodePanelOpen && activeTab !== 'knowledge-graph' && activeTab !== 'networking' && (
         <motion.button
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -1641,6 +1669,131 @@ const WorkflowContent = () => {
         </AlertDialogContent>
       </AlertDialog>
     )}
+
+    {/* Workflow Templates Panel */}
+    <WorkflowTemplatesPanel 
+      isOpen={isTemplatesPanelOpen} 
+      onToggle={() => setIsTemplatesPanelOpen(false)} 
+      isDark={isDark} 
+      onTemplateSelect={template => {
+        // Map template id to a more complex workflow (nodes/edges)
+        let nodes = []
+        let edges = []
+        if (template.id === 'email-summary') {
+          nodes = [
+            {
+              id: 'trigger-1',
+              type: 'trigger',
+              position: { x: 100, y: 100 },
+              data: { label: 'When email received', description: 'Trigger on new email', status: 'idle' }
+            },
+            {
+              id: 'document-1',
+              type: 'document',
+              position: { x: 350, y: 100 },
+              data: { label: 'Summarize Email', description: 'Summarize email content', status: 'idle' }
+            },
+            {
+              id: 'slack-1',
+              type: 'universal_agent',
+              position: { x: 600, y: 100 },
+              data: { label: 'Send to Slack', description: 'Send summary to Slack', status: 'idle' }
+            }
+          ]
+          edges = [
+            { id: 'e1', source: 'trigger-1', target: 'document-1' },
+            { id: 'e2', source: 'document-1', target: 'slack-1' }
+          ]
+        } else if (template.id === 'calendar-digest') {
+          nodes = [
+            {
+              id: 'trigger-2',
+              type: 'trigger',
+              position: { x: 100, y: 100 },
+              data: { label: 'Daily Trigger', description: 'Every day at 8am', status: 'idle' }
+            },
+            {
+              id: 'calendar-1',
+              type: 'document',
+              position: { x: 350, y: 100 },
+              data: { label: 'Get Events', description: 'Fetch today\'s events', status: 'idle' }
+            },
+            {
+              id: 'summary-1',
+              type: 'document',
+              position: { x: 600, y: 100 },
+              data: { label: 'Summarize', description: 'Summarize events', status: 'idle' }
+            },
+            {
+              id: 'slack-2',
+              type: 'universal_agent',
+              position: { x: 850, y: 100 },
+              data: { label: 'Send to Slack', description: 'Send digest to Slack', status: 'idle' }
+            }
+          ]
+          edges = [
+            { id: 'e1', source: 'trigger-2', target: 'calendar-1' },
+            { id: 'e2', source: 'calendar-1', target: 'summary-1' },
+            { id: 'e3', source: 'summary-1', target: 'slack-2' }
+          ]
+        } else if (template.id === 'notion-task') {
+          nodes = [
+            {
+              id: 'trigger-3',
+              type: 'trigger',
+              position: { x: 100, y: 100 },
+              data: { label: 'When Slack message', description: 'Trigger on new Slack message', status: 'idle' }
+            },
+            {
+              id: 'notion-1',
+              type: 'universal_agent',
+              position: { x: 350, y: 100 },
+              data: { label: 'Create Notion Task', description: 'Create task in Notion', status: 'idle' }
+            }
+          ]
+          edges = [
+            { id: 'e1', source: 'trigger-3', target: 'notion-1' }
+          ]
+        } else if (template.id === 'auto-reply') {
+          nodes = [
+            {
+              id: 'trigger-4',
+              type: 'trigger',
+              position: { x: 100, y: 100 },
+              data: { label: 'When email received', description: 'Trigger on new email', status: 'idle' }
+            },
+            {
+              id: 'reply-1',
+              type: 'universal_agent',
+              position: { x: 350, y: 100 },
+              data: { label: 'Auto Reply', description: 'Send auto-reply', status: 'idle' }
+            }
+          ]
+          edges = [
+            { id: 'e1', source: 'trigger-4', target: 'reply-1' }
+          ]
+        } else {
+          // fallback: single node
+          nodes = [
+            {
+              id: `template-${template.id}-${Date.now()}`,
+              type: 'document',
+              position: { x: 200, y: 200 },
+              data: {
+                label: template.name,
+                description: template.description,
+                status: 'idle',
+                outputData: undefined,
+              },
+            },
+          ]
+          edges = []
+        }
+        setNodes(nodes)
+        setEdges(edges)
+        setIsTemplatesPanelOpen(false)
+      }}
+    />
 
   </div>
 );
