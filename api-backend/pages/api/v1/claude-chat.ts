@@ -31,7 +31,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Prepend workflow instruction as a user message
     const workflowInstruction = {
       role: "user",
-      content: `You are a workflow generator. Given a user request, output ONLY a JSON object describing a workflow for a drag-and-drop canvas. The JSON must have this format:\n\n{\n  \"nodes\": [\n    { \"id\": \"trigger-1\", \"type\": \"GmailEmailReceivedNode\", \"position\": { \"x\": 100, \"y\": 100 }, \"data\": { \"label\": \"When email received\", \"description\": \"...\", \"status\": \"idle\" } },\n    { \"id\": \"agent-1\", \"type\": \"UniversalAgentNode\", \"position\": { \"x\": 400, \"y\": 100 }, \"data\": { \"label\": \"Summarize with AI\", \"description\": \"...\", \"status\": \"idle\" } },\n    { \"id\": \"action-1\", \"type\": \"SlackSendMessageNode\", \"position\": { \"x\": 700, \"y\": 100 }, \"data\": { \"label\": \"Send Slack message\", \"description\": \"...\", \"status\": \"idle\" } }\n  ],\n  \"edges\": [\n    { \"id\": \"e1\", \"source\": \"trigger-1\", \"target\": \"agent-1\" },\n    { \"id\": \"e2\", \"source\": \"agent-1\", \"target\": \"action-1\" }\n  ]\n}\n\nDo not include any explanation, markdown, or code block. Only output the JSON object.`
+      content: `You are a workflow generator. Given a user request, output ONLY a JSON object describing a workflow for a drag-and-drop canvas. The JSON must have this format:
+
+{
+  "nodes": [
+    { "id": "trigger-1", "type": "trigger", "position": { "x": 100, "y": 100 }, "data": { "label": "Trigger", "description": "...", "status": "idle" } },
+    { "id": "universal_agent-2", "type": "universal_agent", "position": { "x": 400, "y": 100 }, "data": { "label": "AI Agent", "description": "...", "status": "idle" } },
+    { "id": "router-4", "type": "router", "position": { "x": 700, "y": 100 }, "data": { "label": "Router", "description": "...", "status": "idle" } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "trigger-1", "target": "universal_agent-2" },
+    { "id": "e2", "source": "universal_agent-2", "target": "router-4" }
+  ]
+}
+
+- Only use these node types: trigger, universal_agent, router.
+- Node IDs must be in the format: 'trigger-#', 'universal_agent-#', 'router-#' (where # is a unique number 1-10).
+- You may use multiple universal_agent or router nodes as needed for the workflow.
+- Do not use any other node types or IDs.
+- For a workflow like "When I get an email, summarize it with AI and send to Slack", use a trigger node for the email event, a universal_agent node for summarization, and another universal_agent node for sending to Slack.
+- Do not include any explanation, markdown, or code block. Only output the JSON object.`
     };
     body.messages = [workflowInstruction, ...(body.messages || [])];
 
