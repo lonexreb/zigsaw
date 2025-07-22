@@ -20,6 +20,7 @@ import '@xyflow/react/dist/style.css';
 import { Activity, Zap, Database, Workflow, X, Github, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MetricsPanel from '../components/MetricsPanel';
+import { ChatWorkflowAssistant } from '../components/ChatWorkflowAssistant';
 import NodePanel from '../components/NodePanel';
 import TabContent from '../components/TabContent';
 import DeploymentModal from '../components/DeploymentModal';
@@ -1473,8 +1474,16 @@ const WorkflowContent = () => {
 
     </div>
 
-    {/* Enhanced Metrics Panel */}
-    <MetricsPanel isDark={isDark} />
+    {/* Enhanced Metrics Panel or Chat Workflow Assistant */}
+    {activeTab === 'workflow' ? (
+      <ChatWorkflowAssistant onWorkflowGenerated={(workflow) => {
+        // TODO: Implement logic to load workflow JSON onto canvas
+        // Example: addNodesAndEdgesFromWorkflow(workflow)
+        console.log('Workflow JSON from Claude:', workflow)
+      }} />
+    ) : (
+      <MetricsPanel isDark={isDark} />
+    )}
 
     {/* Floating Node Panel Toggle Button */}
     <AnimatePresence>

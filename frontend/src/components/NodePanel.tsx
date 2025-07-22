@@ -45,7 +45,7 @@ interface NodeType {
 const nodeTypes: NodeType[] = [
   // TRIGGER NODES - Event-Based
   {
-    id: 'trigger_gmail',
+    id: 'GmailEmailReceivedNode',
     label: 'When email received',
     description: 'Start when a new email arrives in your Gmail inbox',
     icon: <MessageSquare className="w-5 h-5" />, // Lucide
@@ -54,7 +54,7 @@ const nodeTypes: NodeType[] = [
     type: 'trigger',
   },
   {
-    id: 'trigger_google_calendar',
+    id: 'GoogleCalendarEventStartsNode',
     label: 'When calendar event starts',
     description: 'Start when a Google Calendar event is about to begin',
     icon: <Calendar className="w-5 h-5" />, // Lucide
@@ -63,7 +63,7 @@ const nodeTypes: NodeType[] = [
     type: 'trigger',
   },
   {
-    id: 'trigger_slack',
+    id: 'SlackMessageReceivedNode',
     label: 'When Slack message received',
     description: 'Start when a new message is posted in a Slack channel',
     icon: <MessageSquare className="w-5 h-5" />, // Lucide
@@ -72,7 +72,7 @@ const nodeTypes: NodeType[] = [
     type: 'trigger',
   },
   {
-    id: 'trigger_notion',
+    id: 'NotionItemUpdatedNode',
     label: 'When Notion item updated',
     description: 'Start when a Notion database item is updated',
     icon: <FileText className="w-5 h-5" />, // Lucide
@@ -83,7 +83,7 @@ const nodeTypes: NodeType[] = [
 
   // ACTION NODES - Perform a Task
   {
-    id: 'action_gmail_send_email',
+    id: 'GmailSendEmailNode',
     label: 'Send email',
     description: 'Send an email to one or more recipients using Gmail',
     icon: <MessageSquare className="w-5 h-5" />, // Lucide
@@ -92,7 +92,7 @@ const nodeTypes: NodeType[] = [
     type: 'action',
   },
   {
-    id: 'action_google_calendar_event',
+    id: 'GoogleCalendarCreateEventNode',
     label: 'Create calendar event',
     description: 'Create or update a Google Calendar event',
     icon: <Calendar className="w-5 h-5" />, // Lucide
@@ -101,7 +101,7 @@ const nodeTypes: NodeType[] = [
     type: 'action',
   },
   {
-    id: 'action_slack_send_message',
+    id: 'SlackSendMessageNode',
     label: 'Send Slack message',
     description: 'Send a message to a Slack channel or direct message',
     icon: <MessageSquare className="w-5 h-5" />, // Lucide
@@ -110,7 +110,7 @@ const nodeTypes: NodeType[] = [
     type: 'action',
   },
   {
-    id: 'action_notion_create_page',
+    id: 'NotionCreatePageNode',
     label: 'Create Notion page',
     description: 'Create a new page or log data in a Notion database',
     icon: <FileText className="w-5 h-5" />, // Lucide
@@ -422,10 +422,11 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
   const [nodesExpanded, setNodesExpanded] = useState(true);
   const [toolsExpanded, setToolsExpanded] = useState(true);
 
+  // onDragStart should use node.id as the nodeType
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
+    event.dataTransfer.setData('application/reactflow', nodeType)
+    event.dataTransfer.effectAllowed = 'move'
+  }
 
   // Split nodeTypes into categories
   const triggerNodes = nodeTypes.filter(node => node.category === 'Trigger Nodes');
