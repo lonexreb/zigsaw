@@ -39,87 +39,17 @@ interface NodeType {
 
 const nodeTypes: NodeType[] = [
   // TRIGGER NODES - Event-Based
-  {
-    id: 'GmailEmailReceivedNode',
-    label: 'When email received',
-    description: 'Start when a new email arrives in your Gmail inbox',
-    icon: <MessageSquare className="w-5 h-5" />, // Lucide
-    color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
-    category: 'Trigger Nodes',
-    type: 'trigger',
-  },
-  {
-    id: 'GoogleCalendarEventStartsNode',
-    label: 'When calendar event starts',
-    description: 'Start when a Google Calendar event is about to begin',
-    icon: <Calendar className="w-5 h-5" />, // Lucide
-    color: { primary: 'blue', secondary: 'green', glow: 'blue-400/20' },
-    category: 'Trigger Nodes',
-    type: 'trigger',
-  },
-  {
-    id: 'SlackMessageReceivedNode',
-    label: 'When Slack message received',
-    description: 'Start when a new message is posted in a Slack channel',
-    icon: <MessageSquare className="w-5 h-5" />, // Lucide
-    color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
-    category: 'Trigger Nodes',
-    type: 'trigger',
-  },
-  {
-    id: 'NotionItemUpdatedNode',
-    label: 'When Notion item updated',
-    description: 'Start when a Notion database item is updated',
-    icon: <FileText className="w-5 h-5" />, // Lucide
-    color: { primary: 'black', secondary: 'slate', glow: 'slate-400/20' },
-    category: 'Trigger Nodes',
-    type: 'trigger',
-  },
+  // Removed all trigger nodes
 
   // ACTION NODES - Perform a Task
-  {
-    id: 'GmailSendEmailNode',
-    label: 'Send email',
-    description: 'Send an email to one or more recipients using Gmail',
-    icon: <MessageSquare className="w-5 h-5" />, // Lucide
-    color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
-    category: 'Action Nodes',
-    type: 'action',
-  },
-  {
-    id: 'GoogleCalendarCreateEventNode',
-    label: 'Create calendar event',
-    description: 'Create or update a Google Calendar event',
-    icon: <Calendar className="w-5 h-5" />, // Lucide
-    color: { primary: 'blue', secondary: 'green', glow: 'blue-400/20' },
-    category: 'Action Nodes',
-    type: 'action',
-  },
-  {
-    id: 'SlackSendMessageNode',
-    label: 'Send Slack message',
-    description: 'Send a message to a Slack channel or direct message',
-    icon: <MessageSquare className="w-5 h-5" />, // Lucide
-    color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
-    category: 'Action Nodes',
-    type: 'action',
-  },
-  {
-    id: 'NotionCreatePageNode',
-    label: 'Create Notion page',
-    description: 'Create a new page or log data in a Notion database',
-    icon: <FileText className="w-5 h-5" />, // Lucide
-    color: { primary: 'black', secondary: 'slate', glow: 'slate-400/20' },
-    category: 'Action Nodes',
-    type: 'action',
-  },
+  // Removed all action nodes
 
   // NODES - Core Workflow Components
   {
     id: 'trigger',
     label: 'Trigger Node',
     description: 'Initiate workflows based on events',
-    icon: <Zap className="w-5 h-5" />,
+    icon: <Zap className="w-5 h-5" />, 
     color: { primary: 'yellow', secondary: 'orange', glow: 'yellow-400/20' },
     category: 'Nodes'
   },
@@ -127,7 +57,7 @@ const nodeTypes: NodeType[] = [
     id: 'universal_agent',
     label: 'Universal Agent',
     description: 'Multi-provider AI agent with tool integration',
-    icon: <Bot className="w-5 h-5" />,
+    icon: <Bot className="w-5 h-5" />, 
     color: { primary: 'purple', secondary: 'violet', glow: 'purple-400/20' },
     category: 'Nodes'
   },
@@ -135,7 +65,7 @@ const nodeTypes: NodeType[] = [
     id: 'router',
     label: 'Router Node',
     description: 'AI-powered routing for dynamic workflow paths',
-    icon: <GitBranch className="w-5 h-5" />,
+    icon: <GitBranch className="w-5 h-5" />, 
     color: { primary: 'purple', secondary: 'indigo', glow: 'purple-400/20' },
     category: 'Nodes'
   },
@@ -143,7 +73,7 @@ const nodeTypes: NodeType[] = [
     id: 'loop',
     label: 'Loop Node',
     description: 'Repeat a sub-workflow for each item in a list',
-    icon: <Repeat className="w-5 h-5" />,
+    icon: <Repeat className="w-5 h-5" />, 
     color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
     category: 'Nodes'
   },
@@ -151,7 +81,7 @@ const nodeTypes: NodeType[] = [
     id: 'document',
     label: 'Document Processor',
     description: 'Parse and process documents',
-    icon: <FileText className="w-5 h-5" />,
+    icon: <FileText className="w-5 h-5" />, 
     color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
     category: 'Nodes'
   },
@@ -159,7 +89,7 @@ const nodeTypes: NodeType[] = [
     id: 'groqllama',
     label: 'Groq Llama',
     description: 'Ultra-fast LLM inference',
-    icon: <Cpu className="w-5 h-5" />,
+    icon: <Cpu className="w-5 h-5" />, 
     color: { primary: 'purple', secondary: 'violet', glow: 'purple-400/20' },
     category: 'Nodes'
   },
@@ -167,7 +97,7 @@ const nodeTypes: NodeType[] = [
     id: 'database',
     label: 'Database Node',
     description: 'Query and manage tabular data',
-    icon: <Database className="w-5 h-5" />,
+    icon: <Database className="w-5 h-5" />, 
     color: { primary: 'blue', secondary: 'cyan', glow: 'blue-400/20' },
     category: 'Nodes'
   },
@@ -175,7 +105,7 @@ const nodeTypes: NodeType[] = [
     id: 'api_connector',
     label: 'API Connector',
     description: 'Connect to any HTTP API endpoint',
-    icon: <Globe className="w-5 h-5" />,
+    icon: <Globe className="w-5 h-5" />, 
     color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
     category: 'Nodes'
   },
@@ -581,28 +511,6 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
           autoHideDuration={200}
         >
           <div className="p-4 space-y-4">
-            {/* Trigger Nodes Category */}
-            <CategorySection
-              title="Trigger Nodes"
-              icon={<Zap className="w-4 h-4" />}
-              nodes={filteredTriggerNodes}
-              colorTheme="yellow"
-              isOpen={triggerExpanded}
-              onToggle={() => setTriggerExpanded(!triggerExpanded)}
-              isDark={isDark}
-              onDragStart={onDragStart}
-            />
-            {/* Action Nodes Category */}
-            <CategorySection
-              title="Action Nodes"
-              icon={<Cpu className="w-4 h-4" />}
-              nodes={filteredActionNodes}
-              colorTheme="purple"
-              isOpen={actionExpanded}
-              onToggle={() => setActionExpanded(!actionExpanded)}
-              isDark={isDark}
-              onDragStart={onDragStart}
-            />
             {/* Nodes Category */}
             <CategorySection
               title="Workflow Nodes"
@@ -626,7 +534,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
               onDragStart={onDragStart}
             />
             {/* Empty State */}
-            {filteredTriggerNodes.length === 0 && filteredActionNodes.length === 0 && filteredNodeNodes.length === 0 && filteredToolNodes.length === 0 && searchTerm && (
+            {filteredNodeNodes.length === 0 && filteredToolNodes.length === 0 && searchTerm && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -649,8 +557,6 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <span>{filteredTriggerNodes.length} Triggers</span>
-        <span>{filteredActionNodes.length} Actions</span>
         <span>{filteredNodeNodes.length} Nodes</span>
         <span>{filteredToolNodes.length} Tools</span>
       </motion.div>

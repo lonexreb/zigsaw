@@ -175,226 +175,107 @@ interface ToolWithIcon extends Omit<Tool, 'icon'> {
   icon: React.ReactNode;
 }
 
+// Restrict available tools to only the specified set
 const availableTools: ToolWithIcon[] = [
   {
-    id: 'web_search',
-    name: 'Web Search',
-    description: 'Search the web for current information',
-    category: 'search',
-    icon: <Globe className="h-4 w-4" />,
-    version: '1.0.0',
-    author: 'System',
-    parameters: [
-      { name: 'query', type: 'string', description: 'What to search for', required: true },
-      { name: 'num_results', type: 'number', description: 'How many results to show', required: false, default: 10 },
-    ],
-    required: false,
-    enabled: false,
-    tags: ['web', 'search', 'information'],
-    rating: 4.5,
-    downloads: 1000,
-    cost: 0.01,
-    provider: 'system',
-    supportedModels: ['all'],
-    documentation: 'https://docs.example.com/web-search',
-    examples: [
-      {
-        title: 'Basic Search',
-        description: 'Search for information about AI',
-        parameters: { query: 'artificial intelligence news', num_results: 5 }
-      }
-    ]
-  },
-  {
-    id: 'code_interpreter',
-    name: 'Code Interpreter',
-    description: 'Execute Python code safely',
-    category: 'development',
-    icon: <Code className="h-4 w-4" />,
-    version: '1.0.0',
-    author: 'System',
-    parameters: [
-      { name: 'code', type: 'string', description: 'Code to run', required: true },
-      { name: 'timeout', type: 'number', description: 'Time limit (seconds)', required: false, default: 30 },
-    ],
-    required: false,
-    enabled: false,
-    tags: ['python', 'code', 'execution'],
-    rating: 4.8,
-    downloads: 2500,
-    cost: 0.02,
-    provider: 'system',
-    supportedModels: ['all'],
-    documentation: 'https://docs.example.com/code-interpreter',
-    examples: [
-      {
-        title: 'Simple Calculation',
-        description: 'Perform a mathematical calculation',
-        parameters: { code: 'print(2 + 2)', timeout: 10 }
-      }
-    ]
-  },
-  {
-    id: 'database_query',
-    name: 'Database Query',
-    description: 'Query database with SQL',
-    category: 'data',
-    icon: <Database className="h-4 w-4" />,
-    version: '1.0.0',
-    author: 'System',
-    parameters: [
-      { name: 'query', type: 'string', description: 'Database question', required: true },
-      { name: 'connection_string', type: 'string', description: 'Database location', required: true },
-    ],
-    required: false,
-    enabled: false,
-    tags: ['sql', 'database', 'query'],
-    rating: 4.2,
-    downloads: 800,
-    cost: 0.03,
-    provider: 'system',
-    supportedModels: ['all'],
-    documentation: 'https://docs.example.com/database-query',
-    examples: [
-      {
-        title: 'Select Query',
-        description: 'Query user data',
-        parameters: { 
-          query: 'SELECT * FROM users LIMIT 10',
-          connection_string: 'postgresql://user:pass@localhost:5432/db'
-        }
-      }
-    ]
-  },
-  {
-    id: 'calculator',
-    name: 'Calculator',
-    description: 'Perform mathematical calculations',
-    category: 'utility',
-    icon: <Calculator className="h-4 w-4" />,
-    version: '1.0.0',
-    author: 'System',
-    parameters: [
-      { name: 'expression', type: 'string', description: 'Math problem to solve', required: true },
-    ],
-    required: false,
-    enabled: false,
-    tags: ['math', 'calculation', 'arithmetic'],
-    rating: 4.3,
-    downloads: 1200,
-    cost: 0.001,
-    provider: 'system',
-    supportedModels: ['all'],
-    documentation: 'https://docs.example.com/calculator',
-    examples: [
-      {
-        title: 'Basic Calculation',
-        description: 'Perform arithmetic operations',
-        parameters: { expression: '2 + 2 * 3' }
-      }
-    ]
-  },
-  {
-    id: 'email_sender',
-    name: 'Email Sender',
-    description: 'Send emails via SMTP',
-    category: 'communication',
+    id: 'gmail_reply',
+    name: 'Gmail: Reply',
+    description: 'Reply to emails in Gmail',
     icon: <Mail className="h-4 w-4" />,
+    category: 'Communication',
     version: '1.0.0',
     author: 'System',
-    parameters: [
-      { name: 'to', type: 'string', description: 'Who to send to', required: true },
-      { name: 'subject', type: 'string', description: 'Email title', required: true },
-      { name: 'body', type: 'string', description: 'Email message', required: true },
-    ],
+    parameters: [],
     required: false,
-    enabled: false,
-    tags: ['email', 'communication', 'smtp'],
-    rating: 4.0,
-    downloads: 600,
-    cost: 0.005,
+    enabled: true,
+    tags: ['gmail', 'reply'],
+    rating: 5,
+    downloads: 0,
+    cost: 0,
     provider: 'system',
     supportedModels: ['all'],
-    documentation: 'https://docs.example.com/email-sender',
-    examples: [
-      {
-        title: 'Send Email',
-        description: 'Send a simple email',
-        parameters: { 
-          to: 'user@example.com',
-          subject: 'Hello',
-          body: 'Hello, this is a test email.'
-        }
-      }
-    ]
+    documentation: '',
+    examples: [],
   },
   {
-    id: 'calendar_manager',
-    name: 'Calendar Manager',
-    description: 'Manage calendar events',
-    category: 'productivity',
+    id: 'slack_send_message',
+    name: 'Slack: Send message',
+    description: 'Send a message in Slack',
+    icon: <MessageSquare className="h-4 w-4" />,
+    category: 'Communication',
+    version: '1.0.0',
+    author: 'System',
+    parameters: [],
+    required: false,
+    enabled: true,
+    tags: ['slack', 'send'],
+    rating: 5,
+    downloads: 0,
+    cost: 0,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: '',
+    examples: [],
+  },
+  {
+    id: 'notion_create_page',
+    name: 'Notion: Create page',
+    description: 'Create a new page in Notion',
+    icon: <FileText className="h-4 w-4" />,
+    category: 'Productivity',
+    version: '1.0.0',
+    author: 'System',
+    parameters: [],
+    required: false,
+    enabled: true,
+    tags: ['notion', 'create'],
+    rating: 5,
+    downloads: 0,
+    cost: 0,
+    provider: 'system',
+    supportedModels: ['all'],
+    documentation: '',
+    examples: [],
+  },
+  {
+    id: 'gcal_summarize_events',
+    name: 'GCal: Summarize events',
+    description: 'Summarize Google Calendar events',
     icon: <Calendar className="h-4 w-4" />,
+    category: 'Productivity',
     version: '1.0.0',
     author: 'System',
-    parameters: [
-      { name: 'action', type: 'select', description: 'What to do', required: true, options: ['create', 'update', 'delete', 'list'] },
-      { name: 'event_details', type: 'json', description: 'Event information', required: false },
-    ],
+    parameters: [],
     required: false,
-    enabled: false,
-    tags: ['calendar', 'events', 'scheduling'],
-    rating: 4.4,
-    downloads: 900,
-    cost: 0.008,
+    enabled: true,
+    tags: ['gcal', 'summarize'],
+    rating: 5,
+    downloads: 0,
+    cost: 0,
     provider: 'system',
     supportedModels: ['all'],
-    documentation: 'https://docs.example.com/calendar-manager',
-    examples: [
-      {
-        title: 'Create Event',
-        description: 'Create a new calendar event',
-        parameters: { 
-          action: 'create',
-          event_details: {
-            title: 'Meeting',
-            start: '2024-01-01T10:00:00Z',
-            end: '2024-01-01T11:00:00Z'
-          }
-        }
-      }
-    ]
+    documentation: '',
+    examples: [],
   },
   {
-    id: 'image_analyzer',
-    name: 'Image Analyzer',
-    description: 'Analyze and describe images',
-    category: 'vision',
-    icon: <Image className="h-4 w-4" />,
+    id: 'generic_llm_task',
+    name: 'Generic LLM Task',
+    description: 'Perform a generic LLM task',
+    icon: <Cpu className="h-4 w-4" />,
+    category: 'AI',
     version: '1.0.0',
     author: 'System',
-    parameters: [
-      { name: 'image_url', type: 'string', description: 'Picture location', required: true },
-      { name: 'analysis_type', type: 'select', description: 'What to look for', required: false, options: ['description', 'objects', 'text', 'faces'] },
-    ],
+    parameters: [],
     required: false,
-    enabled: false,
-    tags: ['vision', 'image', 'analysis'],
-    rating: 4.6,
-    downloads: 1500,
-    cost: 0.02,
+    enabled: true,
+    tags: ['llm', 'generic'],
+    rating: 5,
+    downloads: 0,
+    cost: 0,
     provider: 'system',
     supportedModels: ['all'],
-    documentation: 'https://docs.example.com/image-analyzer',
-    examples: [
-      {
-        title: 'Analyze Image',
-        description: 'Analyze an image and describe its contents',
-        parameters: { 
-          image_url: 'https://example.com/image.jpg',
-          analysis_type: 'description'
-        }
-      }
-    ]
+    documentation: '',
+    examples: [],
   },
 ];
 
@@ -1466,79 +1347,7 @@ const UniversalAgentNode: React.FC<UniversalAgentNodeProps> = ({ data, id, selec
                     </div>
                   </div>
 
-                  {/* API Key Management */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-purple-200 flex items-center gap-2">
-                      <Key className="h-4 w-4" />
-                      API Key for {currentProvider.name}
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="flex-1 relative">
-                        <Input
-                          type="password"
-                          value={apiKeys[config.provider] || ''}
-                          onChange={(e) => handleApiKeyChange(config.provider, e.target.value)}
-                          placeholder={`Enter your ${currentProvider.name} API key`}
-                          className={cn(
-                            "bg-slate-800/50 border-purple-400/30 text-white placeholder:text-purple-300/40 rounded-xl pr-20",
-                            apiKeyValidation[config.provider]?.valid && "border-green-400/50",
-                            apiKeyValidation[config.provider]?.valid === false && "border-red-400/50"
-                          )}
-                        />
-                        {apiKeyValidation[config.provider] && (
-                          <div className={cn(
-                            "absolute right-3 top-1/2 transform -translate-y-1/2 text-xs",
-                            apiKeyValidation[config.provider]?.valid ? "text-green-400" : "text-red-400"
-                          )}>
-                            {apiKeyValidation[config.provider]?.valid ? (
-                              <Check className="h-4 w-4" />
-                            ) : (
-                              <X className="h-4 w-4" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleValidateApiKey(config.provider)}
-                        disabled={isValidatingApiKey[config.provider] || !apiKeys[config.provider]}
-                        className="border-purple-400/30 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 rounded-xl whitespace-nowrap"
-                      >
-                        {isValidatingApiKey[config.provider] ? (
-                          <Activity className="h-4 w-4 animate-spin" />
-                        ) : (
-                          'Validate'
-                        )}
-                      </Button>
-                    </div>
-                    {apiKeyValidation[config.provider] && (
-                      <p className={cn(
-                        "text-xs",
-                        apiKeyValidation[config.provider]?.valid ? "text-green-400" : "text-red-400"
-                      )}>
-                        {apiKeyValidation[config.provider]?.message}
-                      </p>
-                    )}
-                    <p className="text-xs text-purple-300/60">
-                      Your API key is stored locally and never sent to our servers. Get your API key from{' '}
-                      {config.provider === 'anthropic' && (
-                        <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                          Anthropic Console
-                        </a>
-                      )}
-                      {config.provider === 'openai' && (
-                        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                          OpenAI Platform
-                        </a>
-                      )}
-                      {config.provider === 'groq' && (
-                        <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                          Groq Console
-                        </a>
-                      )}
-                    </p>
-                  </div>
+                  {/* Removed API Key Management UI */}
 
 
 

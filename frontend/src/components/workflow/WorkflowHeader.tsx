@@ -54,7 +54,8 @@ export function WorkflowHeader({
           whileHover={{ scale: 1.01 }}
         >
           <div className="flex items-center space-x-2">
-            <div className="min-w-0">
+            {/* Removed Logo from top left */}
+            {/* <div className="min-w-0">
               <Logo size="md" isDark={isDark} />
               <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} flex items-center space-x-1 truncate`}>
                 <span className="hidden sm:inline">Zigsaw</span>
@@ -64,7 +65,7 @@ export function WorkflowHeader({
                   </span>
                 )}
               </div>
-            </div>
+            </div> */}
             {/* Theme Toggle Button */}
             <motion.button
               onClick={toggleTheme}

@@ -3,10 +3,11 @@ import { MessageCircle, X, Send } from 'lucide-react'
 
 interface ChatWorkflowAssistantProps {
   onWorkflowGenerated: (workflow: any) => void
+  initialOpen?: boolean
 }
 
-export function ChatWorkflowAssistant({ onWorkflowGenerated }: ChatWorkflowAssistantProps) {
-  const [open, setOpen] = useState(false)
+export function ChatWorkflowAssistant({ onWorkflowGenerated, initialOpen = false }: ChatWorkflowAssistantProps) {
+  const [open, setOpen] = useState(initialOpen)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([])
   const [isLoading, setIsLoading] = useState(false)

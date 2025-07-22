@@ -336,13 +336,14 @@ const WorkflowContent = () => {
   useEffect(() => {
     console.log('Auth state changed - Current user:', currentUser ? currentUser.uid : 'No user');
   }, [currentUser]);
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  // Set initial nodes and edges to empty arrays for an empty canvas
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   // Metrics are now handled by MetricsPanel component directly
   const [isNodePanelOpen, setIsNodePanelOpen] = useState(true);
   const [nodeIdCounter, setNodeIdCounter] = useState(2);
   const [isWorkflowLoaded, setIsWorkflowLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState('ai-creator');
+  const [activeTab, setActiveTab] = useState('workflow');
 
   const [isDeploymentModalOpen, setIsDeploymentModalOpen] = useState(false);
   const [isDeploymentMinimized, setIsDeploymentMinimized] = useState(false);
@@ -422,31 +423,32 @@ const WorkflowContent = () => {
 
   // Load workflow configuration on component mount
   useEffect(() => {
-    const loadWorkflow = async () => {
-      if (!currentUser || isWorkflowLoaded) return;
-
-      try {
-        const idToken = await currentUser.getIdToken(true);
-        const savedConfig = await workflowPersistenceService.loadWorkflow(idToken);
-        
-        if (savedConfig && workflowPersistenceService.isValidWorkflowConfig(savedConfig)) {
-          console.log('Loading saved workflow configuration', savedConfig);
-          setNodes(savedConfig.nodes || []);
-          setEdges(savedConfig.edges || []);
-          setNodeIdCounter(savedConfig.nodeIdCounter || 2);
-        } else {
-          console.log('No saved workflow found, using initial nodes');
-          setNodes(initialNodes);
-          setEdges([]);
-        }
-      } catch (error) {
-        console.error('Failed to load workflow:', error);
-      } finally {
-        setIsWorkflowLoaded(true);
-      }
-    };
-
-    loadWorkflow();
+    // Disabled: Always start with empty canvas
+    // const loadWorkflow = async () => {
+    //   if (!currentUser || isWorkflowLoaded) return;
+    //
+    //   try {
+    //     const idToken = await currentUser.getIdToken(true);
+    //     const savedConfig = await workflowPersistenceService.loadWorkflow(idToken);
+    //     
+    //     if (savedConfig && workflowPersistenceService.isValidWorkflowConfig(savedConfig)) {
+    //       console.log('Loading saved workflow configuration', savedConfig);
+    //       setNodes(savedConfig.nodes || []);
+    //       setEdges(savedConfig.edges || []);
+    //       setNodeIdCounter(savedConfig.nodeIdCounter || 2);
+    //     } else {
+    //       console.log('No saved workflow found, using initial nodes');
+    //       setNodes(initialNodes);
+    //       setEdges([]);
+    //     }
+    //   } catch (error) {
+    //     console.error('Failed to load workflow:', error);
+    //   } finally {
+    //     setIsWorkflowLoaded(true);
+    //   }
+    // };
+    //
+    // loadWorkflow();
   }, [currentUser, isWorkflowLoaded, setNodes, setEdges]);
 
   // Auto-save workflow configuration when nodes or edges change
@@ -536,28 +538,11 @@ const WorkflowContent = () => {
 
   // Define tabs configuration
   const tabs = useMemo(() => [
-    {
-      id: 'ai-creator',
-      label: 'AI Creator',
-      icon: <Bot className="w-3 h-3" />,
-      persistent: true
-    },
+    // Only Workflow tab remains
     {
       id: 'workflow',
       label: 'Workflow',
-      icon: <Workflow className="w-3 h-3" />,
-      persistent: true
-    },
-    {
-      id: 'github-credentials',
-      label: 'GitHub',
-      icon: <Github className="w-3 h-3" />,
-      persistent: true
-    },
-    {
-      id: 'networking',
-      label: 'Networking',
-      icon: <Activity className="w-3 h-3" />,
+      icon: <Workflow className="w-3 h-3" />, 
       persistent: true
     }
   ], []);
