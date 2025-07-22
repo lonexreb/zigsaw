@@ -23,6 +23,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // Ensure model is set
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!body.model) {
+      body.model = 'claude-3-haiku-20240307';
+    }
+
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -30,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify(body)
     })
     const data = await anthropicRes.json()
     res.status(anthropicRes.status).json(data)
