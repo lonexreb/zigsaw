@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, Layers, Clock, CheckCircle, Cpu, Bot, User, ArrowRight, GitMerge, Database, Shield, HelpCircle, HelpCircle as QuestionIcon, Twitter, Apple } from 'lucide-react'
+import { Zap, Layers, Clock, CheckCircle, Cpu, Bot, User, ArrowRight, GitMerge, Database, Shield, HelpCircle, HelpCircle as QuestionIcon, Twitter, Apple, Send } from 'lucide-react'
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 import * as THREE from 'three'
@@ -130,6 +130,10 @@ function Hero() {
   const [current, setCurrent] = useState(0)
   const [typed, setTyped] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
+  // Workflow creation input (like ChatWorkflowAssistant, but in Hero)
+  const [workflowInput, setWorkflowInput] = React.useState('')
+  const [workflowLoading, setWorkflowLoading] = React.useState(false)
+  const [workflowResponse, setWorkflowResponse] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     if (currentUser) navigate('/workflow')
@@ -151,7 +155,7 @@ function Hero() {
     return () => clearTimeout(timeout)
   }, [typed, isDeleting, current, workflows])
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleContinue(e: React.FormEvent) {
     e.preventDefault()
     if (!email || !password) {
       setError('Email and password required')
@@ -162,25 +166,17 @@ function Hero() {
     try {
       await signInWithEmail(email, password)
       // navigation handled by useEffect
-    } catch {
-      setError('Sign in failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email || !password) {
-      setError('Email and password required')
-      return
-    }
-    setIsLoading(true)
-    setError(null)
-    try {
-      await signUpWithEmail(email, password)
-      // navigation handled by useEffect
-    } catch {
-      setError('Sign up failed')
+    } catch (err: any) {
+      if (err?.code === 'auth/user-not-found') {
+        try {
+          await signUpWithEmail(email, password)
+          // navigation handled by useEffect
+        } catch (signupErr: any) {
+          setError(signupErr?.message || 'Sign up failed')
+        }
+      } else {
+        setError(err?.message || 'Sign in failed')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -230,6 +226,52 @@ function Hero() {
     }
   }
 
+  async function handleWorkflowCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!workflowInput.trim()) return
+    setWorkflowLoading(true)
+    setWorkflowResponse(null)
+    try {
+      // Use Groq (Grok) for workflow generation
+      // Backend must have GROQ_API_KEY set in its environment
+      const GROQ_API_URL = 'https://zigsaw-backend.vercel.app/api/v1/chat'
+      const systemPrompt = `You are a workflow generator for a no-code visual automation platform. Given a user request, output ONLY a JSON object describing a workflow for a drag-and-drop canvas. The JSON must have this format:\n\n{\n  "nodes": [ ... ],\n  "edges": [ ... ]\n}\n\n- Only use these node types: trigger, universal_agent, router.\n- Node IDs must be in the format: 'trigger-#', 'universal_agent-#', 'router-#' (where # is a unique number 1-10).\n- When using a router node, always create three outputs: path A, path B, path C.\n- Each output path must connect to exactly one universal_agent node, and no two agent nodes connect to the same path.\n- Use the sourceHandle field in edges to indicate which router output is used (e.g., 'path-a', 'path-b', 'path-c').\n- The trigger node's label and description must be unique and reflect the workflow's purpose (e.g., 'When I get an email').\n- You may use multiple universal_agent or router nodes as needed for the workflow.\n- Do not use any other node types or IDs.\n- Do not include any explanation, markdown, or code block. Only output the JSON object.`
+      const requestBody = {
+        provider: 'groq',
+        model: 'llama3-70b-8192',
+        maxTokens: 1024,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: workflowInput }
+        ]
+        // If backend requires, add: apiKey: '<YOUR_GROQ_API_KEY>'
+      }
+      const res = await fetch(GROQ_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      })
+      const data = await res.json()
+      let workflow = null
+      if (data && typeof data.content === 'string') {
+        try {
+          workflow = JSON.parse(data.content)
+        } catch (e) {
+          setWorkflowResponse('Could not parse workflow JSON.')
+        }
+      }
+      if (workflow && workflow.nodes && workflow.edges) {
+        setWorkflowResponse(`Workflow created with ${workflow.nodes.length} node${workflow.nodes.length !== 1 ? 's' : ''} and ${workflow.edges.length} edge${workflow.edges.length !== 1 ? 's' : ''}.`)
+      } else {
+        setWorkflowResponse('Sorry, could not generate a valid workflow. Try rephrasing your request.')
+      }
+    } catch (e) {
+      setWorkflowResponse('Server error. Please try again later.')
+    } finally {
+      setWorkflowLoading(false)
+    }
+  }
+
   return (
     <section className="relative w-full flex flex-col items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[60vh] md:min-h-[70vh]">
       <AnimatedGlobe />
@@ -268,7 +310,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.1 }}
         >
-          Empower your team to automate tasks, answer questions, and build smart solutions—just by saying what you want automated. If you can use a mouse, you can use Zigsaw.
+          Empower your team to automate tasks, answer questions, and build smart solutions—just by speaking your mind. If you can use a mouse, you can use Zigsaw.
         </motion.p>
         {/* Get Started Button or Login Form */}
         {!showSignIn && (
@@ -290,6 +332,43 @@ function Hero() {
             </span>
           </motion.button>
         )}
+        {/* Workflow creation input box */}
+        {!showSignIn && (
+          <>
+            <form onSubmit={handleWorkflowCreate} className="w-full max-w-md flex flex-col items-center gap-2 mt-8 mb-2">
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  value={workflowInput}
+                  onChange={e => setWorkflowInput(e.target.value)}
+                  placeholder="Describe a workflow to automate..."
+                  className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow shiny-placeholder"
+                  disabled={workflowLoading}
+                />
+                <button
+                  type="submit"
+                  className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 shadow border border-blue-300 transition-all backdrop-blur"
+                  disabled={workflowLoading || !workflowInput.trim()}
+                  style={{ minWidth: 40 }}
+                  aria-label="Send"
+                >
+                  <Send className="w-5 h-5 text-blue-400 drop-shadow" />
+                </button>
+              </div>
+              {workflowResponse && (
+                <div className="w-full mt-2 text-sm text-blue-200 text-center bg-blue-900/40 rounded-lg px-3 py-2 shadow">
+                  {workflowResponse}
+                </div>
+              )}
+            </form>
+            {/* Show workflow placeholder message below input box if no workflow yet */}
+            {workflowResponse == null || !workflowResponse.includes('Workflow created') ? (
+              <div className="w-full flex flex-col items-center justify-center py-4">
+                <div className="text-gray-400 text-sm italic">Your workflow will appear here after you chat with FlowPilot.</div>
+              </div>
+            ) : null}
+          </>
+        )}
         <motion.div
           className="w-full max-w-md"
           initial={false}
@@ -299,10 +378,10 @@ function Hero() {
         >
           {showSignIn && (
             <div className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm">
-          <form onSubmit={handleLogin} className="w-full flex flex-col items-center gap-4">
+          <form onSubmit={handleContinue} className="w-full flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 mb-2">
               <User className="w-6 h-6 text-blue-400" />
-                  <span className="font-bold text-xl text-white">Sign in to Start Building (No Code!)</span>
+                  <span className="font-bold text-xl text-white">Sign in to your account</span>
             </div>
             <input
               type="email"
@@ -325,7 +404,7 @@ function Hero() {
               disabled={isLoading}
             />
             {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-            <div className="flex gap-4 w-full justify-center">
+            <div className="flex w-full justify-center">
               <motion.button 
                 type="submit" 
                 disabled={isLoading} 
@@ -333,17 +412,7 @@ function Hero() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </motion.button>
-              <motion.button 
-                type="button" 
-                onClick={handleSignUp} 
-                disabled={isLoading} 
-                className="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition w-full"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isLoading ? 'Signing Up...' : 'Sign Up'}
+                {isLoading ? 'Continuing...' : 'Continue'}
               </motion.button>
             </div>
                 {/* Google OAuth button (robust, popup+redirect fallback) */}
@@ -1103,13 +1172,7 @@ export default function Login() {
 
 // MiniWorkflowCanvas component
 function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
-  if (!workflow || !workflow.nodes?.length) {
-    return (
-      <div className="w-full flex flex-col items-center justify-center py-8">
-        <div className="text-gray-400 text-sm italic">Your workflow will appear here after you chat with FlowPilot.</div>
-      </div>
-    )
-  }
+  if (!workflow || !workflow.nodes?.length) return null
   // Simple layout: nodes in a row, edges as arrows
   return (
     <div className="w-full flex flex-col items-center justify-center py-8">
