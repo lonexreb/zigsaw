@@ -134,6 +134,7 @@ function Hero() {
   const [workflowInput, setWorkflowInput] = React.useState('')
   const [workflowLoading, setWorkflowLoading] = React.useState(false)
   const [workflowResponse, setWorkflowResponse] = React.useState<string | null>(null)
+  const [workflow, setWorkflow] = useState<MiniWorkflow | null>(null)
 
   React.useEffect(() => {
     if (currentUser) navigate('/workflow')
@@ -231,11 +232,12 @@ function Hero() {
     if (!workflowInput.trim()) return
     setWorkflowLoading(true)
     setWorkflowResponse(null)
+    setWorkflow(null) // Clear previous workflow
     try {
       // Use Groq (Grok) for workflow generation
       // Backend must have GROQ_API_KEY set in its environment
       const GROQ_API_URL = 'https://zigsaw-backend.vercel.app/api/v1/chat'
-      const systemPrompt = `You are a workflow generator for a no-code visual automation platform. Given a user request, output ONLY a JSON object describing a workflow for a drag-and-drop canvas. The JSON must have this format:\n\n{\n  "nodes": [ ... ],\n  "edges": [ ... ]\n}\n\n- Only use these node types: trigger, universal_agent, router.\n- Node IDs must be in the format: 'trigger-#', 'universal_agent-#', 'router-#' (where # is a unique number 1-10).\n- When using a router node, always create three outputs: path A, path B, path C.\n- Each output path must connect to exactly one universal_agent node, and no two agent nodes connect to the same path.\n- Use the sourceHandle field in edges to indicate which router output is used (e.g., 'path-a', 'path-b', 'path-c').\n- The trigger node's label and description must be unique and reflect the workflow's purpose (e.g., 'When I get an email').\n- You may use multiple universal_agent or router nodes as needed for the workflow.\n- Do not use any other node types or IDs.\n- Do not include any explanation, markdown, or code block. Only output the JSON object.`
+      const systemPrompt = `You are a workflow generator for a no-code visual automation platform. Always output a simple workflow as a JSON object with exactly 3 or 4 nodes, each with a unique, relevant label. The JSON must have this format:\n\n{\n  "nodes": [ ... ],\n  "edges": [ ... ]\n}\n\n- Only use these node types: trigger, universal_agent, router.\n- Node IDs must be in the format: 'trigger-#', 'universal_agent-#', 'router-#' (where # is a unique number 1-10).\n- Each node must have a unique, descriptive label relevant to the workflow.\n- Connect the nodes in a logical sequence using edges.\n- The trigger node should start the workflow.\n- Do not use any other node types or IDs.\n- Do not include any explanation, markdown, or code block. Only output the JSON object.`
       const requestBody = {
         provider: 'groq',
         model: 'llama3-70b-8192',
@@ -262,7 +264,9 @@ function Hero() {
       }
       if (workflow && workflow.nodes && workflow.edges) {
         setWorkflowResponse(`Workflow created with ${workflow.nodes.length} node${workflow.nodes.length !== 1 ? 's' : ''} and ${workflow.edges.length} edge${workflow.edges.length !== 1 ? 's' : ''}.`)
+        setWorkflow(workflow)
       } else {
+        setWorkflow(null)
         setWorkflowResponse('Sorry, could not generate a valid workflow. Try rephrasing your request.')
       }
     } catch (e) {
@@ -367,6 +371,10 @@ function Hero() {
                 <div className="text-gray-400 text-sm italic">Your workflow will appear here after you chat with FlowPilot.</div>
               </div>
             ) : null}
+            {/* After the summary, show the mini workflow canvas if available */}
+            {workflow && (
+              <MiniWorkflowCanvas workflow={workflow} />
+            )}
           </>
         )}
         <motion.div
@@ -1172,27 +1180,106 @@ export default function Login() {
 
 // MiniWorkflowCanvas component
 function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
+  const [glowIdx, setGlowIdx] = React.useState(0)
+  const [allGreen, setAllGreen] = React.useState(false)
+  React.useEffect(() => {
+    let timeout: NodeJS.Timeout
+    if (!workflow || !workflow.nodes?.length) return
+    if (!allGreen) {
+      timeout = setTimeout(() => {
+        if (glowIdx < workflow.nodes.length - 1) {
+          setGlowIdx(i => i + 1)
+        } else {
+          setAllGreen(true)
+        }
+      }, 900)
+    } else {
+      timeout = setTimeout(() => {
+        setGlowIdx(0)
+        setAllGreen(false)
+      }, 1200)
+    }
+    return () => clearTimeout(timeout)
+  }, [glowIdx, allGreen, workflow?.nodes?.length])
+
   if (!workflow || !workflow.nodes?.length) return null
-  // Simple layout: nodes in a row, edges as arrows
+
+  // Icon map for node types
+  const nodeIcons: Record<string, JSX.Element> = {
+    trigger: <Zap className="w-8 h-8 text-blue-400" />, // Lucide Zap
+    universal_agent: <Bot className="w-8 h-8 text-cyan-400" />, // Lucide Bot
+    router: <GitMerge className="w-8 h-8 text-yellow-400" />, // Lucide GitMerge
+  }
+
+  // Helper to format node type
+  function formatNodeType(type: string) {
+    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  }
+
   return (
     <div className="w-full flex flex-col items-center justify-center py-8">
-      <div className="mb-2 text-blue-300 font-semibold text-base">Mini Workflow Canvas</div>
-      <div className="flex items-center gap-4 overflow-x-auto px-4">
-        {workflow.nodes.map((node, i) => (
-          <React.Fragment key={node.id}>
-            <div className="flex flex-col items-center">
-              <div className="rounded-lg px-4 py-2 bg-blue-900 text-white font-bold text-xs shadow border border-blue-400 min-w-[80px] text-center">
-                {node.type}
+      <div className="flex items-center gap-8 overflow-x-auto px-4">
+        {workflow.nodes.map((node, i) => {
+          let glowClass = ''
+          let boxShadow: string | undefined
+          if (allGreen || i < glowIdx) {
+            glowClass = 'glow-green'
+            boxShadow = '0 0 0 6px #22c55e, 0 0 32px 16px #22c55e'
+          } else if (i === glowIdx && !allGreen) {
+            glowClass = 'animate-glow-yellow'
+            boxShadow = '0 0 0 6px #fde047, 0 0 24px 12px #fde047'
+          }
+          return (
+            <React.Fragment key={node.id}>
+              <div className={`flex flex-col items-center z-10 transition-all duration-300 ${glowClass}`}
+                style={boxShadow ? { boxShadow } : undefined}>
+                <span className="relative flex items-center justify-center h-20 w-20 rounded-full shadow border-4 border-blue-400 bg-white">
+                  {nodeIcons[node.type] || <Cpu className="w-8 h-8 text-gray-400" />}
+                </span>
+                <span className="text-base font-bold text-blue-900 mt-2 whitespace-nowrap">{node.label || formatNodeType(node.type)}</span>
+                <span className="text-xs text-gray-400 mt-1">{formatNodeType(node.type)}</span>
               </div>
-              <div className="text-xs text-gray-400 mt-1">{node.label || node.id}</div>
-            </div>
-            {i < workflow.nodes.length - 1 && (
-              <span className="text-blue-400 text-2xl">→</span>
-            )}
-          </React.Fragment>
-        ))}
+              {i < workflow.nodes.length - 1 && (
+                <span className="flex items-center mx-2">
+                  <svg width="48" height="24" viewBox="0 0 48 24" fill="none" className="animated-arrow">
+                    <defs>
+                      <linearGradient id="arrow-gradient" x1="0" y1="12" x2="48" y2="12" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#fde047" />
+                        <stop offset="1" stopColor="#22c55e" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M4 12h40m0 0l-6-6m6 6l-6 6" stroke="url(#arrow-gradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <animate attributeName="stroke-dashoffset" values="48;0;48" dur="1.2s" repeatCount="indefinite" />
+                    </path>
+                  </svg>
+                </span>
+              )}
+            </React.Fragment>
+          )
+        })}
       </div>
-      <div className="mt-2 text-xs text-gray-400">Nodes: {workflow.nodes.length} | Edges: {workflow.edges.length}</div>
+      <style>{`
+        @keyframes glow-yellow {
+          0% { box-shadow: 0 0 0 6px #fde047, 0 0 24px 12px #fde047; }
+          100% { box-shadow: 0 0 0 6px #fde047, 0 0 24px 12px #fde047; }
+        }
+        .glow-green {
+          box-shadow: 0 0 0 6px #22c55e, 0 0 32px 16px #22c55e !important;
+        }
+        .animate-glow-yellow {
+          animation: glow-yellow 0.9s linear infinite;
+        }
+        .animated-arrow {
+          stroke-dasharray: 48;
+          stroke-dashoffset: 0;
+          animation: arrow-dash 1.2s linear infinite;
+        }
+        @keyframes arrow-dash {
+          0% { stroke-dashoffset: 48; }
+          50% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: 48; }
+        }
+      `}</style>
     </div>
   )
 }
