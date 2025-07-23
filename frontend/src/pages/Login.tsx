@@ -268,7 +268,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.1 }}
         >
-          Empower your team to automate tasks, answer questions, and build smart solutions—just by using your imagination. If you can use a mouse, you can use Zigsaw.
+          Empower your team to automate tasks, answer questions, and build smart solutions—just by saying what you want automated. If you can use a mouse, you can use Zigsaw.
         </motion.p>
         {/* Get Started Button or Login Form */}
         {!showSignIn && (
@@ -299,60 +299,92 @@ function Hero() {
         >
           {showSignIn && (
             <div className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm">
-              <form onSubmit={handleLogin} className="w-full flex flex-col items-center gap-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <User className="w-6 h-6 text-blue-400" />
+          <form onSubmit={handleLogin} className="w-full flex flex-col items-center gap-4">
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-6 h-6 text-blue-400" />
                   <span className="font-bold text-xl text-white">Sign in to Start Building (No Code!)</span>
-                </div>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  autoComplete="email"
-                  required
-                  disabled={isLoading}
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  autoComplete="current-password"
-                  required
-                  disabled={isLoading}
-                />
-                {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-                <div className="flex gap-4 w-full justify-center">
-                  <motion.button 
-                    type="submit" 
-                    disabled={isLoading} 
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-full"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {isLoading ? 'Signing In...' : 'Sign In'}
-                  </motion.button>
-                  <motion.button 
-                    type="button" 
-                    onClick={handleSignUp} 
-                    disabled={isLoading} 
-                    className="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition w-full"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {isLoading ? 'Signing Up...' : 'Sign Up'}
-                  </motion.button>
-                </div>
-                {/* Google OAuth button (moved here) */}
+            </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              autoComplete="email"
+              required
+              disabled={isLoading}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              autoComplete="current-password"
+              required
+              disabled={isLoading}
+            />
+            {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+            <div className="flex gap-4 w-full justify-center">
+              <motion.button 
+                type="submit" 
+                disabled={isLoading} 
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </motion.button>
+              <motion.button 
+                type="button" 
+                onClick={handleSignUp} 
+                disabled={isLoading} 
+                className="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition w-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isLoading ? 'Signing Up...' : 'Sign Up'}
+              </motion.button>
+            </div>
+                {/* Google OAuth button (robust, popup+redirect fallback) */}
                 <button
                   type="button"
-                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                  onClick={() => {
+                    if (isLoading) return;
+                    // Try popup first, fallback to redirect if blocked or fails
+                    let popupTried = false;
+                    try {
+                      popupTried = true;
+                      const result = signInWithGoogle?.();
+                      if (result && typeof result.then === 'function') {
+                        result.catch((e: any) => {
+                          if (e?.code === 'auth/popup-blocked' || e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
+                            // Fallback to redirect
+                            import('firebase/auth').then(({ getAuth, GoogleAuthProvider, signInWithRedirect }) => {
+                              signInWithRedirect(getAuth(), new GoogleAuthProvider())
+                            })
+                          } else if (e?.code === 'auth/unauthorized-domain') {
+                            setError('Unauthorized domain. Please add your domain to Firebase Auth > Authorized domains.')
+                          } else {
+                            setError('Google sign in failed')
+                          }
+                        });
+                      }
+                    } catch (e: any) {
+                      if (!popupTried || e?.code === 'auth/popup-blocked' || e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
+                        import('firebase/auth').then(({ getAuth, GoogleAuthProvider, signInWithRedirect }) => {
+                          signInWithRedirect(getAuth(), new GoogleAuthProvider())
+                        })
+                      } else if (e?.code === 'auth/unauthorized-domain') {
+                        setError('Unauthorized domain. Please add your domain to Firebase Auth > Authorized domains.')
+                      } else {
+                        setError('Google sign in failed')
+                      }
+                    }
+                  }}
                   className="w-full flex items-center justify-center gap-3 py-3 mt-2 bg-white text-blue-700 font-semibold rounded-lg shadow hover:bg-gray-100 transition border border-gray-300"
                   style={{ fontFamily: 'inherit', fontSize: '1rem' }}
-                  disabled={isLoading}
                 >
                   <img src="https://logo.clearbit.com/google.com" alt="Google logo" className="w-5 h-5" />
                   Sign in with Google
@@ -360,10 +392,28 @@ function Hero() {
                 {/* Twitter OAuth button */}
                 <button
                   type="button"
-                  onClick={handleTwitterSignIn}
+                  disabled={isLoading}
+                  onClick={() => {
+                    if (isLoading) return;
+                    import('firebase/auth').then(({ getAuth, signInWithPopup, signInWithRedirect, TwitterAuthProvider }) => {
+                      const provider = new TwitterAuthProvider();
+                      signInWithPopup(getAuth(), provider)
+                        .catch((e: any) => {
+                          if (e?.code === 'auth/popup-blocked') {
+                            signInWithRedirect(getAuth(), provider)
+                          } else if (e?.code === 'auth/unauthorized-domain') {
+                            setError('Unauthorized domain. Please add your domain to Firebase Auth > Authorized domains.')
+                          } else if (e?.code === 'auth/popup-closed-by-user') {
+                            setError('Popup closed before completing sign in.')
+                          } else {
+                            setError('Twitter sign in failed')
+                          }
+                        })
+                        .finally(() => setIsLoading(false))
+                    })
+                  }}
                   className="w-full flex items-center justify-center gap-3 py-3 mt-2 bg-white text-blue-500 font-semibold rounded-lg shadow hover:bg-gray-100 transition border border-gray-300"
                   style={{ fontFamily: 'inherit', fontSize: '1rem' }}
-                  disabled={isLoading}
                 >
                   <Twitter className="w-5 h-5 text-blue-500" />
                   Sign in with Twitter
@@ -371,15 +421,33 @@ function Hero() {
                 {/* Apple OAuth button */}
                 <button
                   type="button"
-                  onClick={handleAppleSignIn}
+                  disabled={isLoading}
+                  onClick={() => {
+                    if (isLoading) return;
+                    import('firebase/auth').then(({ getAuth, signInWithPopup, signInWithRedirect, OAuthProvider }) => {
+                      const provider = new OAuthProvider('apple.com');
+                      signInWithPopup(getAuth(), provider)
+                        .catch((e: any) => {
+                          if (e?.code === 'auth/popup-blocked') {
+                            signInWithRedirect(getAuth(), provider)
+                          } else if (e?.code === 'auth/unauthorized-domain') {
+                            setError('Unauthorized domain. Please add your domain to Firebase Auth > Authorized domains.')
+                          } else if (e?.code === 'auth/popup-closed-by-user') {
+                            setError('Popup closed before completing sign in.')
+                          } else {
+                            setError('Apple sign in failed')
+                          }
+                        })
+                        .finally(() => setIsLoading(false))
+                    })
+                  }}
                   className="w-full flex items-center justify-center gap-3 py-3 mt-2 bg-white text-gray-900 font-semibold rounded-lg shadow hover:bg-gray-100 transition border border-gray-300"
                   style={{ fontFamily: 'inherit', fontSize: '1rem' }}
-                  disabled={isLoading}
                 >
                   <Apple className="w-5 h-5 text-gray-900" />
                   Sign in with Apple
                 </button>
-              </form>
+          </form>
             </div>
           )}
         </motion.div>
@@ -532,10 +600,31 @@ interface TrustedCompany {
 function Features() {
   // For logo nodes
   const nodeCompanies = [
-    { name: 'Google', domain: 'google.com' },
-    { name: 'Slack', domain: 'slack.com' },
-    { name: 'Notion', domain: 'notion.so' }
+    { name: 'Google', domain: 'google.com', label: 'Email received' },
+    { name: 'Slack', domain: 'slack.com', label: 'Send alert' },
+    { name: 'Notion', domain: 'notion.so', label: 'Create page' }
   ]
+  // Animation state for glowing
+  const [glowIdx, setGlowIdx] = React.useState(0)
+  const [allGreen, setAllGreen] = React.useState(false)
+  React.useEffect(() => {
+    let timeout: NodeJS.Timeout
+    if (!allGreen) {
+      timeout = setTimeout(() => {
+        if (glowIdx < nodeCompanies.length - 1) {
+          setGlowIdx(i => i + 1)
+        } else {
+          setAllGreen(true)
+        }
+      }, 900)
+    } else {
+      timeout = setTimeout(() => {
+        setGlowIdx(0)
+        setAllGreen(false)
+      }, 1200)
+    }
+    return () => clearTimeout(timeout)
+  }, [glowIdx, allGreen, nodeCompanies.length])
   // For FlowPilot chat button
   // Remove local showFlowPilot state
   return (
@@ -565,20 +654,32 @@ function Features() {
             <span className="text-blue-300 font-bold text-lg mb-2 tracking-wide">Visual Workflow Builder</span>
             <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Connect your favorite apps visually. Drag, drop, and link Google, Slack, Notion, and more.</span>
           </div>
-          {/* Logo node chain */}
-          <div className="flex items-center gap-6">
-            {(nodeCompanies.reduce((acc, company, i) => {
+          {/* Logo node chain with animated glow and labels and visible arrows */}
+          <div className="flex items-center gap-6 min-h-[100px]">
+            {nodeCompanies.reduce<React.ReactNode[]>((acc, company, i) => {
+              let glowClass = ''
+              let boxShadow: string | undefined
+              if (allGreen || i < glowIdx) {
+                glowClass = 'glow-green'
+                boxShadow = '0 0 0 4px #22c55e, 0 0 24px 12px #22c55e'
+              } else if (i === glowIdx && !allGreen) {
+                glowClass = 'animate-glow-yellow'
+                boxShadow = '0 0 0 4px #fde047, 0 0 16px 8px #fde047'
+              }
               acc.push(
-                <div key={company.domain} className="flex flex-col items-center">
-                  <img
-                    src={`https://logo.clearbit.com/${company.domain}`}
-                    alt={company.name + ' logo'}
-                    className="h-14 w-14 object-contain bg-white rounded-full shadow border-2 border-blue-300"
-                    loading="lazy"
-                    draggable={false}
-                    style={{ background: '#fff' }}
-                  />
-                  <span className="text-xs text-blue-200 mt-2 font-semibold">{company.name}</span>
+                <div key={company.domain} className="flex flex-col items-center z-10">
+                  <span className={`relative flex items-center justify-center h-14 w-14 rounded-full shadow border-2 border-blue-300 bg-white ${glowClass}`}
+                    style={boxShadow ? { boxShadow } : undefined}>
+                    <img
+                      src={`https://logo.clearbit.com/${company.domain}`}
+                      alt={company.name + ' logo'}
+                      className="h-10 w-10 object-contain"
+                      loading="lazy"
+                      draggable={false}
+                      style={{ background: '#fff', borderRadius: '9999px' }}
+                    />
+                  </span>
+                  <span className="text-xs text-blue-200 mt-2 font-semibold whitespace-nowrap">{company.label}</span>
                 </div>
               )
               if (i < nodeCompanies.length - 1) {
@@ -587,7 +688,19 @@ function Features() {
                 )
               }
               return acc
-            }, [] as (React.ReactNode | null)[]))}
+            }, [])}
+            <style>{`
+              @keyframes glow-yellow {
+                0% { box-shadow: 0 0 0 4px #fde047, 0 0 16px 8px #fde047; }
+                100% { box-shadow: 0 0 0 4px #fde047, 0 0 16px 8px #fde047; }
+              }
+              .glow-green {
+                box-shadow: 0 0 0 4px #22c55e, 0 0 24px 12px #22c55e !important;
+              }
+              .animate-glow-yellow {
+                animation: glow-yellow 0.9s linear infinite;
+              }
+            `}</style>
           </div>
         </motion.div>
         {/* FlowPilot Feature with chat button */}
