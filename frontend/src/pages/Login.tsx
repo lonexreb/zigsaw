@@ -1187,6 +1187,9 @@ function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
   const [isPaused, setIsPaused] = React.useState(false)
   const [selectedNode, setSelectedNode] = React.useState<null | { id: string, type: string, label?: string }>(null)
   const [hoveredNode, setHoveredNode] = React.useState<string | null>(null)
+  const nodeRefs = React.useRef<(HTMLButtonElement | null)[]>([])
+  const [nodePositions, setNodePositions] = React.useState<{ x: number, width: number }[]>([])
+  const containerRef = React.useRef<HTMLDivElement | null>(null)
 
   // Reset state if workflow changes
   React.useEffect(() => {
@@ -1197,7 +1200,22 @@ function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
     setIsPaused(false)
     setSelectedNode(null)
     setHoveredNode(null)
+    setNodePositions([])
   }, [workflow, nodeCount])
+
+  // After render, measure node positions RELATIVE TO CONTAINER
+  React.useEffect(() => {
+    if (!workflow || !workflow.nodes?.length) return
+    if (!containerRef.current) return
+    const containerRect = containerRef.current.getBoundingClientRect()
+    const positions = nodeRefs.current.slice(0, workflow.nodes.length).map(node => {
+      if (!node) return { x: 0, width: 0 }
+      const rect = node.getBoundingClientRect()
+      return { x: rect.left - containerRect.left, width: rect.width }
+    })
+    // No need to normalize to minX, already relative to container
+    setNodePositions(positions)
+  }, [workflow, workflow?.nodes?.length])
 
   // Animate progress for the current node
   React.useEffect(() => {
@@ -1275,38 +1293,40 @@ function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
 
   return (
     <div className="w-full flex flex-col items-center justify-center py-8">
-      <div className="relative w-full flex items-center justify-center">
-        {/* Animated dotted lines between nodes */}
-        {workflow.nodes.length > 1 && (() => {
-          const nodeWidth = 80
-          const gap = 32
-          const totalWidth = workflow.nodes.length * nodeWidth + (workflow.nodes.length - 1) * gap
-          const y = 40 // vertical center of node
+      <div ref={containerRef} className="relative w-full flex items-center justify-center">
+        {/* Animated dotted lines between nodes (variable length) */}
+        {workflow.nodes.length > 1 && nodePositions.length === workflow.nodes.length && (() => {
+          // Each node: nodePositions[i].x (left), nodePositions[i].width
+          // Draw line from right edge of node i's circle to left edge of node i+1's circle
+          const y = 40 // even more slightly above center of node
+          const svgWidth = nodePositions[nodePositions.length - 1].x + nodePositions[nodePositions.length - 1].width
+          const circleRadius = 40 // px, since h-20 w-20
           return (
             <svg
               className="absolute z-0"
               style={{
-                left: '50%',
-                top: '38px', // slightly above vertical center of node
-                transform: 'translateX(-50%)',
+                left: 0,
+                top: 0,
                 pointerEvents: 'none',
-                width: totalWidth,
-                height: 24,
+                width: svgWidth,
+                height: 104,
                 display: 'block',
               }}
-              width={totalWidth}
-              height={24}
+              width={svgWidth}
+              height={104}
             >
               {workflow.nodes.slice(0, -1).map((_, i) => {
-                const x1 = i * (nodeWidth + gap) + nodeWidth / 2
-                const x2 = (i + 1) * (nodeWidth + gap) + nodeWidth / 2
+                const from = nodePositions[i]
+                const to = nodePositions[i + 1]
+                const fromX = from.x + from.width - circleRadius // right edge of circle
+                const toX = to.x + circleRadius // left edge of next circle
                 return (
                   <line
                     key={i}
-                    x1={x1}
-                    y1={12}
-                    x2={x2}
-                    y2={12}
+                    x1={fromX}
+                    y1={y}
+                    x2={toX}
+                    y2={y}
                     stroke="#fff"
                     strokeWidth="4"
                     strokeDasharray="10 10"
@@ -1354,9 +1374,13 @@ function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
             }
             // Subtle hover animation: only icon grows
             const isHovered = hoveredNode === node.id
+            // Connection dots logic
+            const showLeftDot = i > 0 && (node.type === 'universal_agent' || node.type === 'router')
+            const showRightDot = (node.type === 'trigger' && i === 0) || (node.type === 'universal_agent' || node.type === 'router')
             return (
               <React.Fragment key={node.id}>
                 <button
+                  ref={el => nodeRefs.current[i] = el}
                   type="button"
                   tabIndex={0}
                   aria-label={`Show info for node ${node.label || node.type}`}
@@ -1369,6 +1393,13 @@ function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
                   <span className="relative flex items-center justify-center h-20 w-20 rounded-full shadow border-4 border-blue-400 bg-white transition-all duration-200">
                     {/* SVG Glow/Arc */}
                     {svgRings}
+                    {/* Connection dots */}
+                    {showLeftDot && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-blue-400 rounded-full border-2 border-white shadow" style={{ zIndex: 20 }} />
+                    )}
+                    {showRightDot && (
+                      <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-blue-400 rounded-full border-2 border-white shadow" style={{ zIndex: 20 }} />
+                    )}
                     <span
                       className={`relative z-10 transition-transform duration-200 ${isHovered ? 'scale-105' : ''}`}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.18s cubic-bezier(0.4,0,0.2,1)' }}
