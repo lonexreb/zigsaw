@@ -18,7 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { provider, model, messages, systemPrompt, temperature, maxTokens, apiKey } = req.body;
 
-    if (!provider || !model || !messages || !apiKey) {
+    // For groq, do not require apiKey from client; use env var
+    if (!provider || !model || !messages || (provider !== 'groq' && !apiKey)) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
@@ -59,12 +60,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
         break;
 
-      case 'groq':
+      case 'groq': {
+        // Use GROQ_API_KEY from environment, not from client
+        const groqApiKey = process.env.GROQ_API_KEY;
+        if (!groqApiKey) {
+          return res.status(500).json({ error: 'GROQ_API_KEY not set in backend environment' });
+        }
         response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${groqApiKey}`
           },
           body: JSON.stringify({
             model: model,
@@ -74,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         });
         break;
+      }
 
       default:
         return res.status(400).json({ error: 'Unsupported provider' });
