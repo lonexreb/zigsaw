@@ -71,9 +71,9 @@ export function WorkflowHeader({
       <div className="flex items-center justify-between p-3 sm:p-4">
         {/* Left: Zigsaw Title */}
         <div className="flex items-center min-w-0 flex-1">
-          <span className="font-mono font-bold text-2xl text-gray-900 dark:text-white flex items-center gap-2">
+          <span className="font-mono font-bold text-2xl flex items-center gap-2 zigsaw-logo-shiny">
             {/* Optional: <Logo className="w-7 h-7 mr-2" /> */}
-            Zigsaw
+            zigsaw
           </span>
         </div>
         {/* Center: Main Action Buttons (truly centered) */}
@@ -294,6 +294,20 @@ export function WorkflowHeader({
            text-shadow: 0 1px 8px rgba(0,0,0,0.18);
          }
          @keyframes shine-premium {
+           0% { background-position: 200% center; }
+           100% { background-position: 0% center; }
+         }
+         .zigsaw-logo-shiny {
+           background: linear-gradient(90deg, #ffffff 0%, #87ceeb 25%, #4682b4 50%, #1e90ff 75%, #ffffff 100%);
+           background-size: 200% auto;
+           background-clip: text;
+           -webkit-background-clip: text;
+           -webkit-text-fill-color: transparent;
+           animation: zigsaw-shine 3s linear infinite;
+           filter: drop-shadow(0 0 8px rgba(135, 206, 235, 0.5)) drop-shadow(0 0 16px rgba(70, 130, 180, 0.3)) drop-shadow(0 0 24px rgba(30, 144, 255, 0.2));
+           text-shadow: 0 0 20px rgba(135, 206, 235, 0.7), 0 0 40px rgba(70, 130, 180, 0.5), 0 0 60px rgba(30, 144, 255, 0.3);
+         }
+         @keyframes zigsaw-shine {
            0% { background-position: 200% center; }
            100% { background-position: 0% center; }
          }
