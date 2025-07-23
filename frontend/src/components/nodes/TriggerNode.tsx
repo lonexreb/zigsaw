@@ -158,22 +158,23 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
                   scale: [1, 1.05, 1],
                 }}
                 transition={{
-                  duration: 2,
                   repeat: Infinity,
-                  ease: "easeInOut",
+                  duration: 2,
+                  ease: "easeInOut"
                 }}
-                className="mb-3"
+                className="mb-2"
               >
-                <Zap 
-                  className={`w-12 h-12 ${getStatusColor()} drop-shadow-lg`}
-                  fill="currentColor"
-                />
+                <Zap className="w-8 h-8 text-white drop-shadow-lg" />
               </motion.div>
-              
-              {/* Trigger name - Bigger and more prominent */}
-              <div className="text-white text-lg font-bold drop-shadow-md text-center">
-                {triggerName}
-              </div>
+              {/* Editable label */}
+              <Input
+                value={triggerName}
+                onChange={e => handleNameChange(e.target.value)}
+                className="text-center font-bold text-lg bg-transparent border-none shadow-none focus:ring-0 focus:outline-none px-0 py-1 w-full max-w-[100px] text-white placeholder:text-white/60"
+                placeholder="Trigger"
+                spellCheck={false}
+                aria-label="Trigger name"
+              />
               
               {/* Simple status indicator */}
               <div className="mt-2">

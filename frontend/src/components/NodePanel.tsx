@@ -426,37 +426,29 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
         damping: 25,
         stiffness: 120
       }}
-      className={`fixed left-0 top-0 h-full w-80 backdrop-blur-xl border-r shadow-2xl z-40 flex flex-col ${
+      className={`fixed left-0 top-0 h-full w-80 backdrop-blur-2xl border-r shadow-2xl z-40 flex flex-col ${
         isDark 
-          ? 'bg-gray-900/80 border-gray-700/50 text-gray-200' 
-          : 'bg-white/80 border-gray-300/50 text-gray-800'
+          ? 'bg-gray-900/60 border-gray-200/20 text-white' 
+          : 'bg-white/60 border-gray-200/30 text-gray-900'
       }`}
     >
       {/* Animated Background Gradient */}
       <div className="absolute inset-0 opacity-20" style={{
         background: isDark
-          ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(236, 72, 153, 0.1) 100%)'
-          : 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 50%, rgba(236, 72, 153, 0.05) 100%)',
+          ? 'linear-gradient(135deg, rgba(24, 24, 27, 0.12) 0%, rgba(39, 39, 42, 0.10) 100%)'
+          : 'linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(243,244,246,0.10) 100%)',
       }}/>
 
       {/* Header */}
       <motion.div 
-        className={`p-5 border-b relative z-10 shrink-0 ${isDark ? 'border-gray-700/50' : 'border-gray-300/50'}`}
+        className={`p-5 border-b relative z-10 shrink-0 ${isDark ? 'border-gray-200/20' : 'border-gray-200/30'}`}
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <motion.div 
-              className="p-2 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30"
-              whileHover={{ rotate: 5 }}
-            >
-              <Layers className="w-5 h-5 text-blue-400" />
-            </motion.div>
-            <h2 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Node Library
-            </h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Node Library</h2>
           </div>
           
           <motion.button
@@ -465,8 +457,8 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
             whileTap={{ scale: 0.95 }}
             className={`p-2 rounded-lg border transition-all duration-200 ${
               isDark 
-                ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-600/50 text-gray-300 hover:text-white' 
-                : 'bg-gray-100/80 hover:bg-gray-200 border-gray-300/60 text-gray-600 hover:text-gray-800'
+                ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-200/20 text-gray-300 hover:text-white' 
+                : 'bg-gray-100/80 hover:bg-gray-200 border-gray-200/30 text-gray-600 hover:text-gray-900'
             }`}
           >
             <motion.div
@@ -493,8 +485,8 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full border rounded-lg py-3 pl-10 pr-4 text-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 ${
               isDark 
-                ? 'bg-gray-800/60 border-gray-700/60 text-white placeholder-gray-400 focus:ring-blue-500/50 focus:ring-offset-gray-900 focus:border-blue-500/60'
-                : 'bg-gray-100/60 border-gray-300/60 text-black placeholder-gray-500 focus:ring-blue-500/50 focus:ring-offset-white focus:border-blue-500/60'
+                ? 'bg-gray-800/40 border-gray-200/20 text-white placeholder-gray-400 focus:ring-gray-400/30 focus:ring-offset-gray-900 focus:border-gray-400/40'
+                : 'bg-white/40 border-gray-200/30 text-black placeholder-gray-500 focus:ring-gray-400/30 focus:ring-offset-white focus:border-gray-400/40'
             }`}
           />
         </motion.div>

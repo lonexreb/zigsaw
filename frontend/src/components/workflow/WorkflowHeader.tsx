@@ -76,14 +76,14 @@ export function WorkflowHeader({
             Zigsaw
           </span>
         </div>
-        {/* Center: Main Action Buttons */}
-        <div className="flex-1 flex justify-center items-center gap-2 relative">
+        {/* Center: Main Action Buttons (truly centered) */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2 z-10">
           {/* Buy Premium Button */}
           <motion.button
             onClick={() => navigate('/subscription')}
             whileHover={{ scale: 1.07, boxShadow: isDark ? "0 0 24px 0 #facc15cc" : "0 0 24px 0 #fbbf24cc" }}
             whileTap={{ scale: 0.96 }}
-            className={`px-3 py-2 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg flex items-center gap-2 font-semibold text-sm shiny-premium-btn ${
+            className={`px-2 py-1 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg flex items-center gap-2 font-semibold text-xs shiny-premium-btn ${
               isDark 
                 ? 'bg-gradient-to-r from-yellow-600/80 to-orange-600/80 hover:from-yellow-500/90 hover:to-orange-500/90 text-white border-yellow-500/30' 
                 : 'bg-gradient-to-r from-yellow-500/80 to-orange-500/80 hover:from-yellow-400/90 hover:to-orange-400/90 text-white border-yellow-400/50'
@@ -98,7 +98,7 @@ export function WorkflowHeader({
             onClick={handleManualSave}
             whileHover={{ scale: 1.05, boxShadow: isDark ? "0 0 20px rgba(59, 130, 246, 0.4)" : "0 0 20px rgba(59, 130, 246, 0.4)" }}
             whileTap={{ scale: 0.95 }}
-            className={`px-3 py-2 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg flex items-center gap-2 font-semibold text-sm bg-white text-black border-black hover:bg-black hover:text-white ${isDark ? '' : ''}`}
+            className={`px-2 py-1 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg flex items-center gap-2 font-semibold text-xs bg-white text-black border-black hover:bg-black hover:text-white ${isDark ? '' : ''}`}
             title="Save Workflow"
           >
             <Save className="w-4 h-4" />
@@ -120,7 +120,7 @@ export function WorkflowHeader({
                 ? 'bg-gradient-to-r from-red-500/90 to-red-600/90 text-white border-red-400/60' 
                 : 'bg-gradient-to-r from-green-500/90 to-green-600/90 text-white border-green-400/60'
             }`}
-            style={{ width: 56, height: 56, borderRadius: '50%', position: 'relative', overflow: 'hidden' }}
+            style={{ width: 40, height: 40, borderRadius: '50%', position: 'relative', overflow: 'hidden' }}
             title={isWorkflowExecuting ? 'Stop Workflow' : 'Run Workflow'}
           >
             <span className="absolute inset-0 run-btn-shine" aria-hidden="true" />
@@ -129,7 +129,7 @@ export function WorkflowHeader({
               transition={isWorkflowExecuting ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
               className="z-10"
             >
-              {isWorkflowExecuting ? <Square className="w-7 h-7" /> : <Play className="w-7 h-7" />}
+              {isWorkflowExecuting ? <Square className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </motion.div>
           </motion.button>
           {/* Test POST Button */}
@@ -137,7 +137,7 @@ export function WorkflowHeader({
             onClick={onTestPost}
             whileHover={{ scale: 1.05, boxShadow: isDark ? "0 0 20px rgba(59, 130, 246, 0.4)" : "0 0 20px rgba(59, 130, 246, 0.4)" }}
             whileTap={{ scale: 0.95 }}
-            className={`px-2 py-2 rounded-lg font-medium text-xs transition-all duration-300 flex items-center space-x-1 backdrop-blur-sm border shadow-lg ${
+            className={`px-2 py-1 rounded-lg font-medium text-xs transition-all duration-300 flex items-center space-x-1 backdrop-blur-sm border shadow-lg ${
               isDark
                 ? 'bg-gradient-to-r from-blue-500/80 to-blue-600/80 hover:from-blue-400/90 hover:to-blue-500/90 text-white border-blue-400/30'
                 : 'bg-gradient-to-r from-blue-600/80 to-blue-700/80 hover:from-blue-500/90 hover:to-blue-600/90 text-white border-blue-500/50'
@@ -146,25 +146,6 @@ export function WorkflowHeader({
           >
             <Play className="w-4 h-4" />
             <span className="hidden sm:inline">Test Run</span>
-          </motion.button>
-          {/* Deploy Button */}
-          <motion.button 
-            onClick={handleOpenDeployment}
-            whileHover={{ scale: 1.05, boxShadow: isDark ? "0 0 20px rgba(255, 255, 255, 0.4)" : "0 0 20px rgba(0, 0, 0, 0.4)" }}
-            whileTap={{ scale: 0.95 }}
-            className={`p-2 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg ${
-              isDark 
-                ? 'bg-gradient-to-r from-gray-700/80 to-gray-800/80 hover:from-gray-600/90 hover:to-gray-700/90 text-white border-gray-600/30' 
-                : 'bg-gradient-to-r from-gray-100/80 to-gray-200/80 hover:from-gray-200/90 hover:to-gray-300/90 text-black border-gray-400/50'
-            }`}
-            title="Deploy"
-          >
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <Rocket className="w-4 h-4" />
-            </motion.div>
           </motion.button>
         </div>
         {/* Right: Theme, Settings, Account, Sign Out */}
