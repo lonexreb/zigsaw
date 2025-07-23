@@ -1,9 +1,11 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, Layers, Clock, CheckCircle, Cpu, Bot, User, ArrowRight, GitMerge, Database, Shield } from 'lucide-react'
+import { Zap, Layers, Clock, CheckCircle, Cpu, Bot, User, ArrowRight, GitMerge, Database, Shield, HelpCircle, HelpCircle as QuestionIcon, Twitter, Apple } from 'lucide-react'
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 import * as THREE from 'three'
+import { ChatWorkflowAssistant } from '../components/ChatWorkflowAssistant'
+import { AnimatePresence, motion as m } from 'framer-motion'
 
 function AnimatedGlobe() {
   const mountRef = useRef<HTMLDivElement>(null)
@@ -61,36 +63,93 @@ function Navbar() {
       transition={{ duration: 0.5 }}
     >
       <div className="flex items-center gap-2">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-        <span className="font-mono font-bold text-2xl text-white">zigsaw</span>
+        <span
+          className="font-sans font-extrabold text-3xl tracking-tight bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-700 bg-[length:200%_100%] bg-clip-text text-transparent animate-ziglow"
+          style={{ WebkitTextStroke: '1px #1e293b' }}
+        >
+          zigsaw
+        </span>
       </div>
-      <div className="hidden md:flex gap-8 text-gray-300 font-mono text-base">
-        <a href="#features" className="hover:text-blue-400 transition">Features</a>
-        <a href="#pricing" className="hover:text-blue-400 transition">Pricing</a>
-        <a href="#community" className="hover:text-blue-400 transition">Community</a>
-        <a href="#docs" className="hover:text-blue-400 transition">Docs</a>
+      <div className="hidden md:flex gap-8 font-sans font-semibold tracking-tight text-gray-300 text-base">
+        <a href="#features" className="hover:text-blue-400 transition relative group">
+          Features
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
+        <a href="#pricing" className="hover:text-blue-400 transition relative group">
+          Pricing
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
+        <a href="#solutions" className="hover:text-blue-400 transition relative group">
+          Solutions
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
+        <a href="#about" className="hover:text-blue-400 transition relative group">
+          About
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
+        <a href="#templates" className="hover:text-blue-400 transition relative group">
+          Templates
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
+        <a href="#community" className="hover:text-blue-400 transition relative group">
+          Community
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
+        <a href="#docs" className="hover:text-blue-400 transition relative group">
+          Docs
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
+        <a href="#blog" className="hover:text-blue-400 transition relative group">
+          Blog
+          <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
+        </a>
       </div>
-      <motion.a 
-        href="#get-started" 
-        className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        Get Started
-      </motion.a>
+      <style>{`
+        @keyframes ziglow {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
+        }
+        .animate-ziglow {
+          animation: ziglow 2.5s linear infinite alternate;
+        }
+      `}</style>
     </motion.nav>
   )
 }
 
 function Hero() {
-  const { signInWithEmail, signUpWithEmail } = useAuth()
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle, currentUser } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [showSignIn, setShowSignIn] = React.useState(false)
+  // Typewriter animation state
+  const workflows = getHeroWorkflows()
+  const [current, setCurrent] = useState(0)
+  const [typed, setTyped] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  React.useEffect(() => {
+    if (currentUser) navigate('/workflow')
+  }, [currentUser, navigate])
+
+  useEffect(() => {
+    const full = workflows[current]
+    let timeout: NodeJS.Timeout
+    if (!isDeleting && typed.length < full.length) {
+      timeout = setTimeout(() => setTyped(full.slice(0, typed.length + 1)), 60)
+    } else if (isDeleting && typed.length > 0) {
+      timeout = setTimeout(() => setTyped(full.slice(0, typed.length - 1)), 30)
+    } else if (!isDeleting && typed.length === full.length) {
+      timeout = setTimeout(() => setIsDeleting(true), 1200)
+    } else if (isDeleting && typed.length === 0) {
+      setIsDeleting(false)
+      setCurrent((current + 1) % workflows.length)
+    }
+    return () => clearTimeout(timeout)
+  }, [typed, isDeleting, current, workflows])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -102,7 +161,7 @@ function Hero() {
     setError(null)
     try {
       await signInWithEmail(email, password)
-      navigate('/workflow')
+      // navigation handled by useEffect
     } catch {
       setError('Sign in failed')
     } finally {
@@ -119,181 +178,686 @@ function Hero() {
     setError(null)
     try {
       await signUpWithEmail(email, password)
-      navigate('/workflow')
+      // navigation handled by useEffect
     } catch {
       setError('Sign up failed')
     } finally {
       setIsLoading(false)
     }
   }
+  async function handleGoogleSignIn() {
+    setIsLoading(true)
+    setError(null)
+    try {
+      if (signInWithGoogle) {
+        await signInWithGoogle()
+        // navigation handled by useEffect
+      } else {
+        alert('Google OAuth not yet implemented')
+      }
+    } catch {
+      setError('Google sign in failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  async function handleTwitterSignIn() {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const { getAuth, signInWithPopup, TwitterAuthProvider } = await import('firebase/auth')
+      const provider = new TwitterAuthProvider()
+      await signInWithPopup(getAuth(), provider)
+      // navigation handled by useEffect
+    } catch {
+      setError('Twitter sign in failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  async function handleAppleSignIn() {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const { getAuth, signInWithPopup, OAuthProvider } = await import('firebase/auth')
+      const provider = new OAuthProvider('apple.com')
+      await signInWithPopup(getAuth(), provider)
+      // navigation handled by useEffect
+    } catch {
+      setError('Apple sign in failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <section className="relative w-full flex flex-col items-center justify-center py-24 px-4 overflow-hidden min-h-[90vh]">
+    <section className="relative w-full flex flex-col items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[60vh] md:min-h-[70vh]">
       <AnimatedGlobe />
       <div className="absolute inset-0 bg-black/70 z-10" />
-      
       {/* Hero Content */}
       <div className="relative z-20 flex flex-col items-center text-center w-full max-w-4xl">
         <motion.h1
-          className="text-5xl md:text-7xl font-bold mb-6 text-white"
+          className="text-5xl md:text-7xl font-bold mb-4 md:mb-6 text-white"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
         >
-          The Developer Platform for <span className="text-blue-400">Reliable AI Agents</span>
+          Automate your tasks <span className="text-blue-400">with no code</span>
         </motion.h1>
-        <motion.p
-          className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9 }}
-        >
-          Trace, debug, and deploy reliable AI agents. Zigsaw integrates with any agent framework and over 400+ LLMs.
-        </motion.p>
-        
-        {/* Login Form */}
-        <motion.div
-          className="w-full max-w-md bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-        >
-          <form onSubmit={handleLogin} className="w-full flex flex-col items-center gap-4">
-            <div className="flex items-center gap-2 mb-2">
-              <User className="w-6 h-6 text-blue-400" />
-              <span className="font-bold text-xl text-white">Get Started</span>
-            </div>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-              autoComplete="email"
-              required
-              disabled={isLoading}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-              autoComplete="current-password"
-              required
-              disabled={isLoading}
-            />
-            {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-            <div className="flex gap-4 w-full justify-center">
-              <motion.button 
-                type="submit" 
-                disabled={isLoading} 
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-full"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </motion.button>
-              <motion.button 
-                type="button" 
-                onClick={handleSignUp} 
-                disabled={isLoading} 
-                className="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition w-full"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isLoading ? 'Signing Up...' : 'Sign Up'}
-              </motion.button>
-            </div>
-          </form>
-        </motion.div>
-
-        <div className="flex gap-8 mt-12 text-gray-300">
-          <motion.div whileHover={{ scale: 1.1, y: -5 }} className="flex flex-col items-center">
-            <GitMerge className="w-8 h-8 text-green-400 mb-1" />
-            <span className="text-xs">Integrations</span>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.1, y: -5 }} className="flex flex-col items-center">
-            <Database className="w-8 h-8 text-purple-400 mb-1" />
-            <span className="text-xs">Fine-tuning</span>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.1, y: -5 }} className="flex flex-col items-center">
-            <Shield className="w-8 h-8 text-yellow-400 mb-1" />
-            <span className="text-xs">Security</span>
-          </motion.div>
+        {/* Animated typewriter subheadline */}
+        <div className="h-10 md:h-14 flex items-center justify-center mb-6 md:mb-8 min-h-[2.5rem] md:min-h-[3rem]">
+          <span className="text-xl md:text-2xl text-blue-300 font-mono whitespace-nowrap">
+            {typed}
+            <span className="blinking-cursor">|</span>
+          </span>
         </div>
+        <style>{`
+          .blinking-cursor {
+            display: inline-block;
+            width: 1ch;
+            animation: blink 1s steps(2, start) infinite;
+          }
+          @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+          }
+        `}</style>
+        <motion.p
+          className="text-base md:text-lg text-gray-400 mb-6 md:mb-8 max-w-xl"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.1 }}
+        >
+          Empower your team to automate tasks, answer questions, and build smart solutions—just by using your imagination. If you can use a mouse, you can use Zigsaw.
+        </motion.p>
+        {/* Get Started Button or Login Form */}
+        {!showSignIn && (
+          <motion.button
+            className="px-8 py-4 font-bold text-lg rounded-lg mb-4 flex items-center gap-3 relative overflow-visible shadow-2xl bg-gradient-to-r from-blue-700 via-blue-500 to-cyan-400 text-white group animate-strong-glow"
+            whileHover={{ scale: 1.07 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setShowSignIn(true)}
+            aria-label="Get Started"
+            type="button"
+          >
+            {/* Strong animated glow */}
+            <span className="absolute -inset-3 rounded-2xl z-0 pointer-events-none animate-strong-glow" aria-hidden="true" />
+            <span className="relative z-10">Get Started</span>
+            <span className="w-6 h-6 flex items-center justify-center text-white text-2xl drop-shadow-lg relative z-10">⏎</span>
+            {/* Stronger shine animation overlay */}
+            <span className="absolute left-0 top-0 w-full h-full z-0 pointer-events-none">
+              <span className="block w-2/3 h-full bg-gradient-to-r from-transparent via-white/80 to-transparent blur-xl opacity-80 animate-strong-shine" />
+            </span>
+          </motion.button>
+        )}
+        <motion.div
+          className="w-full max-w-md"
+          initial={false}
+          animate={showSignIn ? { opacity: 1, y: 0, pointerEvents: 'auto', height: 'auto' } : { opacity: 0, y: 20, pointerEvents: 'none', height: 0 }}
+          transition={{ duration: 0.5, type: 'spring', stiffness: 80 }}
+          style={{ overflow: 'hidden' }}
+        >
+          {showSignIn && (
+            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm">
+              <form onSubmit={handleLogin} className="w-full flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <User className="w-6 h-6 text-blue-400" />
+                  <span className="font-bold text-xl text-white">Sign in to Start Building (No Code!)</span>
+                </div>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  autoComplete="email"
+                  required
+                  disabled={isLoading}
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  autoComplete="current-password"
+                  required
+                  disabled={isLoading}
+                />
+                {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+                <div className="flex gap-4 w-full justify-center">
+                  <motion.button 
+                    type="submit" 
+                    disabled={isLoading} 
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-full"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isLoading ? 'Signing In...' : 'Sign In'}
+                  </motion.button>
+                  <motion.button 
+                    type="button" 
+                    onClick={handleSignUp} 
+                    disabled={isLoading} 
+                    className="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition w-full"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isLoading ? 'Signing Up...' : 'Sign Up'}
+                  </motion.button>
+                </div>
+                {/* Google OAuth button (moved here) */}
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full flex items-center justify-center gap-3 py-3 mt-2 bg-white text-blue-700 font-semibold rounded-lg shadow hover:bg-gray-100 transition border border-gray-300"
+                  style={{ fontFamily: 'inherit', fontSize: '1rem' }}
+                  disabled={isLoading}
+                >
+                  <img src="https://logo.clearbit.com/google.com" alt="Google logo" className="w-5 h-5" />
+                  Sign in with Google
+                </button>
+                {/* Twitter OAuth button */}
+                <button
+                  type="button"
+                  onClick={handleTwitterSignIn}
+                  className="w-full flex items-center justify-center gap-3 py-3 mt-2 bg-white text-blue-500 font-semibold rounded-lg shadow hover:bg-gray-100 transition border border-gray-300"
+                  style={{ fontFamily: 'inherit', fontSize: '1rem' }}
+                  disabled={isLoading}
+                >
+                  <Twitter className="w-5 h-5 text-blue-500" />
+                  Sign in with Twitter
+                </button>
+                {/* Apple OAuth button */}
+                <button
+                  type="button"
+                  onClick={handleAppleSignIn}
+                  className="w-full flex items-center justify-center gap-3 py-3 mt-2 bg-white text-gray-900 font-semibold rounded-lg shadow hover:bg-gray-100 transition border border-gray-300"
+                  style={{ fontFamily: 'inherit', fontSize: '1rem' }}
+                  disabled={isLoading}
+                >
+                  <Apple className="w-5 h-5 text-gray-900" />
+                  Sign in with Apple
+                </button>
+              </form>
+            </div>
+          )}
+        </motion.div>
       </div>
     </section>
   )
 }
 
 function TrustedBy() {
+  const companies = getTrustedCompanies()
+  // Split companies for two rows, alternate for variety
+  const half = Math.ceil(companies.length / 2)
+  const row1 = companies.slice(0, half)
+  const row2 = companies.slice(half)
+
   return (
-    <section className="w-full py-12 bg-black flex flex-col items-center">
-      <div className="uppercase text-xs text-gray-500 tracking-widest mb-4">Trusted by teams at</div>
-      <div className="flex flex-wrap gap-8 justify-center items-center">
-        <span className="font-bold text-gray-400 text-lg">AWS</span>
-        <span className="font-bold text-gray-400 text-lg">Accenture</span>
-        <span className="font-bold text-gray-400 text-lg">Deloitte</span>
-        <span className="font-bold text-gray-400 text-lg">GlobeTelecom</span>
-        <span className="font-bold text-gray-400 text-lg">Publicis</span>
-        <span className="font-bold text-gray-400 text-lg">InsightSoftware</span>
+    <section className="w-full py-6 md:py-8 bg-black flex flex-col items-center">
+      <div className="uppercase text-xs text-gray-500 tracking-widest mb-2 md:mb-4">Trusted by teams at</div>
+      <div className="relative w-screen left-1/2 right-1/2 -translate-x-1/2 flex flex-col gap-6 overflow-x-hidden">
+        {/* Row 1: left to right */}
+        <div className="relative w-full overflow-x-hidden">
+          <div className="flex gap-12 animate-marquee-fast whitespace-nowrap items-center">
+            {row1.map(company => (
+              <CompanyLogoItem key={company.domain} company={company} />
+            ))}
+            {row1.map(company => (
+              <CompanyLogoItem key={company.domain + '-dup'} company={company} />
+            ))}
+          </div>
+        </div>
+        {/* Row 2: right to left */}
+        <div className="relative w-full overflow-x-hidden">
+          <div className="flex gap-12 animate-marquee-fast-reverse whitespace-nowrap items-center">
+            {row2.map(company => (
+              <CompanyLogoItem key={company.domain} company={company} />
+            ))}
+            {row2.map(company => (
+              <CompanyLogoItem key={company.domain + '-dup'} company={company} />
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes marquee-fast {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-fast-reverse {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+        .animate-marquee-fast {
+          animation: marquee-fast 16s linear infinite;
+        }
+        .animate-marquee-fast-reverse {
+          animation: marquee-fast-reverse 16s linear infinite;
+        }
+      `}</style>
+    </section>
+  )
+}
+
+// Subcomponent for logo + name
+function CompanyLogoItem({ company }: { company: TrustedCompany }) {
+  return (
+    <div className="flex flex-col items-center min-w-[120px] mx-4">
+      <img
+        src={getCompanyLogoUrl(company.domain)}
+        alt={company.name + ' logo'}
+        className="h-10 w-auto object-contain mb-2 bg-white rounded shadow"
+        loading="lazy"
+        draggable={false}
+        onError={e => (e.currentTarget.style.display = 'none')}
+      />
+      <span className="font-bold text-gray-400 text-xs text-center truncate w-24">{company.name}</span>
+    </div>
+  )
+}
+
+// Helper: List of companies (expanded)
+function getTrustedCompanies(): TrustedCompany[] {
+  return [
+    { name: 'Amazon', domain: 'amazon.com' },
+    { name: 'Google', domain: 'google.com' },
+    { name: 'Microsoft', domain: 'microsoft.com' },
+    { name: 'Meta', domain: 'meta.com' },
+    { name: 'Netflix', domain: 'netflix.com' },
+    { name: 'Apple', domain: 'apple.com' },
+    { name: 'OpenAI', domain: 'openai.com' },
+    { name: 'Nvidia', domain: 'nvidia.com' },
+    { name: 'Salesforce', domain: 'salesforce.com' },
+    { name: 'Shopify', domain: 'shopify.com' },
+    { name: 'Uber', domain: 'uber.com' },
+    { name: 'Stripe', domain: 'stripe.com' },
+    { name: 'Slack', domain: 'slack.com' },
+    { name: 'Zoom', domain: 'zoom.us' },
+    { name: 'Spotify', domain: 'spotify.com' },
+    { name: 'Airbnb', domain: 'airbnb.com' },
+    { name: 'AWS', domain: 'aws.amazon.com' },
+    { name: 'Deloitte', domain: 'deloitte.com' },
+    { name: 'Accenture', domain: 'accenture.com' },
+    { name: 'Globe Telecom', domain: 'globe.com.ph' },
+    { name: 'Publicis', domain: 'publicisgroupe.com' },
+    { name: 'InsightSoftware', domain: 'insightsoftware.com' },
+    { name: 'Twitter', domain: 'twitter.com' },
+    { name: 'LinkedIn', domain: 'linkedin.com' },
+    { name: 'GitHub', domain: 'github.com' },
+    { name: 'Oracle', domain: 'oracle.com' },
+    { name: 'SAP', domain: 'sap.com' },
+    { name: 'Twilio', domain: 'twilio.com' },
+    { name: 'IBM', domain: 'ibm.com' },
+    { name: 'Intel', domain: 'intel.com' },
+    { name: 'Cisco', domain: 'cisco.com' },
+    { name: 'Atlassian', domain: 'atlassian.com' },
+    { name: 'Dropbox', domain: 'dropbox.com' },
+    { name: 'Box', domain: 'box.com' },
+    { name: 'Red Hat', domain: 'redhat.com' },
+    { name: 'Cloudflare', domain: 'cloudflare.com' },
+    { name: 'DigitalOcean', domain: 'digitalocean.com' },
+    { name: 'MongoDB', domain: 'mongodb.com' },
+    { name: 'Datadog', domain: 'datadoghq.com' },
+    { name: 'PagerDuty', domain: 'pagerduty.com' },
+    { name: 'Zendesk', domain: 'zendesk.com' },
+    { name: 'Okta', domain: 'okta.com' },
+    { name: 'Snowflake', domain: 'snowflake.com' },
+    { name: 'Palantir', domain: 'palantir.com' },
+    { name: 'Coinbase', domain: 'coinbase.com' },
+    { name: 'Robinhood', domain: 'robinhood.com' },
+    { name: 'Plaid', domain: 'plaid.com' },
+    { name: 'Notion', domain: 'notion.so' },
+    { name: 'Figma', domain: 'figma.com' },
+    { name: 'Canva', domain: 'canva.com' },
+    // Add more as needed
+  ]
+}
+
+// Helper: Get logo URL from Brand.dev (free tier, no API key needed for basic logo)
+function getCompanyLogoUrl(domain: string): string {
+  return `https://logo.clearbit.com/${domain}`
+  // For Brand.dev alternative:
+  // return `https://logo.brand.dev/${domain}`
+}
+
+// Types
+interface TrustedCompany {
+  name: string
+  domain: string
+}
+
+function Features() {
+  // For logo nodes
+  const nodeCompanies = [
+    { name: 'Google', domain: 'google.com' },
+    { name: 'Slack', domain: 'slack.com' },
+    { name: 'Notion', domain: 'notion.so' }
+  ]
+  // For FlowPilot chat button
+  // Remove local showFlowPilot state
+  return (
+    <section id="features" className="w-full py-20 bg-gray-900 text-white flex flex-col items-center">
+      <div className="flex flex-col items-center mb-8">
+        <div className="flex items-center gap-4">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-blue-400">
+            <rect x="10" y="3" width="4" height="14" rx="2" fill="currentColor" />
+            <rect x="5" y="8" width="3" height="9" rx="1.5" fill="currentColor" opacity="0.6" />
+            <rect x="16" y="8" width="3" height="9" rx="1.5" fill="currentColor" opacity="0.6" />
+            <rect x="8" y="20" width="8" height="2" rx="1" fill="currentColor" opacity="0.3" />
+          </svg>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight">Automate workflows at the speed of sound</h2>
+        </div>
+        <span className="mt-3 inline-block bg-blue-700/80 text-blue-100 text-xs font-bold px-4 py-1 rounded-full tracking-wide shadow">Voice &amp; Chat powered automation</span>
+      </div>
+      <div className="flex flex-col md:flex-row gap-12 max-w-5xl w-full items-center justify-center">
+        {/* Visual Workflow Builder Feature (logos as nodes) */}
+        <motion.div
+          className="flex-1 bg-gradient-to-br from-blue-900/60 to-gray-800 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px]"
+          initial={{ x: -120, opacity: 0 }}
+          whileInView={{ x: 0, opacity: 1 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.8, type: 'spring', stiffness: 80 }}
+        >
+          <div className="w-full flex flex-col items-center mb-6">
+            <span className="text-blue-300 font-bold text-lg mb-2 tracking-wide">Visual Workflow Builder</span>
+            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Connect your favorite apps visually. Drag, drop, and link Google, Slack, Notion, and more.</span>
+          </div>
+          {/* Logo node chain */}
+          <div className="flex items-center gap-6">
+            {(nodeCompanies.reduce((acc, company, i) => {
+              acc.push(
+                <div key={company.domain} className="flex flex-col items-center">
+                  <img
+                    src={`https://logo.clearbit.com/${company.domain}`}
+                    alt={company.name + ' logo'}
+                    className="h-14 w-14 object-contain bg-white rounded-full shadow border-2 border-blue-300"
+                    loading="lazy"
+                    draggable={false}
+                    style={{ background: '#fff' }}
+                  />
+                  <span className="text-xs text-blue-200 mt-2 font-semibold">{company.name}</span>
+                </div>
+              )
+              if (i < nodeCompanies.length - 1) {
+                acc.push(
+                  <span key={company.domain + '-arrow'} className="text-blue-400 text-3xl mx-2">→</span>
+                )
+              }
+              return acc
+            }, [] as (React.ReactNode | null)[]))}
+          </div>
+        </motion.div>
+        {/* FlowPilot Feature with chat button */}
+        <motion.div
+          className="flex-1 bg-gradient-to-br from-cyan-900/60 to-gray-800 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px]"
+          initial={{ x: 120, opacity: 0 }}
+          whileInView={{ x: 0, opacity: 1 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.8, type: 'spring', stiffness: 80, delay: 0.2 }}
+        >
+          <div className="w-full flex flex-col items-center mb-6">
+            <span className="text-cyan-300 font-bold text-lg mb-2 tracking-wide">FlowPilot: Your Workflow Assistant</span>
+            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Just chat with FlowPilot and it instantly creates automations and workflows for you—no setup, no code, just conversation.</span>
+          </div>
+          <button
+            className="mt-4 px-6 py-3 bg-gray-800/60 backdrop-blur font-bold rounded-full shadow-lg hover:scale-105 transition-all text-lg flex items-center gap-2 border border-gray-500/30"
+            onClick={() => {
+              const chatBtn = document.querySelector('[aria-label="Open workflow assistant chat"]') as HTMLElement
+              if (chatBtn) {
+                chatBtn.click()
+              }
+            }}
+            aria-label="Open FlowPilot Chat"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 21l1.8-4A7.97 7.97 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+            <span className="rainbow-animate-text">Chat with FlowPilot</span>
+          </button>
+         <style>{`
+           @keyframes rainbow {
+             0% { background-position: 0% 50%; }
+             100% { background-position: 100% 50%; }
+           }
+           .rainbow-animate-text {
+             background: linear-gradient(90deg, #ff0080, #7928ca, #007cf0, #00dfd8, #ff0080);
+             background-size: 300% 100%;
+             -webkit-background-clip: text;
+             -webkit-text-fill-color: transparent;
+             background-clip: text;
+             text-fill-color: transparent;
+             animation: rainbow 2.5s linear infinite alternate;
+             font-weight: bold;
+           }
+         `}</style>
+        </motion.div>
       </div>
     </section>
   )
 }
 
-function Features() {
-  const features = [
-    {
-      icon: <Zap className="w-8 h-8 text-blue-400" />,
-      title: 'Agentflow',
-      desc: 'Build multi-agent systems with workflow orchestration distributed across multiple coordinated agents.'
-    },
-    {
-      icon: <Layers className="w-8 h-8 text-green-400" />,
-      title: 'Chat Assistants',
-      desc: 'Build single-agent systems and chatbots with support for tool calling and knowledge retrieval (RAG) from various data sources.'
-    },
-    {
-      icon: <CheckCircle className="w-8 h-8 text-yellow-400" />,
-      title: 'Human in the Loop',
-      desc: 'Allow humans to review tasks performed by agents within the feedback loop.'
-    },
-    {
-      icon: <Cpu className="w-8 h-8 text-purple-400" />,
-      title: 'Observability',
-      desc: 'Full execution traces, support Prometheus, OpenTelemetry and other observability tools.'
-    },
-    {
-      icon: <Clock className="w-8 h-8 text-pink-400" />,
-      title: 'API, SDK, Embed',
-      desc: 'Extend and integrate to your applications using APIs, SDK and Embedded Chat.'
-    },
-    {
-      icon: <Layers className="w-8 h-8 text-blue-300" />,
-      title: 'Enterprise Ready',
-      desc: 'Deploy and scale your AI applications with enterprise-grade infrastructure, support for both cloud and on-premises environments.'
-    },
-  ]
+function Pricing() {
+  const tiers = getPricingTiers()
+  // Sale timer for Pro plan
+  const [saleEndsAt] = React.useState(() => Date.now() + 24 * 60 * 60 * 1000)
+  const [saleTimeLeft, setSaleTimeLeft] = React.useState(saleEndsAt - Date.now())
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setSaleTimeLeft(saleEndsAt - Date.now())
+    }, 33)
+    return () => clearInterval(interval)
+  }, [saleEndsAt])
+  function formatTime(ms: number) {
+    if (ms <= 0) return '00:00:00.000000'
+    const totalSeconds = Math.floor(ms / 1000)
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0')
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0')
+    const seconds = String(totalSeconds % 60).padStart(2, '0')
+    const msStr = String(ms % 1000).padStart(3, '0')
+    // Add microseconds (simulate with random for demo)
+    const micro = String(Math.floor(Math.random() * 1000)).padStart(3, '0')
+    return `${hours}:${minutes}:${seconds}.${msStr}${micro}`
+  }
   return (
-    <section id="features" className="w-full py-20 bg-gray-900 text-white flex flex-col items-center">
-      <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">Features</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
-        {features.map((f, i) => (
-          <motion.div 
-            key={i} 
-            className="flex flex-col items-center bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-blue-500/20 transition"
-            whileHover={{ y: -10, boxShadow: '0px 15px 30px rgba(0, 0, 0, 0.2)' }}
-          >
-            <div className="p-3 bg-gray-700 rounded-full mb-4">{f.icon}</div>
-            <h3 className="text-xl font-semibold mt-4 mb-2 text-center">{f.title}</h3>
-            <p className="text-gray-400 text-center">{f.desc}</p>
-          </motion.div>
-        ))}
+    <section id="pricing" className="w-full py-20 bg-gradient-to-b from-gray-950 to-gray-900 text-white flex flex-col items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full font-sans">
+        {tiers.map((tier, idx) => {
+          const isMiddle = idx === 1
+          const isLeft = idx === 0
+          const isRight = idx === 2
+          return (
+            <div
+              key={tier.name}
+              className={`flex flex-col items-center justify-between rounded-2xl p-10 min-h-[480px] h-full shadow-2xl border-2 relative transition bg-gray-800 ${
+                tier.featured
+                  ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-transparent animate-pricing-shine scale-110 z-20 ring-4 ring-blue-400/30'
+                  : 'border-gray-800'
+              } ${isLeft ? 'md:-rotate-8' : ''} ${isRight ? 'md:rotate-8' : ''}`}
+              style={{ boxSizing: 'border-box' }}
+            >
+              {/* Sale badge for Pro */}
+              {tier.featured && (
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-700 text-white text-xs font-bold px-5 py-1 rounded-full shadow-lg animate-pricing-shine-text border-2 border-blue-300">Sale</span>
+              )}
+              <h3 className={`text-2xl font-extrabold mb-2 text-center tracking-tight ${isMiddle ? 'text-3xl' : ''}`}>{tier.name}</h3>
+              <div className={`flex flex-col items-center mb-4 ${isMiddle ? 'text-6xl' : 'text-5xl'} font-extrabold text-blue-400 tracking-tight`}>
+                {tier.featured && tier.oldPrice && (
+                  <span className="text-lg text-gray-400 font-semibold line-through mb-1">{tier.oldPrice}</span>
+                )}
+                <span>{tier.price}</span>
+                {tier.name !== 'Business' && <span className="text-lg text-gray-400 font-semibold mb-1">/mo</span>}
+                {/* Sale timer for Pro */}
+                {tier.featured && (
+                  <span
+                    className="mt-2 text-base font-mono tracking-widest text-red-500 bg-black/90 px-4 py-2 rounded shadow border border-red-700 flex justify-center items-center w-full"
+                    style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '0.15em' }}
+                  >
+                    {formatTime(saleTimeLeft)}
+                  </span>
+                )}
+              </div>
+              <ul className="text-gray-300 text-base mb-8 space-y-2 w-full md:text-left text-center md:pl-6 flex flex-col items-start md:items-start">
+                {tier.features.map((f, i) => {
+                  if (!isMiddle) {
+                    return (
+                      <li key={i} className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 min-w-4" />{f}</li>
+                    )
+                  }
+                  // Only bold keywords in middle card
+                  const keywords = [
+                    'Unlimited workflows',
+                    'Premium AI models',
+                    'Custom integrations',
+                    'Priority support',
+                    'Dedicated onboarding',
+                    'Team collaboration',
+                    'Advanced automations',
+                    'Unlimited integrations',
+                    'SLA',
+                    'manager',
+                    'onboarding',
+                  ]
+                  let bolded = f
+                  for (const word of keywords) {
+                    if (f.toLowerCase().startsWith(word.toLowerCase())) {
+                      bolded = <><span className="font-bold text-white">{word}</span>{f.slice(word.length)}</>
+                      break
+                    }
+                  }
+                  return (
+                    <li key={i} className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400 min-w-4" />{bolded}</li>
+                  )
+                })}
+              </ul>
+              {tier.name === 'Free' ? (
+                <button className="px-6 py-3 rounded-lg font-semibold shadow bg-blue-600 text-white hover:bg-blue-700 transition w-full">Start Free</button>
+              ) : (
+                <button className={`px-6 py-3 rounded-lg font-semibold shadow ${tier.featured ? 'bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-700 text-white hover:brightness-110' : 'bg-gray-700 text-white hover:bg-gray-600'} transition w-full`} disabled>{tier.cta}</button>
+              )}
+              {tier.featured && (
+                <span className="absolute inset-0 rounded-2xl pointer-events-none animate-pricing-shine-border subtle-glow" aria-hidden="true" />
+              )}
+            </div>
+          )
+        })}
       </div>
+      <style>{`
+        @keyframes pricing-shine-border {
+          0% { box-shadow: 0 0 0 0 #38bdf850, 0 0 16px 4px #0ea5e950; }
+          50% { box-shadow: 0 0 16px 4px #38bdf850, 0 0 32px 8px #0ea5e950; }
+          100% { box-shadow: 0 0 0 0 #38bdf850, 0 0 16px 4px #0ea5e950; }
+        }
+        .animate-pricing-shine-border.subtle-glow {
+          animation: pricing-shine-border 2.5s ease-in-out infinite;
+        }
+        @keyframes pricing-shine {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
+        }
+        .animate-pricing-shine {
+          background-size: 200% 100%;
+          animation: pricing-shine 3s linear infinite alternate;
+        }
+        @keyframes pricing-shine-text {
+          0%, 100% { filter: brightness(1.1); }
+          50% { filter: brightness(1.2); }
+        }
+        .animate-pricing-shine-text {
+          animation: pricing-shine-text 2.5s ease-in-out infinite;
+        }
+      `}</style>
     </section>
   )
+}
+
+// Helper: Pricing tiers (upgraded)
+function getPricingTiers(): PricingTier[] {
+  return [
+    {
+      name: 'Free',
+      price: '$0',
+      features: [
+        'Unlimited workflows',
+        'Connect Slack, Gmail, Notion, GCal',
+        'Community support',
+        'Basic AI models',
+        '100 automation runs/month',
+      ],
+      cta: 'Start Free',
+      featured: false,
+    },
+    {
+      name: 'Pro',
+      price: '$19',
+      oldPrice: '$25',
+      features: [
+        'Unlimited workflows',
+        'Premium AI models',
+        'Priority support',
+        'Advanced automations',
+        'Team collaboration',
+        '10,000 automation runs/month',
+        'Unlimited integrations',
+      ],
+      cta: 'Sale',
+      featured: true,
+    },
+    {
+      name: 'Business',
+      price: '$29',
+      features: [
+        'Unlimited workflows',
+        'All Pro features',
+        'Custom integrations',
+        'Dedicated onboarding',
+        'SLA & compliance',
+        'Unlimited runs',
+        'Dedicated account manager',
+      ],
+      cta: 'Contact Sales',
+      featured: false,
+    },
+  ]
+}
+// Types
+interface PricingTier {
+  name: string
+  price: string
+  features: string[]
+  cta: string
+  featured?: boolean
+  oldPrice?: string
+}
+
+// Helper: Features list (upgraded)
+function getFeaturesList(): FeatureItem[] {
+  return [
+    {
+      icon: <Zap className="w-8 h-8 text-blue-400" />, title: 'No-Code Builder', desc: 'Design automations visually—no coding or setup required.'
+    },
+    {
+      icon: <Layers className="w-8 h-8 text-green-400" />, title: 'App Integrations', desc: 'Connect Slack, Gmail, Notion, Google Calendar, and 400+ more.'
+    },
+    {
+      icon: <CheckCircle className="w-8 h-8 text-yellow-400" />, title: 'Human in the Loop', desc: 'Easily add approvals and manual steps to any workflow.'
+    },
+    {
+      icon: <Cpu className="w-8 h-8 text-purple-400" />, title: 'AI-Powered', desc: 'Use the latest AI models for smart automations and chatbots.'
+    },
+    {
+      icon: <Clock className="w-8 h-8 text-pink-400" />, title: 'Scheduling', desc: 'Automate tasks on a schedule or trigger from events.'
+    },
+    {
+      icon: <Shield className="w-8 h-8 text-yellow-400" />, title: 'Enterprise-Grade', desc: 'Secure, scalable, and ready for business use.'
+    },
+  ]
+}
+// Types
+interface FeatureItem {
+  icon: React.ReactNode
+  title: string
+  desc: string
 }
 
 function Footer() {
@@ -315,14 +879,149 @@ function Footer() {
   )
 }
 
+// Helper: Hero workflow examples
+function getHeroWorkflows(): string[] {
+  return [
+    'Automate Slack reminders for your team',
+    'Sync Gmail emails to Notion databases',
+    'Schedule meetings in Google Calendar with AI',
+    'Summarize customer support tickets from Zendesk',
+    'Send daily reports to your team on Slack',
+    'Create Notion pages from form submissions',
+    'Auto-reply to emails using AI',
+    'Log meeting notes to Notion automatically',
+    'Connect Google Sheets to your workflows',
+    'Build chatbots for your website in minutes',
+    'Integrate with 400+ apps and AI models',
+  ]
+}
+
+// --- FAQ Section ---
+function FAQ() {
+  const faqs = getFaqs()
+  const [open, setOpen] = React.useState<number | null>(null)
+  return (
+    <section className="w-full py-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-950 text-white flex flex-col items-center">
+      <div className="flex items-center gap-4 mb-10">
+        <QuestionIcon className="w-10 h-10 text-white" />
+        <h2 className="text-4xl md:text-5xl font-extrabold text-white text-center tracking-tight">FAQ</h2>
+      </div>
+      <div className="w-full max-w-2xl mx-auto space-y-6">
+        {faqs.map((faq, i) => (
+          <div key={i} className="border border-gray-800/80 rounded-2xl bg-gradient-to-br from-gray-900/80 to-gray-950/60 shadow-lg overflow-hidden">
+            <button
+              className="w-full flex justify-between items-center px-8 py-6 text-left font-semibold text-lg focus:outline-none group"
+              onClick={() => setOpen(open === i ? null : i)}
+              aria-expanded={open === i}
+              aria-controls={`faq-panel-${i}`}
+            >
+              <span className="flex items-center gap-3"><HelpCircle className="w-6 h-6 text-gray-400" />{faq.q}</span>
+              <span className={`ml-4 transition-transform text-gray-400 group-hover:text-gray-200 ${open === i ? 'rotate-90' : ''}`}>▶</span>
+            </button>
+            <AnimatePresence initial={false}>
+              {open === i && (
+                <m.div
+                  id={`faq-panel-${i}`}
+                  className="px-8 pb-6 text-gray-200 text-base"
+                  aria-hidden={open !== i}
+                  key="faq-content"
+                  initial={{ maxHeight: 0, opacity: 0 }}
+                  animate={{ maxHeight: 200, opacity: 1, transition: { opacity: { delay: 0.08, duration: 0.32 }, maxHeight: { duration: 0.38 } } }}
+                  exit={{ maxHeight: 0, opacity: 0, transition: { opacity: { duration: 0.18 }, maxHeight: { duration: 0.28 } } }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div>{faq.a}</div>
+                </m.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// Helper: FAQ content
+function getFaqs(): FAQItem[] {
+  return [
+    {
+      q: 'What is Zigsaw?',
+      a: 'Zigsaw is a no-code platform for building, automating, and deploying AI-powered workflows and assistants. Anyone can use it—no coding required.'
+    },
+    {
+      q: 'How does FlowPilot work?',
+      a: 'Just chat with FlowPilot and describe what you want to automate. FlowPilot will instantly create the workflow for you—no setup or technical skills needed.'
+    },
+    {
+      q: 'Can I connect my favorite apps?',
+      a: 'Yes! Zigsaw supports integrations with Slack, Gmail, Notion, Google Calendar, and 400+ other apps.'
+    },
+    {
+      q: 'Is there a free plan?',
+      a: 'Yes, the Free plan lets you build unlimited workflows and try out Zigsaw with basic AI models and popular integrations.'
+    },
+    {
+      q: 'How do I get support?',
+      a: 'Pro and Enterprise plans include priority support. Free users can access community support and documentation.'
+    },
+  ]
+}
+interface FAQItem {
+  q: string
+  a: string
+}
+
 export default function Login() {
+  const [miniWorkflow, setMiniWorkflow] = React.useState<MiniWorkflow | null>(null)
   return (
     <div className="bg-black">
       <Navbar />
       <Hero />
       <TrustedBy />
       <Features />
+      <MiniWorkflowCanvas workflow={miniWorkflow} />
+      <Pricing />
+      <ChatWorkflowAssistant onWorkflowGenerated={setMiniWorkflow} />
+      <FAQ />
       <Footer />
     </div>
   )
+}
+
+// MiniWorkflowCanvas component
+function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
+  if (!workflow || !workflow.nodes?.length) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-8">
+        <div className="text-gray-400 text-sm italic">Your workflow will appear here after you chat with FlowPilot.</div>
+      </div>
+    )
+  }
+  // Simple layout: nodes in a row, edges as arrows
+  return (
+    <div className="w-full flex flex-col items-center justify-center py-8">
+      <div className="mb-2 text-blue-300 font-semibold text-base">Mini Workflow Canvas</div>
+      <div className="flex items-center gap-4 overflow-x-auto px-4">
+        {workflow.nodes.map((node, i) => (
+          <React.Fragment key={node.id}>
+            <div className="flex flex-col items-center">
+              <div className="rounded-lg px-4 py-2 bg-blue-900 text-white font-bold text-xs shadow border border-blue-400 min-w-[80px] text-center">
+                {node.type}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">{node.label || node.id}</div>
+            </div>
+            {i < workflow.nodes.length - 1 && (
+              <span className="text-blue-400 text-2xl">→</span>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="mt-2 text-xs text-gray-400">Nodes: {workflow.nodes.length} | Edges: {workflow.edges.length}</div>
+    </div>
+  )
+}
+// Types
+interface MiniWorkflow {
+  nodes: { id: string, type: string, label?: string }[]
+  edges: { id: string, source: string, target: string }[]
 }

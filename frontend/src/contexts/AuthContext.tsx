@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser, signInWithPopup, GithubAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser, signInWithPopup, GithubAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider } from 'firebase/auth';
 import app from '../lib/firebase'; // Your Firebase app initialization
 
 interface AuthContextType {
@@ -13,6 +13,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   enableGuestMode: () => void;
   disableGuestMode: () => void;
+  signInWithGoogle?: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,6 +58,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsGuestMode(true);
   };
 
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  };
+
   const disableGuestMode = () => {
     setIsGuestMode(false);
   };
@@ -72,7 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithEmail, 
       signUpWithEmail,
       enableGuestMode,
-      disableGuestMode
+      disableGuestMode,
+      signInWithGoogle
     }}>
       {!loading && children}
     </AuthContext.Provider>
