@@ -8,6 +8,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { Settings as SettingsIcon } from 'lucide-react'
 import WorkflowTemplatesPanel from '../WorkflowTemplatesPanel'
 import { Layers } from 'lucide-react'
+import { SlackSignInButton } from '../ui/SlackSignInButton'
 
 interface WorkflowHeaderProps {
   isDark: boolean
@@ -150,6 +151,8 @@ export function WorkflowHeader({
         </div>
         {/* Right: Theme, Settings, Account, Sign Out */}
         <div className="flex items-center gap-2">
+          {/* Slack Sign In Button */}
+          <SlackSignInButton />
           {/* Theme Toggle Button */}
           <motion.button
             onClick={toggleTheme}
