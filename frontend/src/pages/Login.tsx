@@ -1180,27 +1180,67 @@ export default function Login() {
 
 // MiniWorkflowCanvas component
 function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
-  const [glowIdx, setGlowIdx] = React.useState(0)
-  const [allGreen, setAllGreen] = React.useState(false)
+  const nodeCount = workflow?.nodes?.length ?? 0
+  const [completed, setCompleted] = React.useState<boolean[]>([])
+  const [currentIdx, setCurrentIdx] = React.useState(0)
+  const [progress, setProgress] = React.useState(0)
+  const [isPaused, setIsPaused] = React.useState(false)
+  const [selectedNode, setSelectedNode] = React.useState<null | { id: string, type: string, label?: string }>(null)
+  const [hoveredNode, setHoveredNode] = React.useState<string | null>(null)
+
+  // Reset state if workflow changes
   React.useEffect(() => {
-    let timeout: NodeJS.Timeout
-    if (!workflow || !workflow.nodes?.length) return
-    if (!allGreen) {
-      timeout = setTimeout(() => {
-        if (glowIdx < workflow.nodes.length - 1) {
-          setGlowIdx(i => i + 1)
-        } else {
-          setAllGreen(true)
-        }
-      }, 900)
-    } else {
-      timeout = setTimeout(() => {
-        setGlowIdx(0)
-        setAllGreen(false)
-      }, 1200)
+    if (!workflow || !nodeCount) return
+    setCompleted(Array(nodeCount).fill(false))
+    setCurrentIdx(0)
+    setProgress(0)
+    setIsPaused(false)
+    setSelectedNode(null)
+    setHoveredNode(null)
+  }, [workflow, nodeCount])
+
+  // Animate progress for the current node
+  React.useEffect(() => {
+    if (!workflow || !nodeCount || isPaused) return
+    if (completed.every(Boolean)) return
+    if (completed[currentIdx]) return
+    let raf: number
+    let start: number | null = null
+    const duration = 700 // ms for each arc
+    function animate(ts: number) {
+      if (start === null) start = ts
+      const elapsed = ts - start
+      const pct = Math.min(elapsed / duration, 1)
+      setProgress(pct)
+      if (pct < 1) {
+        raf = requestAnimationFrame(animate)
+      } else {
+        // Mark node as completed
+        setCompleted(prev => {
+          const next = [...prev]
+          next[currentIdx] = true
+          return next
+        })
+        setTimeout(() => {
+          if (currentIdx < nodeCount - 1) {
+            setCurrentIdx(i => i + 1)
+            setProgress(0)
+          } else {
+            // All done, pause, then reset
+            setIsPaused(true)
+            setTimeout(() => {
+              setCompleted(Array(nodeCount).fill(false))
+              setCurrentIdx(0)
+              setProgress(0)
+              setIsPaused(false)
+            }, 1200)
+          }
+        }, 200)
+      }
     }
-    return () => clearTimeout(timeout)
-  }, [glowIdx, allGreen, workflow?.nodes?.length])
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [currentIdx, workflow, nodeCount, completed, isPaused])
 
   if (!workflow || !workflow.nodes?.length) return null
 
@@ -1211,75 +1251,192 @@ function MiniWorkflowCanvas({ workflow }: { workflow: MiniWorkflow | null }) {
     router: <GitMerge className="w-8 h-8 text-yellow-400" />, // Lucide GitMerge
   }
 
-  // Helper to format node type
   function formatNodeType(type: string) {
     return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
   }
 
+  // Preset info sentences for each node type
+  function getNodeInfo(type: string, label?: string) {
+    switch (type) {
+      case 'trigger':
+        return label ? `This is the trigger node: "${label}". It starts the workflow when a specific event occurs.` : 'This is the trigger node. It starts the workflow.'
+      case 'universal_agent':
+        return label ? `This is a universal agent node: "${label}". It performs an AI-powered action or automation.` : 'This is a universal agent node. It performs an AI-powered action.'
+      case 'router':
+        return label ? `This is a router node: "${label}". It routes the workflow based on conditions or logic.` : 'This is a router node. It routes the workflow.'
+      default:
+        return label ? `Node: "${label}".` : 'Node.'
+    }
+  }
+
+  // SVG arc constants
+  const R = 34
+  const C = 2 * Math.PI * R
+
   return (
     <div className="w-full flex flex-col items-center justify-center py-8">
-      <div className="flex items-center gap-8 overflow-x-auto px-4">
-        {workflow.nodes.map((node, i) => {
-          let glowClass = ''
-          let boxShadow: string | undefined
-          if (allGreen || i < glowIdx) {
-            glowClass = 'glow-green'
-            boxShadow = '0 0 0 6px #22c55e, 0 0 32px 16px #22c55e'
-          } else if (i === glowIdx && !allGreen) {
-            glowClass = 'animate-glow-yellow'
-            boxShadow = '0 0 0 6px #fde047, 0 0 24px 12px #fde047'
-          }
+      <div className="relative w-full flex items-center justify-center">
+        {/* Animated dotted lines between nodes */}
+        {workflow.nodes.length > 1 && (() => {
+          const nodeWidth = 80
+          const gap = 32
+          const totalWidth = workflow.nodes.length * nodeWidth + (workflow.nodes.length - 1) * gap
+          const y = 40 // vertical center of node
           return (
-            <React.Fragment key={node.id}>
-              <div className={`flex flex-col items-center z-10 transition-all duration-300 ${glowClass}`}
-                style={boxShadow ? { boxShadow } : undefined}>
-                <span className="relative flex items-center justify-center h-20 w-20 rounded-full shadow border-4 border-blue-400 bg-white">
-                  {nodeIcons[node.type] || <Cpu className="w-8 h-8 text-gray-400" />}
-                </span>
-                <span className="text-base font-bold text-blue-900 mt-2 whitespace-nowrap">{node.label || formatNodeType(node.type)}</span>
-                <span className="text-xs text-gray-400 mt-1">{formatNodeType(node.type)}</span>
-              </div>
-              {i < workflow.nodes.length - 1 && (
-                <span className="flex items-center mx-2">
-                  <svg width="48" height="24" viewBox="0 0 48 24" fill="none" className="animated-arrow">
-                    <defs>
-                      <linearGradient id="arrow-gradient" x1="0" y1="12" x2="48" y2="12" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#fde047" />
-                        <stop offset="1" stopColor="#22c55e" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M4 12h40m0 0l-6-6m6 6l-6 6" stroke="url(#arrow-gradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <animate attributeName="stroke-dashoffset" values="48;0;48" dur="1.2s" repeatCount="indefinite" />
-                    </path>
-                  </svg>
-                </span>
-              )}
-            </React.Fragment>
+            <svg
+              className="absolute z-0"
+              style={{
+                left: '50%',
+                top: '38px', // slightly above vertical center of node
+                transform: 'translateX(-50%)',
+                pointerEvents: 'none',
+                width: totalWidth,
+                height: 24,
+                display: 'block',
+              }}
+              width={totalWidth}
+              height={24}
+            >
+              {workflow.nodes.slice(0, -1).map((_, i) => {
+                const x1 = i * (nodeWidth + gap) + nodeWidth / 2
+                const x2 = (i + 1) * (nodeWidth + gap) + nodeWidth / 2
+                return (
+                  <line
+                    key={i}
+                    x1={x1}
+                    y1={12}
+                    x2={x2}
+                    y2={12}
+                    stroke="#fff"
+                    strokeWidth="4"
+                    strokeDasharray="10 10"
+                    className="dotted-connection"
+                    style={{ filter: 'drop-shadow(0 0 4px #fff8)' }}
+                  />
+                )
+              })}
+            </svg>
           )
-        })}
+        })()}
+        <div className="flex items-center gap-8 overflow-x-auto px-4 z-10">
+          {workflow.nodes.map((node, i) => {
+            let svgRings: React.ReactNode = null
+            if (completed[i]) {
+              // Full green ring
+              svgRings = (
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80" fill="none">
+                  <circle
+                    cx="40" cy="40" r={R}
+                    stroke="#22c55e"
+                    strokeWidth="8"
+                    opacity="0.8"
+                    strokeDasharray={C}
+                    strokeDashoffset={0}
+                    style={{ filter: 'drop-shadow(0 0 16px #22c55e)' }}
+                  />
+                </svg>
+              )
+            } else if (i === currentIdx) {
+              // Growing yellow arc
+              svgRings = (
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80" fill="none">
+                  <circle
+                    cx="40" cy="40" r={R}
+                    stroke="#fde047"
+                    strokeWidth="8"
+                    opacity="0.95"
+                    strokeDasharray={C}
+                    strokeDashoffset={C * (1 - progress)}
+                    style={{ filter: 'drop-shadow(0 0 16px #fde047)' }}
+                  />
+                </svg>
+              )
+            }
+            // Subtle hover animation: only icon grows
+            const isHovered = hoveredNode === node.id
+            return (
+              <React.Fragment key={node.id}>
+                <button
+                  type="button"
+                  tabIndex={0}
+                  aria-label={`Show info for node ${node.label || node.type}`}
+                  onClick={() => setSelectedNode(node)}
+                  onMouseEnter={() => setHoveredNode(node.id)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                  className="flex flex-col items-center z-10 relative transition-all duration-200 focus:outline-none group"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
+                >
+                  <span className="relative flex items-center justify-center h-20 w-20 rounded-full shadow border-4 border-blue-400 bg-white transition-all duration-200">
+                    {/* SVG Glow/Arc */}
+                    {svgRings}
+                    <span
+                      className={`relative z-10 transition-transform duration-200 ${isHovered ? 'scale-105' : ''}`}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.18s cubic-bezier(0.4,0,0.2,1)' }}
+                    >
+                      {nodeIcons[node.type] || <Cpu className="w-8 h-8 text-gray-400" />}
+                    </span>
+                  </span>
+                  <span className="text-base font-bold text-white mt-2 whitespace-nowrap">{node.label || formatNodeType(node.type)}</span>
+                  <span className="text-xs text-gray-400 mt-1">{formatNodeType(node.type)}</span>
+                </button>
+              </React.Fragment>
+            )
+          })}
+        </div>
+        <style>{`
+          .dotted-connection {
+            animation: dashmove 1.2s linear infinite;
+          }
+          @keyframes dashmove {
+            to {
+              stroke-dashoffset: -20;
+            }
+          }
+          .animated-arrow {
+            stroke-dasharray: 48;
+            stroke-dashoffset: 0;
+            animation: arrow-dash 1.2s linear infinite;
+          }
+          @keyframes arrow-dash {
+            0% { stroke-dashoffset: 48; }
+            50% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: 48; }
+          }
+        `}</style>
+        {/* Modal for node info */}
+        {selectedNode && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setSelectedNode(null)}>
+            <div
+              className="bg-white rounded-2xl shadow-2xl p-8 max-w-xs w-full flex flex-col items-center relative animate-fade-in"
+              onClick={e => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Node info: ${selectedNode.label || selectedNode.type}`}
+            >
+              <span className="mb-4">{nodeIcons[selectedNode.type] || <Cpu className="w-8 h-8 text-gray-400" />}</span>
+              <div className="text-lg font-bold text-gray-900 mb-2">{selectedNode.label || formatNodeType(selectedNode.type)}</div>
+              <div className="text-gray-700 text-base text-center mb-4">{getNodeInfo(selectedNode.type, selectedNode.label)}</div>
+              <button
+                type="button"
+                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+                onClick={() => setSelectedNode(null)}
+                autoFocus
+              >
+                Close
+              </button>
+            </div>
+            <style>{`
+              .animate-fade-in {
+                animation: fadeIn 0.18s cubic-bezier(0.4,0,0.2,1);
+              }
+              @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.96); }
+                to { opacity: 1; transform: scale(1); }
+              }
+            `}</style>
+          </div>
+        )}
       </div>
-      <style>{`
-        @keyframes glow-yellow {
-          0% { box-shadow: 0 0 0 6px #fde047, 0 0 24px 12px #fde047; }
-          100% { box-shadow: 0 0 0 6px #fde047, 0 0 24px 12px #fde047; }
-        }
-        .glow-green {
-          box-shadow: 0 0 0 6px #22c55e, 0 0 32px 16px #22c55e !important;
-        }
-        .animate-glow-yellow {
-          animation: glow-yellow 0.9s linear infinite;
-        }
-        .animated-arrow {
-          stroke-dasharray: 48;
-          stroke-dashoffset: 0;
-          animation: arrow-dash 1.2s linear infinite;
-        }
-        @keyframes arrow-dash {
-          0% { stroke-dashoffset: 48; }
-          50% { stroke-dashoffset: 0; }
-          100% { stroke-dashoffset: 48; }
-        }
-      `}</style>
     </div>
   )
 }
