@@ -8,7 +8,8 @@ import { useTheme } from '../theme/ThemeProvider'
 import { Settings as SettingsIcon } from 'lucide-react'
 import WorkflowTemplatesPanel from '../WorkflowTemplatesPanel'
 import { Layers } from 'lucide-react'
-import { SlackSignInButton } from '../ui/SlackSignInButton'
+import { SlackSignInButton, GmailSignInButton, GoogleCalendarSignInButton, NotionSignInButton } from '../ui/SlackSignInButton'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu'
 
 interface WorkflowHeaderProps {
   isDark: boolean
@@ -152,7 +153,37 @@ export function WorkflowHeader({
         {/* Right: Theme, Settings, Account, Sign Out */}
         <div className="flex items-center gap-2">
           {/* Slack Sign In Button */}
-          <SlackSignInButton />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`p-2 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg flex items-center justify-center gap-2 ${
+                  isDark 
+                    ? 'bg-gray-800/80 hover:bg-gray-700/90 text-white border-gray-600/30' 
+                    : 'bg-gray-100/80 hover:bg-gray-200/90 text-black border-gray-400/50'
+                }`}
+                title="Sign In"
+              >
+                <User className="w-4 h-4" />
+                <span className="font-semibold text-xs">Sign In</span>
+              </motion.button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <SlackSignInButton className="w-full px-2 py-1 text-xs h-8" />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <GmailSignInButton className="w-full px-2 py-1 text-xs h-8" />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <GoogleCalendarSignInButton className="w-full px-2 py-1 text-xs h-8" />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <NotionSignInButton className="w-full px-2 py-1 text-xs h-8" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* Theme Toggle Button */}
           <motion.button
             onClick={toggleTheme}

@@ -1,5 +1,7 @@
 import * as React from 'react'
 import { Button } from './button'
+import gmailLogo from '../../assets/gmaillogo.png'
+import gcalLogo from '../../assets/gcallogo.png'
 
 function SlackLogo({ className = '' }: { className?: string }) {
   return (
@@ -35,4 +37,72 @@ function SlackSignInButton({ className }: SlackSignInButtonProps) {
   )
 }
 
-export { SlackSignInButton } 
+function NotionLogo({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 40 40" width={20} height={20} aria-hidden="true">
+      <rect x="4" y="4" width="32" height="32" rx="6" fill="#fff" stroke="#000" strokeWidth="2" />
+      <text x="50%" y="60%" textAnchor="middle" fontWeight="bold" fontSize="18" fill="#000" fontFamily="sans-serif" dy=".3em">N</text>
+    </svg>
+  )
+}
+
+function NotionSignInButton({ className }: { className?: string }) {
+  function handleSignIn() {
+    // Notion OAuth 2.0 flow
+    const clientId = encodeURIComponent('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')
+    const redirectUri = encodeURIComponent(window.location.origin + '/api/oauth/notion/callback')
+    const responseType = 'code'
+    const state = encodeURIComponent(Math.random().toString(36).substring(2))
+    const notionAuthUrl = `https://api.notion.com/v1/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&owner=user&state=${state}`
+    window.location.href = notionAuthUrl
+  }
+
+  return (
+    <Button
+      className={`bg-black text-white hover:bg-gray-900 flex items-center gap-2 ${className ?? ''}`}
+      onClick={handleSignIn}
+      type="button"
+    >
+      <NotionLogo className="w-5 h-5" />
+      Sign in with Notion
+    </Button>
+  )
+}
+
+function GmailSignInButton({ className }: { className?: string }) {
+  function handleSignIn() {
+    // Placeholder for Gmail OAuth
+    alert('Sign in with Gmail (OAuth coming soon)')
+  }
+
+  return (
+    <Button
+      className={`bg-[#EA4335] text-white hover:bg-[#C5221F] flex items-center gap-2 ${className ?? ''}`}
+      onClick={handleSignIn}
+      type="button"
+    >
+      <img src={gmailLogo} alt="Gmail logo" className="w-5 h-5" />
+      Gmail
+    </Button>
+  )
+}
+
+function GoogleCalendarSignInButton({ className }: { className?: string }) {
+  function handleSignIn() {
+    // Placeholder for Google Calendar OAuth
+    alert('Sign in with Google Calendar (OAuth coming soon)')
+  }
+
+  return (
+    <Button
+      className={`bg-[#4285F4] text-white hover:bg-[#3367D6] flex items-center gap-2 ${className ?? ''}`}
+      onClick={handleSignIn}
+      type="button"
+    >
+      <img src={gcalLogo} alt="Google Calendar logo" className="w-5 h-5" />
+      GCal
+    </Button>
+  )
+}
+
+export { SlackSignInButton, GmailSignInButton, GoogleCalendarSignInButton, NotionSignInButton } 
