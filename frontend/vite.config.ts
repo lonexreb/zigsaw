@@ -18,9 +18,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -30,7 +28,3 @@ export default defineConfig(({ mode }) => ({
     include: ['firebase/app', 'firebase/auth'],
   },
 }));
-function componentTagger() {
-    throw new Error("Function not implemented.");
-}
-
