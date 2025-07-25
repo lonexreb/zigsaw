@@ -71,8 +71,7 @@ function NotionSignInButton({ className }: { className?: string }) {
 
 function GmailSignInButton({ className }: { className?: string }) {
   function handleSignIn() {
-    // Placeholder for Gmail OAuth
-    alert('Sign in with Gmail (OAuth coming soon)')
+    window.location.href = 'https://zigsaw-backend.vercel.app/api/auth/signin/google'
   }
 
   return (
@@ -89,8 +88,7 @@ function GmailSignInButton({ className }: { className?: string }) {
 
 function GoogleCalendarSignInButton({ className }: { className?: string }) {
   function handleSignIn() {
-    // Placeholder for Google Calendar OAuth
-    alert('Sign in with Google Calendar (OAuth coming soon)')
+    window.location.href = 'https://zigsaw-backend.vercel.app/api/auth/signin/gcl'
   }
 
   return (

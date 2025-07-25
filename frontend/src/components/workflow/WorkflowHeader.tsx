@@ -8,6 +8,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { Settings as SettingsIcon } from 'lucide-react'
 import WorkflowTemplatesPanel from '../WorkflowTemplatesPanel'
 import { Layers } from 'lucide-react'
+import { SlackSignInButton, GmailSignInButton, GoogleCalendarSignInButton, NotionSignInButton } from '../ui/SlackSignInButton'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu'
 
 interface WorkflowHeaderProps {
@@ -151,7 +152,7 @@ export function WorkflowHeader({
         </div>
         {/* Right: Theme, Settings, Account, Sign Out */}
         <div className="flex items-center gap-2">
-          {/* NextAuth Sign In Dropdown */}
+          {/* Slack Sign In Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <motion.button
@@ -162,24 +163,24 @@ export function WorkflowHeader({
                     ? 'bg-gray-800/80 hover:bg-gray-700/90 text-white border-gray-600/30' 
                     : 'bg-gray-100/80 hover:bg-gray-200/90 text-black border-gray-400/50'
                 }`}
-                title="Account"
+                title="Sign In"
               >
                 <User className="w-4 h-4" />
-                <span className="font-semibold text-xs">Account</span>
+                <span className="font-semibold text-xs">Sign In</span>
               </motion.button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => window.location.href = 'https://your-backend-domain.com/api/auth/signin/slack'}>
-                Sign in with Slack
+              <DropdownMenuItem asChild>
+                <SlackSignInButton className="w-full px-2 py-1 text-xs h-8" />
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.href = 'https://your-backend-domain.com/api/auth/signin/google'}>
-                Sign in with Gmail
+              <DropdownMenuItem asChild>
+                <GmailSignInButton className="w-full px-2 py-1 text-xs h-8" />
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.href = 'https://your-backend-domain.com/api/auth/signin/notion'}>
-                Sign in with Notion
+              <DropdownMenuItem asChild>
+                <GoogleCalendarSignInButton className="w-full px-2 py-1 text-xs h-8" />
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.href = 'https://your-backend-domain.com/api/auth/signin/gcl'}>
-                Sign in with GCL
+              <DropdownMenuItem asChild>
+                <NotionSignInButton className="w-full px-2 py-1 text-xs h-8" />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
