@@ -1,5 +1,6 @@
 import { useSession, signOut } from 'next-auth/react'
 import { useEffect } from 'react'
+import Link from 'next/link'
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
@@ -34,10 +35,10 @@ export default function Dashboard() {
         height: '100vh',
         fontFamily: 'system-ui'
       }}>
-        <div>
-          <h2>Not authenticated</h2>
-          <a href="/api/auth/signin">Sign in</a>
-        </div>
+                 <div>
+           <h2>Not authenticated</h2>
+           <Link href="/api/auth/signin">Sign in</Link>
+         </div>
       </div>
     )
   }
