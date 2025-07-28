@@ -71,7 +71,13 @@ function NotionSignInButton({ className }: { className?: string }) {
 
 function GmailSignInButton({ className }: { className?: string }) {
   function handleSignIn() {
-    window.location.href = 'https://zigsaw-backend.vercel.app/api/auth/signin/google'
+    // Automatically detect environment and use appropriate backend URL
+    const isLocalhost = window.location.hostname === 'localhost'
+    const backendUrl = isLocalhost 
+      ? 'http://localhost:3000' 
+      : 'https://zigsaw-backend.vercel.app'
+    
+    window.location.href = `${backendUrl}/api/auth/signin/google`
   }
 
   return (

@@ -1,40 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Zigsaw Backend
 
-## Getting Started
+## Environment Setup
 
-First, run the development server:
+### Required Environment Variables
+
+#### For Local Development (localhost:3000)
+
+Create a `.env.local` file in the root directory:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# NextAuth Configuration for Local Development
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-nextauth-secret-here
+
+# Frontend URL for redirects
+FRONTEND_URL=http://localhost:8080
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### For Production (Vercel)
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+Set these environment variables in your Vercel dashboard:
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+```bash
+# NextAuth Configuration for Production
+NEXTAUTH_URL=https://zigsaw-backend.vercel.app
+NEXTAUTH_SECRET=your-nextauth-secret-here
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+# Frontend URL for redirects
+FRONTEND_URL=https://your-frontend-domain.com
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+```
 
-## Learn More
+### Google OAuth Setup
 
-To learn more about Next.js, take a look at the following resources:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Go to Credentials > Create Credentials > OAuth 2.0 Client ID
+5. Set Application type to "Web application"
+6. Add authorized redirect URIs:
+   - `https://zigsaw-backend.vercel.app/api/auth/callback/google` (production)
+   - `http://localhost:3000/api/auth/callback/google` (local development)
+7. Copy Client ID and Client Secret to your environment files
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+### NextAuth Secret
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Generate a random secret for NextAuth:
+```bash
+openssl rand -base64 32
+```
 
-## Deploy on Vercel
+## Installation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm install
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+## Google Sign-In Endpoints
+
+### Production
+- `https://zigsaw-backend.vercel.app/api/auth/signin/google`
+
+### Local Development  
+- `http://localhost:3000/api/auth/signin/google`
+
+These endpoints handle the OAuth flow and redirect users back to your frontend after authentication:
+- Production: redirects to your production frontend
+- Local: redirects to `http://localhost:8080`
