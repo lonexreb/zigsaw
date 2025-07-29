@@ -149,9 +149,9 @@ async function executeTool(functionName: string, arguments_: Record<string, unkn
             requestPayload = {
               url: url,
               // Add optional parameters based on user preferences
-              ...(extract_text && { extract_text: true }),
-              ...(extract_links && { extract_links: true }),
-              ...(extract_images && { extract_images: true }),
+              ...(extract_text ? { extract_text: true } : {}),
+              ...(extract_links ? { extract_links: true } : {}),
+              ...(extract_images ? { extract_images: true } : {}),
               // Add common Firecrawl parameters
               format: 'markdown',
               only_main_content: true
