@@ -104,7 +104,7 @@ const availableTools = {
 };
 
 // Execute a tool based on the function call
-async function executeTool(functionName: string, arguments_: any, firecrawlApiKey?: string) {
+async function executeTool(functionName: string, arguments_: Record<string, unknown>, firecrawlApiKey?: string) {
   switch (functionName) {
     case 'firecrawl_scraper':
       if (!firecrawlApiKey) {
@@ -185,7 +185,7 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
               } else if (errorJson.message) {
                 errorDetails = errorJson.message;
               }
-            } catch (e) {
+            } catch {
               // If parsing fails, use the raw error text
             }
             
@@ -289,7 +289,6 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
         // If we don't have enough results, try the HTML search (limited)
         if (results.length === 0) {
           // Fallback: Basic web search using a simple approach
-          const fallbackUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
           console.log('⚠️ No instant results, using fallback search method');
           
           results.push({
@@ -327,7 +326,7 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
         
         // For now, we'll use a simple evaluation approach
         // In production, this should use Docker or a proper sandbox
-        const VM = require('vm');
+        const vm = await import('vm');
         
         // Create a safe context for JavaScript execution (as a Python substitute for demo)
         const context = {
@@ -367,7 +366,7 @@ async function executeTool(functionName: string, arguments_: any, firecrawlApiKe
           jsCode = `return ${jsCode}`;
         }
         
-        const result = VM.runInNewContext(jsCode, context, {
+        const result = vm.runInNewContext(jsCode, context, {
           timeout: safeTimeout * 1000,
           displayErrors: true
         });
