@@ -2,10 +2,16 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getToken } from 'next-auth/jwt'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  // Secure CORS - only allow your frontend
+  const isLocalhost = req.headers.host?.includes('localhost')
+  const allowedOrigin = isLocalhost 
+    ? 'http://localhost:8080'
+    : process.env.FRONTEND_URL || 'https://your-frontend-domain.com'
+  
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
 
   if (req.method === 'OPTIONS') {
     res.status(200).end()
