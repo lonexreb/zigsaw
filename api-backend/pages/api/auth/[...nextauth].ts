@@ -35,7 +35,8 @@ export default NextAuth({
         ? 'http://localhost:8080'
         : process.env.FRONTEND_URL || 'https://your-frontend-domain.com'
       
-      return `${frontendUrl}/dashboard`
+      // Redirect back to frontend (main workflow app)
+      return frontendUrl
     },
   },
   session: {
