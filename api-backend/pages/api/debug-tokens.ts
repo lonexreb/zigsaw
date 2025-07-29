@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getToken } from 'next-auth/jwt'
-import { getSession } from 'next-auth/react'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Secure CORS - only allow your frontend  

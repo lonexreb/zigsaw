@@ -18,6 +18,11 @@ interface NodeExecutionRequest {
   };
 }
 
+interface ClaudeContentBlock {
+  type: string;
+  text?: string;
+}
+
 interface NodeExecutionResponse {
   success: boolean;
   nodeId: string;
@@ -221,9 +226,9 @@ ${tools.length > 0 ? 'You have access to tools - use them when they would be hel
     // Handle Claude's response format
     if (Array.isArray(apiResult.content)) {
       // Claude returns array of content blocks
-      content = apiResult.content
-        .filter(block => block.type === 'text')
-        .map(block => block.text)
+      content = (apiResult.content as ClaudeContentBlock[])
+        .filter((block: ClaudeContentBlock) => block.type === 'text')
+        .map((block: ClaudeContentBlock) => block.text || '')
         .join('\n');
     } else if (typeof apiResult.content === 'string') {
       content = apiResult.content;

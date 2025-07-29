@@ -239,7 +239,9 @@ async function executeTool(functionName: string, arguments_: Record<string, unkn
         throw new Error('Query is required and must be a string');
       }
       
-      const maxResults = Math.min(Math.max(1, num_results), 10);
+      // Ensure num_results is a valid number
+      const numResultsNumber = typeof num_results === 'number' ? num_results : 5;
+      const maxResults = Math.min(Math.max(1, numResultsNumber), 10);
       
       try {
         console.log(`🔍 Performing web search for: "${query}" (${maxResults} results)`);
@@ -319,7 +321,9 @@ async function executeTool(functionName: string, arguments_: Record<string, unkn
         throw new Error('Code is required and must be a string');
       }
       
-      const safeTimeout = Math.min(Math.max(1, timeout), 30);
+      // Ensure timeout is a valid number
+      const timeoutNumber = typeof timeout === 'number' ? timeout : 10;
+      const safeTimeout = Math.min(Math.max(1, timeoutNumber), 30);
       
       try {
         console.log(`🐍 Executing Python code (timeout: ${safeTimeout}s)`);

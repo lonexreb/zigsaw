@@ -46,22 +46,26 @@ const GROQ_MODELS = {
   'llama-3.1-8b-instant': {
     contextLength: 131072,
     speed: 'ultra-fast',
-    costPer1000Tokens: 0.05
+    costPer1000Tokens: 0.05,
+    supportsTools: false
   },
   'llama-3.1-405b-reasoning': {
     contextLength: 131072,
     speed: 'fast',
-    costPer1000Tokens: 0.59
+    costPer1000Tokens: 0.59,
+    supportsTools: false
   },
   'mixtral-8x7b-32768': {
     contextLength: 32768,
     speed: 'fast',
-    costPer1000Tokens: 0.24
+    costPer1000Tokens: 0.24,
+    supportsTools: false
   },
   'gemma2-9b-it': {
     contextLength: 8192,
     speed: 'ultra-fast',
-    costPer1000Tokens: 0.20
+    costPer1000Tokens: 0.20,
+    supportsTools: false
   },
   'llama3-groq-70b-8192-tool-use-preview': {
     contextLength: 8192,
