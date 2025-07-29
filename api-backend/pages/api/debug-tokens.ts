@@ -42,10 +42,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       hasRefreshToken: !!jwtToken?.refreshToken,
       scope: jwtToken?.scope,
       email: jwtToken?.email,
-      tokenPreview: jwtToken?.accessToken ? 
+      tokenPreview: jwtToken?.accessToken && typeof jwtToken.accessToken === 'string' ? 
         `${jwtToken.accessToken.substring(0, 20)}...` : 
         'No access token',
-      refreshTokenPreview: jwtToken?.refreshToken ? 
+      refreshTokenPreview: jwtToken?.refreshToken && typeof jwtToken.refreshToken === 'string' ? 
         `${jwtToken.refreshToken.substring(0, 20)}...` : 
         'No refresh token',
       timestamp: new Date().toISOString(),
