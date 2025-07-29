@@ -10,6 +10,8 @@ import WorkflowTemplatesPanel from '../WorkflowTemplatesPanel'
 import { Layers } from 'lucide-react'
 import { SlackSignInButton, GmailSignInButton, GoogleCalendarSignInButton, NotionSignInButton } from '../ui/SlackSignInButton'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu'
+import { GmailStatusIndicator } from '../GmailStatusIndicator'
+import { useGmailAuth } from '../../hooks/useGmailAuth'
 
 interface WorkflowHeaderProps {
   isDark: boolean
@@ -45,6 +47,7 @@ export function WorkflowHeader({
   onTestPost
 }: WorkflowHeaderProps) {
   const { backgroundEffectsEnabled, setBackgroundEffectsEnabled } = useTheme()
+  const { refresh: refreshGmailAuth } = useGmailAuth()
   
   // Brightness state and effect
   const [brightness, setBrightness] = useState(1)
@@ -150,8 +153,10 @@ export function WorkflowHeader({
             <span className="hidden sm:inline">Test Run</span>
           </motion.button>
         </div>
-        {/* Right: Theme, Settings, Account, Sign Out */}
+        {/* Right: Gmail Status, Theme, Settings, Account, Sign Out */}
         <div className="flex items-center gap-2">
+          {/* Gmail Status Indicator */}
+          <GmailStatusIndicator isDark={isDark} className="max-w-xs" />
           {/* Slack Sign In Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -174,7 +179,10 @@ export function WorkflowHeader({
                 <SlackSignInButton className="w-full px-2 py-1 text-xs h-8" />
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <GmailSignInButton className="w-full px-2 py-1 text-xs h-8" />
+                <GmailSignInButton 
+                  className="w-full px-2 py-1 text-xs h-8" 
+                  onSuccess={refreshGmailAuth}
+                />
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <GoogleCalendarSignInButton className="w-full px-2 py-1 text-xs h-8" />

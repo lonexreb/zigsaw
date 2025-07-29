@@ -69,7 +69,7 @@ function NotionSignInButton({ className }: { className?: string }) {
   )
 }
 
-function GmailSignInButton({ className }: { className?: string }) {
+function GmailSignInButton({ className, onSuccess }: { className?: string, onSuccess?: () => void }) {
   function handleSignIn() {
     // Automatically detect environment and use appropriate backend URL
     const isLocalhost = window.location.hostname === 'localhost'
@@ -77,8 +77,23 @@ function GmailSignInButton({ className }: { className?: string }) {
       ? 'http://localhost:3000' 
       : 'https://zigsaw-backend.vercel.app'
     
+    // Store callback function for after sign-in
+    if (onSuccess) {
+      window.sessionStorage.setItem('gmailSignInCallback', 'true')
+    }
+    
     window.location.href = `${backendUrl}/api/auth/signin/google`
   }
+
+  // Check for successful sign-in when component mounts
+  React.useEffect(() => {
+    const hasCallback = window.sessionStorage.getItem('gmailSignInCallback')
+    if (hasCallback && onSuccess) {
+      window.sessionStorage.removeItem('gmailSignInCallback')
+      // Delay to allow page to fully load
+      setTimeout(onSuccess, 1000)
+    }
+  }, [onSuccess])
 
   return (
     <Button
