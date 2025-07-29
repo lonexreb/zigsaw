@@ -6,6 +6,13 @@ export default NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: 'openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.send',
+          access_type: 'offline',
+          prompt: 'consent',
+        }
+      }
     })
   ],
   callbacks: {
@@ -14,6 +21,12 @@ export default NextAuth({
       if (account) {
         token.accessToken = account.access_token
         token.refreshToken = account.refresh_token
+        token.scope = account.scope
+        console.log('Gmail OAuth tokens received:', {
+          access_token: account.access_token ? '✅ Present' : '❌ Missing',
+          refresh_token: account.refresh_token ? '✅ Present' : '❌ Missing',
+          scope: account.scope
+        })
       }
       return token
     },
@@ -24,10 +37,7 @@ export default NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url
+      console.log('NextAuth redirect - url:', url, 'baseUrl:', baseUrl)
       
       // Determine frontend URL based on environment
       const isLocalhost = baseUrl.includes('localhost')
@@ -35,7 +45,8 @@ export default NextAuth({
         ? 'http://localhost:8080'
         : process.env.FRONTEND_URL || 'https://your-frontend-domain.com'
       
-      // Redirect back to frontend (main workflow app)
+      // Always redirect to frontend after successful authentication
+      console.log('Redirecting to frontend:', frontendUrl)
       return frontendUrl
     },
   },
