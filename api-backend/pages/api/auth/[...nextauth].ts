@@ -6,6 +6,22 @@ export default NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: [
+            'openid',
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/gmail.modify',
+            'https://www.googleapis.com/auth/gmail.send',
+            'https://www.googleapis.com/auth/gmail.compose',
+            'https://www.googleapis.com/auth/gmail.labels'
+          ].join(' '),
+          prompt: 'consent',
+          access_type: 'offline'
+        }
+      }
     })
   ],
   callbacks: {
@@ -21,6 +37,16 @@ export default NextAuth({
       // Send properties to the client, like an access_token from a provider
       session.accessToken = token.accessToken as string
       session.refreshToken = token.refreshToken as string
+      
+      // Add Gmail scopes to session for frontend use
+      session.gmailScopes = [
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.modify',
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.compose',
+        'https://www.googleapis.com/auth/gmail.labels'
+      ]
+      
       return session
     },
     async redirect({ url, baseUrl }) {

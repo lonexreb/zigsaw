@@ -63,7 +63,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       scopes: [
         'https://www.googleapis.com/auth/gmail.readonly',
         'https://www.googleapis.com/auth/gmail.modify', 
-        'https://www.googleapis.com/auth/gmail.send'
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.compose',
+        'https://www.googleapis.com/auth/gmail.labels'
       ],
       usage: {
         note: 'Use these tokens to make Gmail API calls',

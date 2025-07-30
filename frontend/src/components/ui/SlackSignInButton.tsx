@@ -76,8 +76,8 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
       window.sessionStorage.setItem('gmailSignInCallback', 'true')
     }
     
-    // Redirect directly to the production auth endpoint
-    window.location.href = 'https://zigsaw-backend.vercel.app/api/auth/signin/google'
+    // Use custom Gmail OAuth flow that explicitly requests Gmail API permissions
+    window.location.href = 'https://zigsaw-backend.vercel.app/api/gmail/auth/start'
   }
 
   // Check for successful sign-in when component mounts
