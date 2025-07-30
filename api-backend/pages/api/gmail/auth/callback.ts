@@ -7,13 +7,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { code, state, error } = req.query
 
+  // Determine frontend URL with fallbacks
+  const frontendUrl = process.env.FRONTEND_URL || 
+    (process.env.NODE_ENV === 'production' 
+      ? 'https://zigsaw.dev/workflow' 
+      : 'http://localhost:8080')
+
   if (error) {
     console.error('OAuth error:', error)
-    return res.redirect(`${process.env.FRONTEND_URL}?error=gmail_auth_failed`)
+    return res.redirect(`${frontendUrl}?error=gmail_auth_failed`)
   }
 
   if (!code) {
-    return res.redirect(`${process.env.FRONTEND_URL}?error=no_auth_code`)
+    return res.redirect(`${frontendUrl}?error=no_auth_code`)
   }
 
   try {
@@ -35,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text()
       console.error('Token exchange failed:', errorText)
-      return res.redirect(`${process.env.FRONTEND_URL}?error=token_exchange_failed`)
+      return res.redirect(`${frontendUrl}?error=token_exchange_failed`)
     }
 
     const tokens = await tokenResponse.json()
@@ -45,10 +51,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // In production, you'd want to store these securely
     
     // Redirect back to frontend with success
-    res.redirect(`${process.env.FRONTEND_URL}?gmail_auth=success`)
+    res.redirect(`${frontendUrl}?gmail_auth=success`)
 
   } catch (error) {
     console.error('Gmail auth callback error:', error)
-    res.redirect(`${process.env.FRONTEND_URL}?error=gmail_auth_failed`)
+    res.redirect(`${frontendUrl}?error=gmail_auth_failed`)
   }
 } 
