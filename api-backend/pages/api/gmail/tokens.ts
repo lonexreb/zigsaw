@@ -2,11 +2,22 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getToken } from 'next-auth/jwt'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Secure CORS - only allow your frontend
-  const isLocalhost = req.headers.host?.includes('localhost')
-  const allowedOrigin = isLocalhost 
-    ? 'http://localhost:8080'
-    : process.env.FRONTEND_URL || 'https://your-frontend-domain.com'
+  // Debug CORS with specific origin matching
+  console.log('Request origin:', req.headers.origin)
+  console.log('Request host:', req.headers.host)
+  console.log('Frontend URL env:', process.env.FRONTEND_URL)
+  
+  // Allow common development and production origins
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:3000', 
+    'https://zigsaw.dev',
+    'https://zigsaw-frontend.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean) as string[]
+  
+  const origin = req.headers.origin
+  const allowedOrigin = (origin && allowedOrigins.includes(origin)) ? origin : (allowedOrigins[0] || 'http://localhost:8080')
   
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
