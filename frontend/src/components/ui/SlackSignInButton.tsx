@@ -71,18 +71,13 @@ function NotionSignInButton({ className }: { className?: string }) {
 
 function GmailSignInButton({ className, onSuccess }: { className?: string, onSuccess?: () => void }) {
   function handleSignIn() {
-    // Automatically detect environment and use appropriate backend URL
-    const isLocalhost = window.location.hostname === 'localhost'
-    const backendUrl = isLocalhost 
-      ? 'http://localhost:3000' 
-      : 'https://zigsaw-backend.vercel.app'
-    
     // Store callback function for after sign-in
     if (onSuccess) {
       window.sessionStorage.setItem('gmailSignInCallback', 'true')
     }
     
-    window.location.href = `${backendUrl}/api/auth/signin/google`
+    // Redirect directly to the production auth endpoint
+    window.location.href = 'https://zigsaw-backend.vercel.app/api/auth/signin/google'
   }
 
   // Check for successful sign-in when component mounts
@@ -109,7 +104,12 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
 
 function GoogleCalendarSignInButton({ className }: { className?: string }) {
   function handleSignIn() {
-    window.location.href = 'https://zigsaw-backend.vercel.app/api/auth/signin/gcl'
+    // Always use production backend URL for now
+    const backendUrl = 'https://zigsaw-backend.vercel.app'
+    
+    // Use the correct signin URL with proper callback
+    const callbackUrl = encodeURIComponent(window.location.origin)
+    window.location.href = `${backendUrl}/api/auth/signin/gcl?callbackUrl=${callbackUrl}`
   }
 
   return (

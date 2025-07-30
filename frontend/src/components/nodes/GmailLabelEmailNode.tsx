@@ -43,7 +43,7 @@ function GmailLabelEmailNode({ id, data, selected }: GmailLabelEmailNodeProps) {
 
     try {
       // Get message ID from input data (most recent email)
-      const messageId = data.inputData?.messageId || data.inputData?.id || data.inputData?.message?.id;
+      const messageId = data.inputData?.messageId || data.inputData?.id;
 
       if (!messageId) {
         throw new Error('No email found. Connect an email source first.');
@@ -98,10 +98,10 @@ function GmailLabelEmailNode({ id, data, selected }: GmailLabelEmailNodeProps) {
 
   const getStatusColor = () => {
     switch (data.status) {
-      case 'running': return 'bg-yellow-500';
-      case 'completed': return 'bg-green-500';
-      case 'error': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'running': return 'border-yellow-500 bg-yellow-50';
+      case 'completed': return 'border-green-500 bg-green-50';
+      case 'error': return 'border-red-500 bg-red-50';
+      default: return 'border-gray-200 bg-white';
     }
   };
 
@@ -183,7 +183,7 @@ function GmailLabelEmailNode({ id, data, selected }: GmailLabelEmailNodeProps) {
             
             {/* Left streak */}
             <motion.div 
-              className="absolute bottom-0 left-0 w-0.5 h-full bg-gradient-to-t from-transparent via-blue-400/60 to-transparent"
+              className="absolute bottom-0 left-0 w-0.5 h-full bg-gradient-to-t from-transparent via-purple-400/60 to-transparent"
               animate={{
                 y: ['100%', '-100%'],
                 opacity: [0, 1, 0]

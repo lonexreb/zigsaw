@@ -261,24 +261,24 @@ function GmailDraftReplyNode({ id, data, selected }: GmailDraftReplyNodeProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Button
-                onClick={createDraftReply}
+            <Button
+              onClick={createDraftReply}
                 disabled={isRunning || data.status === 'running' || !isConnected || !hasTokens}
                 className="w-full h-10 text-sm font-medium bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0 font-sans"
                 size="lg"
-              >
+            >
                 {isRunning ? (
-                  <>
+                <>
                     <Activity className="w-4 h-4 mr-2 animate-spin" />
-                    Creating Draft...
-                  </>
-                ) : (
-                  <>
+                  Creating Draft...
+                </>
+              ) : (
+                <>
                     <Send className="w-4 h-4 mr-2" />
-                    Create Draft Reply
-                  </>
-                )}
-              </Button>
+                  Create Draft Reply
+                </>
+              )}
+            </Button>
             </motion.div>
           </div>
         </div>

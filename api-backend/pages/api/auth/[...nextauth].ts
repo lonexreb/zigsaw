@@ -23,9 +23,15 @@ export default NextAuth({
       session.refreshToken = token.refreshToken as string
       return session
     },
+    async redirect({ url, baseUrl }) {
+      // Handle redirects properly
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      else if (new URL(url).origin === baseUrl) return url
+      else if (url.startsWith(process.env.FRONTEND_URL || 'http://localhost:8080')) return url
+      return baseUrl
+    },
   },
   pages: {
-    signIn: '/auth/signin',
     error: '/auth/error',
   },
   session: {
