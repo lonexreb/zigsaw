@@ -2,10 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getToken } from 'next-auth/jwt'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
   // CORS headers
   const origin = req.headers.origin
   const allowedOrigins = [
@@ -26,6 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'OPTIONS') {
     res.status(200).end()
     return
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
