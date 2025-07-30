@@ -16,6 +16,8 @@ import {
   Calendar,
   Video,
   Repeat,
+  Tag,
+  Mail,
   UserCheck,
   ChevronRight,
   Layers,
@@ -117,6 +119,22 @@ const nodeTypes: NodeType[] = [
     description: 'Gmail integration and email management',
     icon: <MessageSquare className="w-5 h-5" />,
     color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
+    category: 'Tools'
+  },
+  {
+    id: 'gmail_label_email',
+    label: 'Gmail Label Email',
+    description: 'Add or remove labels from emails automatically',
+    icon: <Tag className="w-5 h-5" />,
+    color: { primary: 'red', secondary: 'orange', glow: 'red-400/20' },
+    category: 'Tools'
+  },
+  {
+    id: 'gmail_draft_reply',
+    label: 'Gmail Draft Reply',
+    description: 'Create automated draft replies to emails',
+    icon: <Mail className="w-5 h-5" />,
+    color: { primary: 'blue', secondary: 'red', glow: 'blue-400/20' },
     category: 'Tools'
   },
   {

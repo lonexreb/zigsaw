@@ -46,6 +46,8 @@ import { ThemeProvider, useTheme } from '../components/theme/ThemeProvider'
 
 import { useNavigate } from 'react-router-dom';
 import GmailNode from '../components/nodes/GmailNode';
+import GmailLabelEmailNode from '../components/nodes/GmailLabelEmailNode';
+import GmailDraftReplyNode from '../components/nodes/GmailDraftReplyNode';
 import { workflowPersistenceService, WorkflowConfig } from '../services/workflowPersistenceService';
 import GoogleCalendarNode from '../components/nodes/GoogleCalendarNode';
 import WhisperNode from '../components/nodes/WhisperNode';
@@ -107,6 +109,8 @@ const nodeTypes = {
   trigger: createWrappedNode(TriggerNode, 'Trigger'),
   loop: createWrappedNode(LoopNode, 'Loop'),
   gmail: createWrappedNode(GmailNode, 'Gmail'),
+  gmail_label_email: createWrappedNode(GmailLabelEmailNode, 'Gmail Label Email'),
+  gmail_draft_reply: createWrappedNode(GmailDraftReplyNode, 'Gmail Draft Reply'),
   google_calendar: createWrappedNode(GoogleCalendarNode, 'Google Calendar'),
   whisper: createWrappedNode(WhisperNode, 'Whisper'),
   imagen: createWrappedNode(ImagenNode, 'Imagen'),

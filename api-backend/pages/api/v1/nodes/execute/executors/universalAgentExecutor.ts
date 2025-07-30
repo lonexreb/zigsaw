@@ -54,7 +54,7 @@ export async function executeUniversalAgentInternal(
       model: request.config.model,
       hasTools: !!request.config.tools?.length,
       hasInputData: !!request.inputData
-    });
+    });                      
 
     // Extract and validate configuration
     const {
