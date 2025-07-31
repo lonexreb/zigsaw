@@ -76,9 +76,9 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
       window.sessionStorage.setItem('gmailSignInCallback', 'true')
     }
     
-    // Use NextAuth with proper Gmail scopes and force consent
+    // Use NextAuth with force consent (scopes are configured in NextAuth)
     const callbackUrl = encodeURIComponent(window.location.origin)
-    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent&scope=${encodeURIComponent('openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.labels')}`
+    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
   }
 
   // Check for successful sign-in when component mounts
@@ -105,9 +105,9 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
 
 function GoogleCalendarSignInButton({ className }: { className?: string }) {
   function handleSignIn() {
-    // Use NextAuth with Google Calendar scopes and force consent
+    // Use NextAuth with force consent (scopes are configured in NextAuth)
     const callbackUrl = encodeURIComponent(window.location.origin)
-    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent&scope=${encodeURIComponent('openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events')}`
+    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
   }
 
   return (
