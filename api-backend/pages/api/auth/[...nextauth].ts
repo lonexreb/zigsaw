@@ -16,7 +16,10 @@ export default NextAuth({
             'https://www.googleapis.com/auth/gmail.modify',
             'https://www.googleapis.com/auth/gmail.send',
             'https://www.googleapis.com/auth/gmail.compose',
-            'https://www.googleapis.com/auth/gmail.labels'
+            'https://www.googleapis.com/auth/gmail.labels',
+            'https://www.googleapis.com/auth/calendar.readonly',
+            'https://www.googleapis.com/auth/calendar',
+            'https://www.googleapis.com/auth/calendar.events'
           ].join(' '),
           prompt: 'consent',
           access_type: 'offline'
@@ -38,7 +41,7 @@ export default NextAuth({
       session.accessToken = token.accessToken as string
       session.refreshToken = token.refreshToken as string
       
-      // Add Gmail scopes to session for frontend use
+      // Add Gmail and Calendar scopes to session for frontend use
       session.gmailScopes = [
         'https://www.googleapis.com/auth/gmail.readonly',
         'https://www.googleapis.com/auth/gmail.modify',
@@ -47,13 +50,19 @@ export default NextAuth({
         'https://www.googleapis.com/auth/gmail.labels'
       ]
       
+      session.calendarScopes = [
+        'https://www.googleapis.com/auth/calendar.readonly',
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/calendar.events'
+      ]
+      
       return session
     },
     async redirect({ url, baseUrl }) {
       // Handle redirects properly
       if (url.startsWith('/')) return `${baseUrl}${url}`
       else if (new URL(url).origin === baseUrl) return url
-      else if (url.startsWith(process.env.FRONTEND_URL || 'http://localhost:8080')) return url
+      else if (url.startsWith(process.env.FRONTEND_URL || 'https://zigsaw.dev/workflow')) return url
       return baseUrl
     },
   },

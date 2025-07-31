@@ -29,11 +29,8 @@ export function useGmailAuth() {
     try {
       setStatus(prev => ({ ...prev, loading: true, error: undefined }))
       
-      // Determine backend URL based on environment
-      const isLocalhost = window.location.hostname === 'localhost'
-      const backendUrl = isLocalhost 
-        ? 'http://localhost:3000' 
-        : 'https://zigsaw-backend.vercel.app'
+      // Always use production backend URL for now
+      const backendUrl = 'https://zigsaw-backend.vercel.app'
 
       // First check if we have a valid session
       const sessionResponse = await fetch(`${backendUrl}/api/auth/session-check`, {

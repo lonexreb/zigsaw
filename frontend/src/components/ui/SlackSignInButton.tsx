@@ -76,8 +76,9 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
       window.sessionStorage.setItem('gmailSignInCallback', 'true')
     }
     
-    // Use custom Gmail OAuth flow that explicitly requests Gmail API permissions
-    window.location.href = 'https://zigsaw-backend.vercel.app/api/gmail/auth/start'
+    // Use NextAuth with proper Gmail scopes and force consent
+    const callbackUrl = encodeURIComponent(window.location.origin)
+    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent&scope=${encodeURIComponent('openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.labels')}`
   }
 
   // Check for successful sign-in when component mounts
@@ -104,12 +105,9 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
 
 function GoogleCalendarSignInButton({ className }: { className?: string }) {
   function handleSignIn() {
-    // Always use production backend URL for now
-    const backendUrl = 'https://zigsaw-backend.vercel.app'
-    
-    // Use the correct signin URL with proper callback
+    // Use NextAuth with Google Calendar scopes and force consent
     const callbackUrl = encodeURIComponent(window.location.origin)
-    window.location.href = `${backendUrl}/api/auth/signin/gcl?callbackUrl=${callbackUrl}`
+    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent&scope=${encodeURIComponent('openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events')}`
   }
 
   return (

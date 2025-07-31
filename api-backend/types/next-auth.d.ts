@@ -5,5 +5,6 @@ declare module 'next-auth' {
     accessToken?: string
     refreshToken?: string
     gmailScopes?: string[]
+    calendarScopes?: string[]
   }
 } 

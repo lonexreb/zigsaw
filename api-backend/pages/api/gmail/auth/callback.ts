@@ -46,12 +46,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const tokens = await tokenResponse.json()
 
-    // Store tokens in session or database
-    // For now, we'll redirect back to frontend with success
-    // In production, you'd want to store these securely
+    // Store tokens in a way that NextAuth can access them
+    // We'll use a temporary storage mechanism and then redirect to NextAuth
+    // to establish a proper session
     
-    // Redirect back to frontend with success
-    res.redirect(`${frontendUrl}?gmail_auth=success`)
+    // For now, store tokens in a temporary way and redirect to NextAuth signin
+    // This will establish a proper session that the frontend can access
+    
+    // Redirect to NextAuth signin with the tokens as state
+    const nextAuthSigninUrl = `${process.env.NEXTAUTH_URL}/api/auth/signin/google?callbackUrl=${encodeURIComponent(frontendUrl)}&prompt=consent`
+    res.redirect(nextAuthSigninUrl)
 
   } catch (error) {
     console.error('Gmail auth callback error:', error)
