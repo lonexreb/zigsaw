@@ -124,84 +124,14 @@ function GmailLabelEmailNode({ id, data, selected }: GmailLabelEmailNodeProps) {
       />
       
       <motion.div
-        className={`relative bg-gradient-to-br from-slate-900/90 via-purple-900/40 to-blue-900/60 backdrop-blur-xl border border-purple-400/20 rounded-2xl shadow-2xl transition-all duration-500 hover:shadow-purple-500/20 hover:border-purple-400/40 hover:scale-[1.02] min-w-[300px] min-h-[200px] ${
-          selected ? "ring-2 ring-purple-400/60 shadow-purple-500/30" : ""
-        }`}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
+        className={`w-full h-full min-w-[300px] min-h-[200px] bg-white border-2 rounded-xl shadow-lg overflow-hidden ${getStatusColor()}`}
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.2 }}
       >
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-indigo-600/10 rounded-2xl animate-pulse" />
-        
-        {/* Animated Light Streaks */}
-        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 rounded-2xl">
-            {/* Top streak */}
-            <motion.div 
-              className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-purple-400/60 to-transparent"
-              animate={{
-                x: ['-100%', '100%'],
-                opacity: [0, 1, 0]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-            
-            {/* Right streak */}
-            <motion.div 
-              className="absolute top-0 right-0 w-0.5 h-full bg-gradient-to-b from-transparent via-blue-400/60 to-transparent"
-              animate={{
-                y: ['-100%', '100%'],
-                opacity: [0, 1, 0]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.75
-              }}
-            />
-            
-            {/* Bottom streak */}
-            <motion.div 
-              className="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-l from-transparent via-purple-400/60 to-transparent"
-              animate={{
-                x: ['100%', '-100%'],
-                opacity: [0, 1, 0]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 1.5
-              }}
-            />
-            
-            {/* Left streak */}
-            <motion.div 
-              className="absolute bottom-0 left-0 w-0.5 h-full bg-gradient-to-t from-transparent via-purple-400/60 to-transparent"
-              animate={{
-                y: ['100%', '-100%'],
-                opacity: [0, 1, 0]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 2.25
-              }}
-            />
-          </div>
-        </div>
-
         <Handle type="target" position={Position.Left} className="w-4 h-4" />
         <Handle type="source" position={Position.Right} className="w-4 h-4" />
 
-        <div className="relative p-4 h-full flex flex-col z-10">
+        <div className="p-4 h-full flex flex-col">
           <NodeNameHeader 
             icon={Tag}
             title="Label Email"
@@ -212,66 +142,55 @@ function GmailLabelEmailNode({ id, data, selected }: GmailLabelEmailNodeProps) {
           <div className="flex-1 flex flex-col items-center justify-center space-y-6">
             {/* Big Words */}
             <div className="text-center space-y-2">
-              <h3 className="text-2xl font-semibold text-white font-sans tracking-wide">
+              <h3 className="text-2xl font-bold text-gray-800">
                 LABEL EMAIL
               </h3>
-              <p className="text-lg text-gray-300 font-sans">
+              <p className="text-lg text-gray-600">
                 Most Recent Email
               </p>
             </div>
 
             {/* Connection Status */}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-2">
               <IconComponent className={`w-5 h-5 ${connectionStatus.color}`} />
-              <span className={`text-sm font-medium ${connectionStatus.color} font-sans`}>
+              <span className={`text-sm font-medium ${connectionStatus.color}`}>
                 {connectionStatus.text}
               </span>
             </div>
 
             {/* Status Badge */}
             {data.status !== 'idle' && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.3, type: "spring" }}
+              <Badge 
+                variant={data.status === 'completed' ? 'default' : data.status === 'error' ? 'destructive' : 'secondary'}
+                className="text-xs"
               >
-                <Badge 
-                  variant={data.status === 'completed' ? 'default' : data.status === 'error' ? 'destructive' : 'secondary'}
-                  className="text-xs font-sans"
-                >
-                  {data.status === 'running' ? 'Running...' : 
-                   data.status === 'completed' ? 'Completed' : 
-                   data.status === 'error' ? 'Error' : 'Idle'}
-                </Badge>
-              </motion.div>
+                {data.status === 'running' ? 'Running...' : 
+                 data.status === 'completed' ? 'Completed' : 
+                 data.status === 'error' ? 'Error' : 'Idle'}
+              </Badge>
             )}
           </div>
 
           {/* Run Button */}
           <div className="mt-4">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <Button
+              onClick={executeLabeling}
+              disabled={isRunning || data.status === 'running' || !isConnected || !hasTokens}
+              className="w-full h-10 text-sm font-medium"
+              size="lg"
             >
-              <Button
-                onClick={executeLabeling}
-                disabled={isRunning || data.status === 'running' || !isConnected || !hasTokens}
-                className="w-full h-10 text-sm font-medium bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0 font-sans"
-                size="lg"
-              >
-                {isRunning ? (
-                  <>
-                    <Activity className="w-4 h-4 mr-2 animate-spin" />
-                    Labeling...
-                  </>
-                ) : (
-                  <>
-                    <Tag className="w-4 h-4 mr-2" />
-                    Label Email
-                  </>
-                )}
-              </Button>
-            </motion.div>
+              {isRunning ? (
+                <>
+                  <Activity className="w-4 h-4 mr-2 animate-spin" />
+                  Labeling...
+                </>
+              ) : (
+                <>
+                  <Tag className="w-4 h-4 mr-2" />
+                  Label Email
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </motion.div>

@@ -103,12 +103,27 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
   )
 }
 
-function GoogleCalendarSignInButton({ className }: { className?: string }) {
+function GoogleCalendarSignInButton({ className, onSuccess }: { className?: string, onSuccess?: () => void }) {
   function handleSignIn() {
+    // Store callback function for after sign-in
+    if (onSuccess) {
+      window.sessionStorage.setItem('gcalSignInCallback', 'true')
+    }
+    
     // Use NextAuth with force consent (scopes are configured in NextAuth)
     const callbackUrl = encodeURIComponent(window.location.origin)
     window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
   }
+
+  // Check for successful sign-in when component mounts
+  React.useEffect(() => {
+    const hasCallback = window.sessionStorage.getItem('gcalSignInCallback')
+    if (hasCallback && onSuccess) {
+      window.sessionStorage.removeItem('gcalSignInCallback')
+      // Delay to allow page to fully load
+      setTimeout(onSuccess, 1000)
+    }
+  }, [onSuccess])
 
   return (
     <Button

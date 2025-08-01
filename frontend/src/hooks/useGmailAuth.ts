@@ -152,10 +152,13 @@ export function useGmailAuth() {
     const handleFocus = () => checkGmailAuth()
     window.addEventListener('focus', handleFocus)
     
-    // Check if user just returned from Gmail sign-in
+    // Check if user just returned from Gmail or GCal sign-in
     const hasGmailCallback = window.sessionStorage.getItem('gmailSignInCallback')
-    if (hasGmailCallback) {
-      window.sessionStorage.removeItem('gmailSignInCallback')
+    const hasGcalCallback = window.sessionStorage.getItem('gcalSignInCallback')
+    
+    if (hasGmailCallback || hasGcalCallback) {
+      if (hasGmailCallback) window.sessionStorage.removeItem('gmailSignInCallback')
+      if (hasGcalCallback) window.sessionStorage.removeItem('gcalSignInCallback')
       // Wait a bit for the session to be established, then check auth
       setTimeout(() => {
         checkGmailAuth()
