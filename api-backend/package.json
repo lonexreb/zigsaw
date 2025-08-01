@@ -11,7 +11,9 @@
     "clean": "rm -rf .next && rm -rf node_modules && npm install"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.11.0",
+    "jsonwebtoken": "^9.0.2",
     "next": "^14.2.5",
     "next-auth": "^4.24.11",
     "nookies": "^2.5.2",

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getToken } from 'next-auth/jwt'
+import jwt from 'jsonwebtoken'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Debug CORS with specific origin matching
@@ -43,8 +44,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const tokenString = authHeader.substring(7)
         try {
           // Try to decode the JWT token manually
-          const jwt = require('jsonwebtoken')
-          const decoded = jwt.verify(tokenString, process.env.NEXTAUTH_SECRET)
+          const secret = process.env.NEXTAUTH_SECRET
+          if (!secret) {
+            throw new Error('NEXTAUTH_SECRET not configured')
+          }
+          const decoded = jwt.verify(tokenString, secret) as any
           token = decoded
         } catch (jwtError) {
           console.log('JWT verification failed:', jwtError instanceof Error ? jwtError.message : 'Unknown error')
