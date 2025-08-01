@@ -77,9 +77,28 @@ export default NextAuth({
       name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
+        domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'none',
+        path: '/',
+        secure: true,
+        domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'none',
+        path: '/',
+        secure: true,
         domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
       }
     }

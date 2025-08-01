@@ -3,23 +3,15 @@ import { getToken } from 'next-auth/jwt'
 import jwt from 'jsonwebtoken'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // CORS headers
+  // CORS headers - Allow all origins for now to debug
   const origin = req.headers.origin
-  const allowedOrigins = [
-    'http://localhost:8080',
-    'http://localhost:3000',
-    'https://zigsaw.dev',
-    'https://zigsaw-frontend.vercel.app',
-    'https://zigsaw-backend.vercel.app',
-    process.env.FRONTEND_URL
-  ].filter(Boolean) as string[]
   
-  const allowedOrigin = (origin && allowedOrigins.includes(origin)) ? origin : (allowedOrigins[0] || 'http://localhost:8080')
-  
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  // Set CORS headers to allow the frontend domain
+  res.setHeader('Access-Control-Allow-Origin', origin || 'https://zigsaw.dev')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Max-Age', '86400') // 24 hours
 
   if (req.method === 'OPTIONS') {
     res.status(200).end()
@@ -69,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           hasCookies: !!req.headers.cookie,
           hasAuthorization: !!req.headers.authorization,
           origin: origin,
-          allowedOrigins: allowedOrigins
+          cookies: req.headers.cookie ? 'Present' : 'Missing'
         }
       })
     }

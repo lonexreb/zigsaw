@@ -69,20 +69,12 @@ export function useGmailAuth() {
       }
 
       if (!token) {
-        // No valid session - retry a few times with delay for fresh sign-ins
-        if (retryCount < 3) {
-          console.log(`No session token, retrying in ${(retryCount + 1) * 2} seconds... (attempt ${retryCount + 1}/3)`)
-          setTimeout(() => {
-            checkGmailAuth(retryCount + 1)
-          }, (retryCount + 1) * 2000) // 2s, 4s, 6s delays
-          return
-        }
-        
+        // No session token means user hasn't signed in yet
+        // Don't retry - just set the status to not connected
         setStatus({
           isConnected: false,
           hasTokens: false,
-          loading: false,
-          error: 'Authentication failed'
+          loading: false
         })
         return
       }
