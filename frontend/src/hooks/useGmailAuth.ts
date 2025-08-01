@@ -26,37 +26,93 @@ export function useGmailAuth() {
     loading: true
   })
 
-  const checkGmailAuth = async (retryCount = 0) => {
-    try {
-      setStatus(prev => ({ ...prev, loading: true, error: undefined }))
-      
-      // Always use production backend URL for now
-      const backendUrl = 'https://zigsaw-backend.vercel.app'
+  const [sessionToken, setSessionToken] = useState<string | null>(null)
 
-      // First check if we have a valid session
-      const sessionResponse = await fetch(`${backendUrl}/api/auth/session-check`, {
+  const getSessionToken = async (): Promise<string | null> => {
+    try {
+      const backendUrl = 'https://zigsaw-backend.vercel.app'
+      
+      // Get a session token from the backend
+      const response = await fetch(`${backendUrl}/api/auth/get-session-token`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         }
       })
 
+      if (response.ok) {
+        const data = await response.json()
+        if (data.authenticated && data.sessionToken) {
+          return data.sessionToken
+        }
+      }
+      return null
+    } catch (error) {
+      console.error('Failed to get session token:', error)
+      return null
+    }
+  }
+
+  const checkGmailAuth = async (retryCount = 0) => {
+    try {
+      setStatus(prev => ({ ...prev, loading: true, error: undefined }))
+      
+      const backendUrl = 'https://zigsaw-backend.vercel.app'
+
+      // Get or refresh session token
+      let token = sessionToken
+      if (!token) {
+        token = await getSessionToken()
+        if (token) {
+          setSessionToken(token)
+        }
+      }
+
+      if (!token) {
+        // No valid session - retry a few times with delay for fresh sign-ins
+        if (retryCount < 3) {
+          console.log(`No session token, retrying in ${(retryCount + 1) * 2} seconds... (attempt ${retryCount + 1}/3)`)
+          setTimeout(() => {
+            checkGmailAuth(retryCount + 1)
+          }, (retryCount + 1) * 2000) // 2s, 4s, 6s delays
+          return
+        }
+        
+        setStatus({
+          isConnected: false,
+          hasTokens: false,
+          loading: false,
+          error: 'Authentication failed'
+        })
+        return
+      }
+
+      // Use the session token for API requests
+      const sessionResponse = await fetch(`${backendUrl}/api/auth/session-check`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
       if (!sessionResponse.ok || sessionResponse.status === 401) {
+        // Token might be expired, try to get a new one
+        const newToken = await getSessionToken()
+        if (newToken && retryCount < 3) {
+          setSessionToken(newToken)
+          console.log(`Token expired, got new token, retrying... (attempt ${retryCount + 1}/3)`)
+          setTimeout(() => {
+            checkGmailAuth(retryCount + 1)
+          }, 1000)
+          return
+        }
+        
         const errorData = await sessionResponse.json().catch(() => ({}))
         console.log('Session check failed:', {
           status: sessionResponse.status,
           statusText: sessionResponse.statusText,
           errorData
         })
-        
-        // No valid session - retry a few times with delay for fresh sign-ins
-        if (retryCount < 3) {
-          console.log(`Session check failed (401), retrying in ${(retryCount + 1) * 2} seconds... (attempt ${retryCount + 1}/3)`)
-          setTimeout(() => {
-            checkGmailAuth(retryCount + 1)
-          }, (retryCount + 1) * 2000) // 2s, 4s, 6s delays
-          return
-        }
         
         setStatus({
           isConnected: false,
@@ -82,9 +138,9 @@ export function useGmailAuth() {
 
       // Now check if we have Gmail tokens
       const response = await fetch(`${backendUrl}/api/gmail/tokens`, {
-        credentials: 'include', // Include cookies for session
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       })
 

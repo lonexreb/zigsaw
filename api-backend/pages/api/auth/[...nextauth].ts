@@ -62,7 +62,7 @@ export default NextAuth({
       // Handle redirects properly
       if (url.startsWith('/')) return `${baseUrl}${url}`
       else if (new URL(url).origin === baseUrl) return url
-      else if (url.startsWith(process.env.FRONTEND_URL || 'https://zigsaw.dev/workflow')) return url
+      else if (url.startsWith(process.env.FRONTEND_URL || 'https://zigsaw-frontend.vercel.app')) return url
       return baseUrl
     },
   },

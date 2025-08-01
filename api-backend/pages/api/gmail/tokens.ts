@@ -31,10 +31,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Get the JWT token from the request
-    const token = await getToken({ 
+    let token = await getToken({ 
       req, 
       secret: process.env.NEXTAUTH_SECRET 
     })
+
+    // If no token from cookies, try to get it from Authorization header
+    if (!token && req.headers.authorization) {
+      const authHeader = req.headers.authorization
+      if (authHeader.startsWith('Bearer ')) {
+        const tokenString = authHeader.substring(7)
+        try {
+          // Try to decode the JWT token manually
+          const jwt = require('jsonwebtoken')
+          const decoded = jwt.verify(tokenString, process.env.NEXTAUTH_SECRET)
+          token = decoded
+        } catch (jwtError) {
+          console.log('JWT verification failed:', jwtError instanceof Error ? jwtError.message : 'Unknown error')
+        }
+      }
+    }
 
     if (!token) {
       return res.status(401).json({ 
