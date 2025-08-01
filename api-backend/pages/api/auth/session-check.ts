@@ -9,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     'http://localhost:3000',
     'https://zigsaw.dev',
     'https://zigsaw-frontend.vercel.app',
+    'https://zigsaw-backend.vercel.app',
     process.env.FRONTEND_URL
   ].filter(Boolean) as string[]
   
@@ -36,9 +37,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!token) {
+      console.log('Session check failed: No token found')
+      console.log('Request cookies:', req.headers.cookie)
+      console.log('Request origin:', origin)
+      
       return res.status(401).json({ 
         authenticated: false,
-        message: 'No session found' 
+        message: 'No session found',
+        debug: {
+          hasCookies: !!req.headers.cookie,
+          origin: origin,
+          allowedOrigins: allowedOrigins
+        }
       })
     }
 

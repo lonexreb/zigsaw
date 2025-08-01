@@ -8,6 +8,7 @@ interface GmailAuthStatus {
   scopes?: string[]
   loading: boolean
   error?: string
+  debug?: any
 }
 
 interface GmailTokens {
@@ -41,6 +42,13 @@ export function useGmailAuth() {
       })
 
       if (!sessionResponse.ok || sessionResponse.status === 401) {
+        const errorData = await sessionResponse.json().catch(() => ({}))
+        console.log('Session check failed:', {
+          status: sessionResponse.status,
+          statusText: sessionResponse.statusText,
+          errorData
+        })
+        
         // No valid session - retry a few times with delay for fresh sign-ins
         if (retryCount < 3) {
           console.log(`Session check failed (401), retrying in ${(retryCount + 1) * 2} seconds... (attempt ${retryCount + 1}/3)`)
@@ -53,7 +61,9 @@ export function useGmailAuth() {
         setStatus({
           isConnected: false,
           hasTokens: false,
-          loading: false
+          loading: false,
+          error: 'Authentication failed',
+          debug: errorData
         })
         return
       }
@@ -64,7 +74,8 @@ export function useGmailAuth() {
         setStatus({
           isConnected: false,
           hasTokens: false,
-          loading: false
+          loading: false,
+          error: 'No Gmail access found'
         })
         return
       }
@@ -102,7 +113,8 @@ export function useGmailAuth() {
         setStatus({
           isConnected: false,
           hasTokens: false,
-          loading: false
+          loading: false,
+          error: 'Gmail authentication failed'
         })
       } else {
         throw new Error(`HTTP ${response.status}`)
