@@ -75,9 +75,9 @@ export default NextAuth({
         return frontendUrl
       }
       
-      // Default to frontend workflow page
-      console.log('Default redirect to frontend workflow')
-      return 'https://zigsaw.dev/workflow'
+      // Default to frontend workflow page with auth success indicator
+      console.log('Default redirect to frontend workflow with auth success')
+      return 'https://zigsaw.dev/workflow?auth=success'
     },
   },
   pages: {

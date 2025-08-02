@@ -171,7 +171,18 @@ export function useGmailAuth() {
 
   // Check auth status on mount and when window gains focus
   useEffect(() => {
-    checkGmailAuth()
+    // Check if user just returned from authentication
+    const urlParams = new URLSearchParams(window.location.search)
+    const authSuccess = urlParams.get('auth')
+    
+    if (authSuccess === 'success') {
+      // User just completed OAuth, try to create a session token
+      createSessionToken()
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else {
+      checkGmailAuth()
+    }
 
     const handleFocus = () => checkGmailAuth()
     window.addEventListener('focus', handleFocus)
@@ -183,14 +194,45 @@ export function useGmailAuth() {
     if (hasGmailCallback || hasGcalCallback) {
       if (hasGmailCallback) window.sessionStorage.removeItem('gmailSignInCallback')
       if (hasGcalCallback) window.sessionStorage.removeItem('gcalSignInCallback')
-      // Wait a bit for the session to be established, then check auth
-      setTimeout(() => {
-        checkGmailAuth()
-      }, 2000)
+      // Try to create a session token immediately
+      createSessionToken()
     }
     
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
+
+  const createSessionToken = async () => {
+    try {
+      const backendUrl = 'https://zigsaw-backend.vercel.app'
+      
+      // Create a session token using the fresh OAuth session
+      const response = await fetch(`${backendUrl}/api/auth/create-session-token`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.sessionToken) {
+          localStorage.setItem('sessionToken', data.sessionToken)
+          console.log('Session token created and stored')
+          // Now check authentication status
+          checkGmailAuth()
+        }
+      } else {
+        console.error('Failed to create session token:', response.status)
+        // Fallback to normal auth check
+        setTimeout(() => checkGmailAuth(), 2000)
+      }
+    } catch (error) {
+      console.error('Error creating session token:', error)
+      // Fallback to normal auth check
+      setTimeout(() => checkGmailAuth(), 2000)
+    }
+  }
 
   return {
     ...status,
