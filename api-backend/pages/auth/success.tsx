@@ -58,11 +58,13 @@ export default function AuthSuccess() {
       } catch (error) {
         console.error('Auth success error:', error)
         
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        
         if (window.opener) {
           // Popup - send error to parent
           window.opener.postMessage({
             type: 'AUTH_ERROR',
-            error: error.message || 'Unknown error'
+            error: errorMessage
           }, 'https://zigsaw.dev')
           window.close()
         } else {
