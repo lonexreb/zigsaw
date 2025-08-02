@@ -77,7 +77,7 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
     }
     
     // Use NextAuth with force consent (scopes are configured in NextAuth)
-    const callbackUrl = encodeURIComponent(window.location.origin)
+    const callbackUrl = encodeURIComponent('https://zigsaw.dev/workflow')
     window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
   }
 
@@ -111,7 +111,7 @@ function GoogleCalendarSignInButton({ className, onSuccess }: { className?: stri
     }
     
     // Use NextAuth with force consent (scopes are configured in NextAuth)
-    const callbackUrl = encodeURIComponent(window.location.origin)
+    const callbackUrl = encodeURIComponent('https://zigsaw.dev/workflow')
     window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
   }
 

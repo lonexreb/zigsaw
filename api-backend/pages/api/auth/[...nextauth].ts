@@ -59,11 +59,25 @@ export default NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Handle redirects properly
-      if (url.startsWith('/')) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
-      else if (url.startsWith(process.env.FRONTEND_URL || 'https://zigsaw-frontend.vercel.app')) return url
-      return baseUrl
+      // Always redirect to frontend after authentication
+      console.log('NextAuth redirect called with:', { url, baseUrl })
+      
+      // If it's a frontend URL, allow it
+      if (url.startsWith('https://zigsaw.dev')) {
+        console.log('Redirecting to frontend:', url)
+        return url
+      }
+      
+      // If it's a relative URL, make it absolute to frontend
+      if (url.startsWith('/')) {
+        const frontendUrl = 'https://zigsaw.dev' + url
+        console.log('Converting relative URL to frontend:', frontendUrl)
+        return frontendUrl
+      }
+      
+      // Default to frontend workflow page
+      console.log('Default redirect to frontend workflow')
+      return 'https://zigsaw.dev/workflow'
     },
   },
   pages: {

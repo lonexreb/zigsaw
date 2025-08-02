@@ -8,9 +8,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { Settings as SettingsIcon } from 'lucide-react'
 import WorkflowTemplatesPanel from '../WorkflowTemplatesPanel'
 import { Layers } from 'lucide-react'
-import { SlackSignInButton, GmailSignInButton, GoogleCalendarSignInButton, NotionSignInButton } from '../ui/SlackSignInButton'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu'
-import { GmailStatusIndicator } from '../GmailStatusIndicator'
+import { AuthStatusIndicator } from '../AuthStatusIndicator'
 import { useGmailAuth } from '../../hooks/useGmailAuth'
 
 interface WorkflowHeaderProps {
@@ -47,7 +45,6 @@ export function WorkflowHeader({
   onTestPost
 }: WorkflowHeaderProps) {
   const { backgroundEffectsEnabled, setBackgroundEffectsEnabled } = useTheme()
-  const { refresh: refreshGmailAuth } = useGmailAuth()
   
   // Brightness state and effect
   const [brightness, setBrightness] = useState(1)
@@ -153,45 +150,11 @@ export function WorkflowHeader({
             <span className="hidden sm:inline">Test Run</span>
           </motion.button>
         </div>
-        {/* Right: Gmail Status, Theme, Settings, Account, Sign Out */}
+        {/* Right: Auth Status, Theme, Settings, Account, Sign Out */}
         <div className="flex items-center gap-2">
-          {/* Gmail Status Indicator */}
-          <GmailStatusIndicator isDark={isDark} className="max-w-xs" />
-          {/* Slack Sign In Button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`p-2 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg flex items-center justify-center gap-2 ${
-                  isDark 
-                    ? 'bg-gray-800/80 hover:bg-gray-700/90 text-white border-gray-600/30' 
-                    : 'bg-gray-100/80 hover:bg-gray-200/90 text-black border-gray-400/50'
-                }`}
-                title="Sign In"
-              >
-                <User className="w-4 h-4" />
-                <span className="font-semibold text-xs">Sign In</span>
-              </motion.button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <SlackSignInButton className="w-full px-2 py-1 text-xs h-8" />
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <GmailSignInButton 
-                  className="w-full px-2 py-1 text-xs h-8" 
-                  onSuccess={refreshGmailAuth}
-                />
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <GoogleCalendarSignInButton className="w-full px-2 py-1 text-xs h-8" />
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <NotionSignInButton className="w-full px-2 py-1 text-xs h-8" />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Auth Status Indicator */}
+          <AuthStatusIndicator isDark={isDark} className="max-w-xs" />
+
           {/* Theme Toggle Button */}
           <motion.button
             onClick={toggleTheme}
