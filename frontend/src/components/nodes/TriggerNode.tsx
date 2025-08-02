@@ -9,6 +9,7 @@ import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useWorkflow } from '../../contexts/WorkflowContext';
 import { workflowPersistenceService } from '../../services/workflowPersistenceService';
 import { useToast } from '../../hooks/use-toast';
@@ -300,17 +301,20 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
 
               <div className="space-y-2">
                 <Label className="text-slate-200">Event Type</Label>
-                <select
-                  value={eventType}
-                  onChange={(e) => handleEventTypeChange(e.target.value)}
-                  className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                >
-                  <option value="manual">Manual Trigger</option>
-                  <option value="gmail_emails">Gmail - Recent Emails</option>
-                  <option value="scheduled">Scheduled Event</option>
-                  <option value="webhook">Webhook</option>
-                  <option value="file_change">File Change</option>
-                </select>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Select value={eventType} onValueChange={handleEventTypeChange}>
+                    <SelectTrigger className="w-full bg-slate-700 border-slate-600 text-white focus:border-yellow-400">
+                      <SelectValue placeholder="Select event type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="manual" className="text-white hover:bg-slate-700">Manual Trigger</SelectItem>
+                      <SelectItem value="gmail_emails" className="text-white hover:bg-slate-700">Gmail - Recent Emails</SelectItem>
+                      <SelectItem value="scheduled" className="text-white hover:bg-slate-700">Scheduled Event</SelectItem>
+                      <SelectItem value="webhook" className="text-white hover:bg-slate-700">Webhook</SelectItem>
+                      <SelectItem value="file_change" className="text-white hover:bg-slate-700">File Change</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
