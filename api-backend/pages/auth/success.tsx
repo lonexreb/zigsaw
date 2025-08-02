@@ -5,6 +5,9 @@ export default function AuthSuccess() {
   const router = useRouter()
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     const handleAuthSuccess = async () => {
       try {
         console.log('Auth success page loaded, creating session token...')
@@ -80,7 +83,7 @@ export default function AuthSuccess() {
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>
       <h1>Authentication Successful</h1>
-      <p>{window.opener ? 'Completing authentication...' : 'Redirecting you back to Zigsaw...'}</p>
+      <p>{typeof window !== 'undefined' && window.opener ? 'Completing authentication...' : 'Redirecting you back to Zigsaw...'}</p>
       <div>🔄 Processing...</div>
     </div>
   )
