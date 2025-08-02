@@ -75,10 +75,48 @@ function GmailSignInButton({ className, onSuccess }: { className?: string, onSuc
     if (onSuccess) {
       window.sessionStorage.setItem('gmailSignInCallback', 'true')
     }
+
+    // Use popup for OAuth to avoid full page redirects
+    const callbackUrl = encodeURIComponent('https://zigsaw-backend.vercel.app/auth/success')
+    const authUrl = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
     
-    // Use NextAuth with force consent (scopes are configured in NextAuth)
-    const callbackUrl = encodeURIComponent('https://zigsaw.dev/workflow')
-    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
+    // Open popup window
+    const popup = window.open(
+      authUrl,
+      'oauth-popup',
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    )
+
+    // Listen for messages from popup
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://zigsaw-backend.vercel.app') return
+      
+      if (event.data.type === 'AUTH_SUCCESS') {
+        console.log('Authentication successful via popup')
+        localStorage.setItem('sessionToken', event.data.token)
+        popup?.close()
+        window.removeEventListener('message', handleMessage)
+        
+        // Trigger auth refresh and callback
+        if (onSuccess) onSuccess()
+        // Reload the page to refresh auth status
+        window.location.reload()
+      } else if (event.data.type === 'AUTH_ERROR') {
+        console.error('Authentication failed:', event.data.error)
+        popup?.close()
+        window.removeEventListener('message', handleMessage)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+
+    // Clean up if popup is manually closed
+    const checkClosed = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(checkClosed)
+        window.removeEventListener('message', handleMessage)
+      }
+    }, 1000)
   }
 
   // Check for successful sign-in when component mounts
@@ -109,10 +147,48 @@ function GoogleCalendarSignInButton({ className, onSuccess }: { className?: stri
     if (onSuccess) {
       window.sessionStorage.setItem('gcalSignInCallback', 'true')
     }
+
+    // Use popup for OAuth to avoid full page redirects
+    const callbackUrl = encodeURIComponent('https://zigsaw-backend.vercel.app/auth/success')
+    const authUrl = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
     
-    // Use NextAuth with force consent (scopes are configured in NextAuth)
-    const callbackUrl = encodeURIComponent('https://zigsaw.dev/workflow')
-    window.location.href = `https://zigsaw-backend.vercel.app/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`
+    // Open popup window
+    const popup = window.open(
+      authUrl,
+      'oauth-popup',
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    )
+
+    // Listen for messages from popup
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://zigsaw-backend.vercel.app') return
+      
+      if (event.data.type === 'AUTH_SUCCESS') {
+        console.log('Authentication successful via popup')
+        localStorage.setItem('sessionToken', event.data.token)
+        popup?.close()
+        window.removeEventListener('message', handleMessage)
+        
+        // Trigger auth refresh and callback
+        if (onSuccess) onSuccess()
+        // Reload the page to refresh auth status
+        window.location.reload()
+      } else if (event.data.type === 'AUTH_ERROR') {
+        console.error('Authentication failed:', event.data.error)
+        popup?.close()
+        window.removeEventListener('message', handleMessage)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+
+    // Clean up if popup is manually closed
+    const checkClosed = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(checkClosed)
+        window.removeEventListener('message', handleMessage)
+      }
+    }, 1000)
   }
 
   // Check for successful sign-in when component mounts

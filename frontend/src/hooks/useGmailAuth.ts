@@ -171,85 +171,38 @@ export function useGmailAuth() {
 
   // Check auth status on mount and when window gains focus
   useEffect(() => {
-    // Check if user just returned from authentication with token
+    // Check for legacy URL-based auth (fallback for old flow)
     const urlParams = new URLSearchParams(window.location.search)
     const authSuccess = urlParams.get('auth')
     const tokenFromUrl = urlParams.get('token')
     
     if (authSuccess === 'success' && tokenFromUrl) {
-      // Store the token and check auth
+      // Store the token and check auth (legacy flow)
       localStorage.setItem('sessionToken', tokenFromUrl)
-      console.log('Session token received from URL and stored')
+      console.log('Session token received from URL and stored (legacy flow)')
       // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname)
       checkGmailAuth()
-    } else if (authSuccess === 'success') {
-      // Try to create a session token (fallback)
-      createSessionToken()
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-    } else if (authSuccess === 'error') {
-      // Authentication failed
-      console.error('Authentication failed')
-      // Clean up the URL
+    } else if (authSuccess || tokenFromUrl) {
+      // Clean up any auth parameters from URL
       window.history.replaceState({}, document.title, window.location.pathname)
       checkGmailAuth()
     } else {
+      // Normal startup - check auth status
       checkGmailAuth()
     }
 
     const handleFocus = () => checkGmailAuth()
     window.addEventListener('focus', handleFocus)
     
-    // Check if user just returned from Gmail or GCal sign-in
-    const hasGmailCallback = window.sessionStorage.getItem('gmailSignInCallback')
-    const hasGcalCallback = window.sessionStorage.getItem('gcalSignInCallback')
-    
-    if (hasGmailCallback || hasGcalCallback) {
-      if (hasGmailCallback) window.sessionStorage.removeItem('gmailSignInCallback')
-      if (hasGcalCallback) window.sessionStorage.removeItem('gcalSignInCallback')
-      // Wait for the auth parameter to be processed above
-      setTimeout(() => {
-        if (!localStorage.getItem('sessionToken')) {
-          createSessionToken()
-        }
-      }, 1000)
-    }
-    
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   const createSessionToken = async () => {
-    try {
-      const backendUrl = 'https://zigsaw-backend.vercel.app'
-      
-      // Create a session token using the fresh OAuth session
-      const response = await fetch(`${backendUrl}/api/auth/create-session-token`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && data.sessionToken) {
-          localStorage.setItem('sessionToken', data.sessionToken)
-          console.log('Session token created and stored')
-          // Now check authentication status
-          checkGmailAuth()
-        }
-      } else {
-        console.error('Failed to create session token:', response.status)
-        // Fallback to normal auth check
-        setTimeout(() => checkGmailAuth(), 2000)
-      }
-    } catch (error) {
-      console.error('Error creating session token:', error)
-      // Fallback to normal auth check
-      setTimeout(() => checkGmailAuth(), 2000)
-    }
+    // This function is now mostly handled by the popup flow
+    // Just check auth status after a brief delay
+    console.log('Legacy createSessionToken called - checking auth status')
+    setTimeout(() => checkGmailAuth(), 1000)
   }
 
   return {
