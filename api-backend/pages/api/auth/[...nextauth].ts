@@ -63,7 +63,6 @@ export default NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Simple redirect logic to avoid infinite loops
       console.log('NextAuth redirect called with:', { url, baseUrl })
       
       // If URL contains zigsaw.dev, allow it
@@ -72,9 +71,9 @@ export default NextAuth({
         return url
       }
       
-      // Otherwise, redirect to frontend with auth success
-      const redirectUrl = 'https://zigsaw.dev/workflow?auth=success'
-      console.log('Redirecting to frontend:', redirectUrl)
+      // Redirect to our custom success page that will handle token creation
+      const redirectUrl = `${baseUrl}/auth/success`
+      console.log('Redirecting to auth success page:', redirectUrl)
       return redirectUrl
     },
   },

@@ -171,15 +171,29 @@ export function useGmailAuth() {
 
   // Check auth status on mount and when window gains focus
   useEffect(() => {
-    // Check if user just returned from authentication
+    // Check if user just returned from authentication with token
     const urlParams = new URLSearchParams(window.location.search)
     const authSuccess = urlParams.get('auth')
+    const tokenFromUrl = urlParams.get('token')
     
-    if (authSuccess === 'success') {
-      // User just completed OAuth, try to create a session token
+    if (authSuccess === 'success' && tokenFromUrl) {
+      // Store the token and check auth
+      localStorage.setItem('sessionToken', tokenFromUrl)
+      console.log('Session token received from URL and stored')
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      checkGmailAuth()
+    } else if (authSuccess === 'success') {
+      // Try to create a session token (fallback)
       createSessionToken()
       // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (authSuccess === 'error') {
+      // Authentication failed
+      console.error('Authentication failed')
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      checkGmailAuth()
     } else {
       checkGmailAuth()
     }
@@ -194,8 +208,12 @@ export function useGmailAuth() {
     if (hasGmailCallback || hasGcalCallback) {
       if (hasGmailCallback) window.sessionStorage.removeItem('gmailSignInCallback')
       if (hasGcalCallback) window.sessionStorage.removeItem('gcalSignInCallback')
-      // Try to create a session token immediately
-      createSessionToken()
+      // Wait for the auth parameter to be processed above
+      setTimeout(() => {
+        if (!localStorage.getItem('sessionToken')) {
+          createSessionToken()
+        }
+      }, 1000)
     }
     
     return () => window.removeEventListener('focus', handleFocus)
