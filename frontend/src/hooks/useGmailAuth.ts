@@ -54,7 +54,7 @@ export function useGmailAuth() {
       }
 
       // Check authentication status using the session token or cookies
-      const authResponse = await fetch(`${backendUrl}/api/auth/check-auth`, {
+      const authResponse = await fetch(`${backendUrl}/api/auth/session-check`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
