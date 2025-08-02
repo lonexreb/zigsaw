@@ -26,51 +26,24 @@ export function useGmailAuth() {
     loading: true
   })
 
-  const [sessionToken, setSessionToken] = useState<string | null>(null)
-
-  const getSessionToken = async (): Promise<string | null> => {
-    try {
-      const backendUrl = 'https://zigsaw-backend.vercel.app'
-      
-      // Get a session token from the backend
-      const response = await fetch(`${backendUrl}/api/auth/get-session-token`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.authenticated && data.sessionToken) {
-          return data.sessionToken
-        }
-      }
-      return null
-    } catch (error) {
-      console.error('Failed to get session token:', error)
-      return null
-    }
-  }
-
   const checkGmailAuth = async (retryCount = 0) => {
     try {
       setStatus(prev => ({ ...prev, loading: true, error: undefined }))
       
       const backendUrl = 'https://zigsaw-backend.vercel.app'
 
-      // Get or refresh session token
-      let token = sessionToken
-      if (!token) {
-        token = await getSessionToken()
-        if (token) {
-          setSessionToken(token)
+      // Check authentication status directly
+      const authResponse = await fetch(`${backendUrl}/api/auth/check-auth`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
         }
-      }
+      })
 
-      if (!token) {
-        // No session token means user hasn't signed in yet
-        // Don't retry - just set the status to not connected
+      const authData = await authResponse.json()
+      
+      if (!authData.authenticated) {
+        // User is not authenticated - this is normal, not an error
         setStatus({
           isConnected: false,
           hasTokens: false,
@@ -79,46 +52,7 @@ export function useGmailAuth() {
         return
       }
 
-      // Use the session token for API requests
-      const sessionResponse = await fetch(`${backendUrl}/api/auth/session-check`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (!sessionResponse.ok || sessionResponse.status === 401) {
-        // Token might be expired, try to get a new one
-        const newToken = await getSessionToken()
-        if (newToken && retryCount < 3) {
-          setSessionToken(newToken)
-          console.log(`Token expired, got new token, retrying... (attempt ${retryCount + 1}/3)`)
-          setTimeout(() => {
-            checkGmailAuth(retryCount + 1)
-          }, 1000)
-          return
-        }
-        
-        const errorData = await sessionResponse.json().catch(() => ({}))
-        console.log('Session check failed:', {
-          status: sessionResponse.status,
-          statusText: sessionResponse.statusText,
-          errorData
-        })
-        
-        setStatus({
-          isConnected: false,
-          hasTokens: false,
-          loading: false,
-          error: 'Authentication failed',
-          debug: errorData
-        })
-        return
-      }
-
-      const sessionData = await sessionResponse.json()
-      
-      if (!sessionData.authenticated || !sessionData.hasGmailAccess) {
+      if (!authData.hasGmailAccess) {
         setStatus({
           isConnected: false,
           hasTokens: false,
@@ -128,11 +62,12 @@ export function useGmailAuth() {
         return
       }
 
+      // User is authenticated and has Gmail access
       // Now check if we have Gmail tokens
       const response = await fetch(`${backendUrl}/api/gmail/tokens`, {
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       })
 
