@@ -1054,6 +1054,7 @@ function Footer() {
         <a href="#docs" className="hover:text-white transition">Docs</a>
         <a href="#contact" className="hover:text-white transition">Contact</a>
         <a href="/privacy-policy" className="hover:text-white transition">Privacy Policy</a>
+        <a href="/terms-and-conditions" className="hover:text-white transition">Terms & Conditions</a>
       </nav>
       <div className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Zigsaw. All rights reserved.</div>
     </footer>
