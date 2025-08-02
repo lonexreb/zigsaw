@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Zap, Play, Activity, Save } from 'lucide-react';
+import { Zap, Play, Activity, Save, Mail, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -13,6 +13,7 @@ import { useWorkflow } from '../../contexts/WorkflowContext';
 import { workflowPersistenceService } from '../../services/workflowPersistenceService';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../contexts/AuthContext';
+import { useGmailAuth } from '../../hooks/useGmailAuth';
 
 interface TriggerNodeProps {
   id: string;
@@ -39,9 +40,11 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
   const { updateNodeConfig, getSelectedNode } = useWorkflow();
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const { isConnected, hasTokens, loading: gmailLoading } = useGmailAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTriggering, setIsTriggering] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingEmails, setIsLoadingEmails] = useState(false);
   const [localStatus, setLocalStatus] = useState<'idle' | 'running' | 'completed' | 'error'>(data.status || 'idle');
   
   // Get configuration from selected node or use defaults
@@ -94,6 +97,87 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
     }
   }, [id, currentUser, getSelectedNode, triggerName, eventType, eventData, toast]);
 
+  // Gmail email retrieval function
+  const handleRetrieveGmailEmails = useCallback(async () => {
+    if (!isConnected || !hasTokens) {
+      toast({
+        title: "Gmail Not Connected",
+        description: "Please sign in to Gmail first using the workflow header",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoadingEmails(true);
+    setLocalStatus('running');
+    data.onStatusChange?.('running');
+
+    try {
+      const sessionToken = localStorage.getItem('sessionToken');
+      const backendUrl = 'https://zigsaw-backend.vercel.app';
+
+      const response = await fetch(`${backendUrl}/api/gmail/list-emails?maxResults=5&q=is:unread`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionToken && { 'Authorization': `Bearer ${sessionToken}` })
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to retrieve emails`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.messages && result.messages.length > 0) {
+        const outputData = {
+          type: 'gmail_emails',
+          name: triggerName,
+          eventType: 'gmail_emails',
+          emails: result.messages,
+          messageDetails: result.messageDetails || [],
+          timestamp: new Date().toISOString(),
+          triggerId: id,
+          count: result.messages.length
+        };
+
+        setLocalStatus('completed');
+        data.onStatusChange?.('completed');
+        data.onOutputDataChange?.(outputData);
+        data.onDataOutput?.(outputData);
+
+        toast({
+          title: "Success!",
+          description: `Retrieved ${result.messages.length} recent emails`,
+          variant: "default"
+        });
+
+        setIsDialogOpen(false);
+      } else {
+        toast({
+          title: "No Emails",
+          description: "No unread emails found",
+          variant: "default"
+        });
+        setLocalStatus('completed');
+        data.onStatusChange?.('completed');
+      }
+    } catch (error) {
+      console.error('Error retrieving Gmail emails:', error);
+      setLocalStatus('error');
+      data.onStatusChange?.('error');
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to retrieve emails",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingEmails(false);
+    }
+  }, [isConnected, hasTokens, triggerName, id, data, toast]);
+
   useEffect(() => {
     if (data.status && data.status !== localStatus) {
       setLocalStatus(data.status);
@@ -101,11 +185,18 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
   }, [data.status]);
 
   const handleTrigger = useCallback(() => {
+    // Handle Gmail email trigger differently
+    if (eventType === 'gmail_emails') {
+      handleRetrieveGmailEmails();
+      return;
+    }
+
+    // Handle other trigger types
     setIsTriggering(true);
     setLocalStatus('running');
     data.onStatusChange?.('running');
 
-    // Simulate trigger execution
+    // Simulate trigger execution for other types
     setTimeout(() => {
       const outputData = {
         type: 'trigger_event',
@@ -124,7 +215,7 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
       setIsTriggering(false);
       setIsDialogOpen(false);
     }, 1000);
-  }, [triggerName, eventType, eventData, id, data]);
+  }, [triggerName, eventType, eventData, id, data, handleRetrieveGmailEmails]);
 
   const getStatusColor = () => {
     switch (localStatus) {
@@ -215,6 +306,7 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
                   className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 >
                   <option value="manual">Manual Trigger</option>
+                  <option value="gmail_emails">Gmail - Recent Emails</option>
                   <option value="scheduled">Scheduled Event</option>
                   <option value="webhook">Webhook</option>
                   <option value="file_change">File Change</option>
@@ -252,24 +344,55 @@ const TriggerNode: React.FC<TriggerNodeProps> = ({ id, data }) => {
                 )}
               </Button>
 
-              {/* Trigger Workflow Button */}
+              {/* Trigger Button - Different text based on event type */}
               <Button
                 onClick={handleTrigger}
-                disabled={isTriggering}
+                disabled={isTriggering || (eventType === 'gmail_emails' && isLoadingEmails)}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl"
               >
-                {isTriggering ? (
+                {(isTriggering || isLoadingEmails) ? (
                   <>
-                    <Activity className="w-4 h-4 mr-2 animate-spin" />
-                    Triggering...
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    {eventType === 'gmail_emails' ? 'Retrieving Emails...' : 'Triggering...'}
                   </>
                 ) : (
                   <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Trigger Workflow
+                    {eventType === 'gmail_emails' ? (
+                      <>
+                        <Mail className="w-4 h-4 mr-2" />
+                        Retrieve Recent Emails
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Trigger Workflow
+                      </>
+                    )}
                   </>
                 )}
               </Button>
+
+              {/* Gmail Connection Status */}
+              {eventType === 'gmail_emails' && (
+                <div className="mt-2 p-2 bg-slate-700 rounded-md">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4" />
+                    <span className="text-slate-300">Gmail Status:</span>
+                    {gmailLoading ? (
+                      <span className="text-yellow-400">Checking...</span>
+                    ) : isConnected && hasTokens ? (
+                      <span className="text-green-400">Connected ✓</span>
+                    ) : (
+                      <span className="text-red-400">Not Connected</span>
+                    )}
+                  </div>
+                  {(!isConnected || !hasTokens) && !gmailLoading && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Sign in to Gmail using the workflow header first
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </DialogContent>
