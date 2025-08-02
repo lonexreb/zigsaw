@@ -32,17 +32,42 @@ export function useGmailAuth() {
       
       const backendUrl = 'https://zigsaw-backend.vercel.app'
 
-      // Check authentication status directly
+      // First, try to get a session token if we don't have one
+      let sessionToken = localStorage.getItem('sessionToken')
+      
+      if (!sessionToken) {
+        // Try to get a session token from the backend
+        const tokenResponse = await fetch(`${backendUrl}/api/auth/get-session-token`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (tokenResponse.ok) {
+          const tokenData = await tokenResponse.json()
+          if (tokenData.authenticated && tokenData.sessionToken) {
+            sessionToken = tokenData.sessionToken
+            localStorage.setItem('sessionToken', sessionToken)
+          }
+        }
+      }
+
+      // Check authentication status using the session token or cookies
       const authResponse = await fetch(`${backendUrl}/api/auth/check-auth`, {
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(sessionToken && { 'Authorization': `Bearer ${sessionToken}` })
         }
       })
 
       const authData = await authResponse.json()
       
       if (!authData.authenticated) {
+        // Clear any stored session token if not authenticated
+        localStorage.removeItem('sessionToken')
+        
         // User is not authenticated - this is normal, not an error
         setStatus({
           isConnected: false,
@@ -67,7 +92,8 @@ export function useGmailAuth() {
       const response = await fetch(`${backendUrl}/api/gmail/tokens`, {
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(sessionToken && { 'Authorization': `Bearer ${sessionToken}` })
         }
       })
 
@@ -84,6 +110,9 @@ export function useGmailAuth() {
           loading: false
         })
       } else if (response.status === 401) {
+        // Clear invalid session token
+        localStorage.removeItem('sessionToken')
+        
         // Not authenticated - retry a few times with delay for fresh sign-ins
         if (retryCount < 3) {
           console.log(`Gmail auth check failed (401), retrying in ${(retryCount + 1) * 2} seconds... (attempt ${retryCount + 1}/3)`)

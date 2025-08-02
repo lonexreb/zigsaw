@@ -95,7 +95,10 @@ export function AuthStatusIndicator({ isDark, className }: AuthStatusIndicatorPr
         <CheckCircle className="w-4 h-4" />
         <span className="text-xs font-medium">Connected</span>
         <button 
-          onClick={refresh}
+          onClick={() => {
+            localStorage.removeItem('sessionToken')
+            refresh()
+          }}
           className="ml-auto p-1 rounded hover:bg-green-800/20 transition-colors"
           title="Refresh status"
         >
@@ -148,6 +151,10 @@ export function AuthStatusIndicator({ isDark, className }: AuthStatusIndicatorPr
           Refresh
         </button>
         <button 
+          onClick={() => {
+            localStorage.removeItem('sessionToken')
+            window.location.href = 'https://zigsaw-backend.vercel.app/api/auth/signout?callbackUrl=https://zigsaw.dev/workflow'
+          }}
           className={`px-2 py-1 rounded text-xs transition-colors ${
             isDark 
               ? 'bg-red-800/30 hover:bg-red-700/40 text-red-300' 
