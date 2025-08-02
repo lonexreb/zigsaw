@@ -2,6 +2,10 @@ import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 
 export default NextAuth({
+  // Explicitly set the base URL to avoid infinite redirects
+  ...(process.env.NODE_ENV === 'production' && {
+    url: process.env.NEXTAUTH_URL || 'https://zigsaw-backend.vercel.app'
+  }),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -59,25 +63,19 @@ export default NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Always redirect to frontend after authentication
+      // Simple redirect logic to avoid infinite loops
       console.log('NextAuth redirect called with:', { url, baseUrl })
       
-      // If it's a frontend URL, allow it
-      if (url.startsWith('https://zigsaw.dev')) {
-        console.log('Redirecting to frontend:', url)
+      // If URL contains zigsaw.dev, allow it
+      if (url.includes('zigsaw.dev')) {
+        console.log('Allowing zigsaw.dev redirect:', url)
         return url
       }
       
-      // If it's a relative URL, make it absolute to frontend
-      if (url.startsWith('/')) {
-        const frontendUrl = 'https://zigsaw.dev' + url
-        console.log('Converting relative URL to frontend:', frontendUrl)
-        return frontendUrl
-      }
-      
-      // Default to frontend workflow page with auth success indicator
-      console.log('Default redirect to frontend workflow with auth success')
-      return 'https://zigsaw.dev/workflow?auth=success'
+      // Otherwise, redirect to frontend with auth success
+      const redirectUrl = 'https://zigsaw.dev/workflow?auth=success'
+      console.log('Redirecting to frontend:', redirectUrl)
+      return redirectUrl
     },
   },
   pages: {
