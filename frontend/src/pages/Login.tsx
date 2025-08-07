@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, CheckCircle, Cpu, Bot, User, GitMerge, HelpCircle, HelpCircle as QuestionIcon, Twitter, Apple, Send } from 'lucide-react'
+import { Zap, CheckCircle, Cpu, Bot, User, GitMerge, HelpCircle, HelpCircle as QuestionIcon, Twitter, Apple, Send, Activity, Rocket, Target, Flame, Sparkles, Settings, Star, Zap as ZapIcon, TrendingUp, Video, Smartphone, BarChart3 } from 'lucide-react'
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 import * as THREE from 'three'
@@ -19,17 +19,62 @@ function AnimatedGlobe() {
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight)
     mountRef.current.appendChild(renderer.domElement)
 
-    const geometry = new THREE.SphereGeometry(5, 32, 32)
+    const geometry = new THREE.SphereGeometry(5, 64, 64)
     const texture = new THREE.TextureLoader().load('https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/earthmap1k.jpg')
-    const material = new THREE.MeshBasicMaterial({ map: texture, color: 0xaaaaaa })
+    
+    // Create a more prominent material with better lighting
+    const material = new THREE.MeshPhongMaterial({ 
+      map: texture, 
+      color: 0xfefefe, // Very white tint
+      transparent: true,
+      opacity: 0.95,
+      shininess: 120
+    })
+    
     const sphere = new THREE.Mesh(geometry, material)
     scene.add(sphere)
 
-    camera.position.z = 10
+    // Add ambient light for overall illumination
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6)
+    scene.add(ambientLight)
+
+    // Add directional light for highlights
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    directionalLight.position.set(10, 10, 5)
+    scene.add(directionalLight)
+
+    // Add point lights for spots/marks effect
+    const pointLight1 = new THREE.PointLight(0x3b82f6, 1.2, 20)
+    pointLight1.position.set(5, 3, 5)
+    scene.add(pointLight1)
+
+    const pointLight2 = new THREE.PointLight(0x06b6d4, 1.2, 20)
+    pointLight2.position.set(-5, -3, -5)
+    scene.add(pointLight2)
+
+    // Add more spots/marks
+    const pointLight3 = new THREE.PointLight(0x8b5cf6, 1, 15)
+    pointLight3.position.set(3, 7, -2)
+    scene.add(pointLight3)
+
+    const pointLight4 = new THREE.PointLight(0x10b981, 1, 15)
+    pointLight4.position.set(-3, -7, 2)
+    scene.add(pointLight4)
+
+    const pointLight5 = new THREE.PointLight(0xf59e0b, 0.8, 12)
+    pointLight5.position.set(7, 1, 3)
+    scene.add(pointLight5)
+
+    const pointLight6 = new THREE.PointLight(0xef4444, 0.8, 12)
+    pointLight6.position.set(-7, -1, -3)
+    scene.add(pointLight6)
+
+    camera.position.z = 12
 
     const animate = function () {
       requestAnimationFrame(animate)
-      sphere.rotation.y += 0.001
+      sphere.rotation.y += 0.003
+      sphere.rotation.x += 0.001
       renderer.render(scene, camera)
     }
 
@@ -51,7 +96,7 @@ function AnimatedGlobe() {
     }
   }, [])
 
-  return <div ref={mountRef} className="absolute top-0 left-0 w-full h-full z-0 opacity-30" />
+  return <div ref={mountRef} className="absolute top-0 left-0 w-full h-full z-0 opacity-80" style={{ filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.4))' }} />
 }
 
 function Navbar() {
@@ -135,6 +180,64 @@ function Hero() {
   const [workflowLoading, setWorkflowLoading] = React.useState(false)
   const [workflowResponse, setWorkflowResponse] = React.useState<string | null>(null)
   const [workflow, setWorkflow] = useState<MiniWorkflow | null>(null)
+
+  // Typing animation for input placeholder
+  const [typingIndex, setTypingIndex] = React.useState(0)
+  const [typingText, setTypingText] = React.useState('')
+  const [isTyping, setIsTyping] = React.useState(true)
+
+  const typingExamples = [
+    "Auto-post viral TikTok content to Instagram...",
+    "Generate trending captions with AI...",
+    "Schedule posts at peak engagement times...",
+    "Auto-reply to comments across all platforms...",
+    "Create Instagram Stories from blog posts...",
+    "Repurpose YouTube videos for TikTok...",
+    "Generate hashtags that boost reach...",
+    "Monitor brand mentions and respond instantly...",
+    "Create content calendars automatically...",
+    "Turn user reviews into social proof posts...",
+    "Get More Reach With Less Effort...",
+    "Scale Your Brand. Skip the Burnout..."
+  ]
+
+  // Typing animation effect
+  React.useEffect(() => {
+    if (workflowInput) return // Don't animate if user is typing
+
+    const currentExample = typingExamples[typingIndex]
+    
+    if (isTyping) {
+      if (typingText.length < currentExample.length) {
+        const timeout = setTimeout(() => {
+          setTypingText(currentExample.slice(0, typingText.length + 1))
+        }, 50)
+        return () => clearTimeout(timeout)
+      } else {
+        const timeout = setTimeout(() => {
+          setIsTyping(false)
+        }, 2000)
+        return () => clearTimeout(timeout)
+      }
+    } else {
+      if (typingText.length > 0) {
+        const timeout = setTimeout(() => {
+          setTypingText(typingText.slice(0, -1))
+        }, 30)
+        return () => clearTimeout(timeout)
+      } else {
+        const timeout = setTimeout(() => {
+          setIsTyping(true)
+          setTypingIndex((prev) => (prev + 1) % typingExamples.length)
+        }, 500)
+        return () => clearTimeout(timeout)
+      }
+    }
+  }, [typingText, isTyping, typingIndex, workflowInput])
+
+  function getTypingPlaceholder() {
+    return typingText
+  }
 
   React.useEffect(() => {
     if (currentUser) navigate('/workflow')
@@ -236,7 +339,7 @@ function Hero() {
   return (
     <section className="relative w-full flex flex-col items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[60vh] md:min-h-[70vh] bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       <AnimatedGlobe />
-      <div className="absolute inset-0 bg-white/60 z-10" />
+      <div className="absolute inset-0 bg-white/30 z-10" />
       {/* Hero Content */}
       <div className="relative z-20 flex flex-col items-center text-center w-full max-w-4xl">
         <motion.h1
@@ -245,13 +348,41 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
         >
-          Automate your <span className="text-blue-600">social media marketing</span>
+          Scale your brand.
+          <br />
+          <span className="text-blue-600">Skip the burnout</span>
         </motion.h1>
         {/* Animated typewriter subheadline */}
         <div className="h-10 md:h-14 flex items-center justify-center mb-6 md:mb-8 min-h-[2.5rem] md:min-h-[3rem]">
           <span className="text-xl md:text-2xl text-blue-600 font-mono whitespace-nowrap">
-            {typed}
-            <span className="blinking-cursor">|</span>
+            {typed.includes('TikTok') && typed.includes('Instagram') ? (
+              <>
+                Auto-post viral{' '}
+                <img src="https://logo.clearbit.com/tiktok.com" alt="TikTok" className="inline w-6 h-6 rounded mx-1" />
+                TikTok content to{' '}
+                <img src="https://logo.clearbit.com/instagram.com" alt="Instagram" className="inline w-6 h-6 rounded mx-1" />
+                Instagram
+              </>
+            ) : typed.includes('Instagram') && typed.includes('YouTube') ? (
+              <>
+                Create{' '}
+                <img src="https://logo.clearbit.com/instagram.com" alt="Instagram" className="inline w-6 h-6 rounded mx-1" />
+                Instagram Stories from blog posts
+              </>
+            ) : typed.includes('YouTube') && typed.includes('TikTok') ? (
+              <>
+                Repurpose{' '}
+                <img src="https://logo.clearbit.com/youtube.com" alt="YouTube" className="inline w-6 h-6 rounded mx-1" />
+                YouTube videos for{' '}
+                <img src="https://logo.clearbit.com/tiktok.com" alt="TikTok" className="inline w-6 h-6 rounded mx-1" />
+                TikTok
+              </>
+            ) : (
+              <>
+                {typed}
+                <span className="blinking-cursor">|</span>
+              </>
+            )}
           </span>
         </div>
         <style>{`
@@ -297,23 +428,33 @@ function Hero() {
         {!showSignIn && (
           <>
             <form onSubmit={handleWorkflowCreate} className="w-full max-w-md flex flex-col items-center gap-2 mt-8 mb-2">
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  value={workflowInput}
-                  onChange={e => setWorkflowInput(e.target.value)}
-                  placeholder="Describe a social media automation..."
-                  className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
-                  disabled={workflowLoading}
-                />
+              <div className="relative w-full flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={workflowInput}
+                    onChange={e => setWorkflowInput(e.target.value)}
+                    placeholder=""
+                    className="w-full px-4 py-3 rounded-lg border border-blue-400 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
+                    disabled={workflowLoading}
+                  />
+                  {/* Typing animation placeholder */}
+                  {!workflowInput && (
+                    <div className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 font-mono text-base pointer-events-none">
+                      <span className="typing-animation">
+                        {workflowInput || getTypingPlaceholder()}
+                      </span>
+                      <span className="blinking-cursor">|</span>
+                    </div>
+                  )}
+                </div>
                 <button
                   type="submit"
-                  className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 shadow border border-blue-300 transition-all backdrop-blur"
+                  className="px-6 h-12 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all shadow border border-blue-300 whitespace-nowrap"
                   disabled={workflowLoading || !workflowInput.trim()}
-                  style={{ minWidth: 40 }}
-                  aria-label="Send"
+                  aria-label="Create"
                 >
-                  <Send className="w-5 h-5 text-blue-400 drop-shadow" />
+                  {workflowLoading ? 'Creating...' : 'Create'}
                 </button>
               </div>
               {workflowResponse && (
@@ -661,9 +802,9 @@ function Features() {
             <rect x="16" y="8" width="3" height="9" rx="1.5" fill="currentColor" opacity="0.6" />
             <rect x="8" y="20" width="8" height="2" rx="1" fill="currentColor" opacity="0.3" />
           </svg>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight">Scale your social media at the speed of sound</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight">Get More Reach With Less Effort</h2>
         </div>
-        <span className="mt-3 inline-block bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full tracking-wide shadow">AI-powered social media automation</span>
+        <span className="mt-3 inline-block bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full tracking-wide shadow">Scale Your Brand. Skip the Burnout.</span>
       </div>
       <div className="flex flex-col md:flex-row gap-12 max-w-5xl w-full items-center justify-center">
         {/* Visual Workflow Builder Feature (logos as nodes) */}
@@ -676,7 +817,7 @@ function Features() {
         >
           <div className="w-full flex flex-col items-center mb-6">
             <span className="text-blue-600 font-bold text-lg mb-2 tracking-wide">Visual Content Pipeline</span>
-            <span className="text-gray-700 text-center text-base mb-4 max-w-xs">Connect Instagram, TikTok, Twitter, and LinkedIn. Create content once, publish everywhere automatically.</span>
+            <span className="text-gray-700 text-center text-base mb-4 max-w-xs">Connect <img src="https://logo.clearbit.com/instagram.com" alt="Instagram" className="inline w-4 h-4 rounded mx-1" /> Instagram, <img src="https://logo.clearbit.com/tiktok.com" alt="TikTok" className="inline w-4 h-4 rounded mx-1" /> TikTok, <img src="https://logo.clearbit.com/twitter.com" alt="Twitter" className="inline w-4 h-4 rounded mx-1" /> Twitter, and <img src="https://logo.clearbit.com/linkedin.com" alt="LinkedIn" className="inline w-4 h-4 rounded mx-1" /> LinkedIn. Create content once, publish everywhere automatically.</span>
           </div>
           {/* Logo node chain with animated glow and labels and visible arrows */}
           <div className="flex items-center gap-6 min-h-[100px]">
@@ -774,28 +915,442 @@ function Features() {
   )
 }
 
+function PowerQuotes() {
+  const quotes = [
+    {
+      text: "From Product Drop to Full Campaign",
+      category: "Product → Content / Campaigns",
+      icon: "zap",
+      example: "Nike Air Max launch → 50+ posts, 8 videos, 12 stories in 5 minutes",
+      platforms: ["All Platforms"],
+      stats: "Campaign ready in 5 min"
+    },
+    {
+      text: "Upload Once. Market Everywhere.",
+      category: "Content Automation",
+      icon: "target",
+      example: "iPhone photo → Instagram Reel, TikTok video, Twitter thread, LinkedIn post",
+      platforms: ["Reels", "Stories", "Posts", "Ads"],
+      stats: "15 formats from 1 image"
+    },
+    {
+      text: "Your Product. A Viral Campaign. Instantly.",
+      category: "Growth & Reach",
+      icon: "flame",
+      example: "Starbucks cup → 2.4M views, 156K likes, trending on 8 platforms",
+      platforms: ["Viral", "Trending", "FYP"],
+      stats: "8 platforms, 1 click"
+    }
+  ]
+
+  return (
+    <section className="w-full py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50 text-gray-900">
+      <div className="max-w-6xl mx-auto px-4">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className="text-center mb-6">
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              Turn Your Products Into <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent animate-pulse">Content Machines</span>
+            </h2>
+          </div>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+            From product drops to viral campaigns. Zigsaw transforms your products into marketing powerhouses.
+          </p>
+          
+          {/* Dashboard Preview */}
+          <motion.div
+            className="flex justify-center mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <div className="relative max-w-4xl w-full">
+              {/* Dashboard Mockup */}
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-200/50 overflow-hidden">
+                {/* Dashboard Header */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">Z</span>
+                      </div>
+                      <span className="font-bold text-gray-800">Zigsaw Dashboard</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span>Analytics</span>
+                      <span>Auto-Posting</span>
+                      <span>AI Content</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Dashboard Content */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Content Creation Panel */}
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Video className="w-6 h-6 text-blue-600" />
+                        <h3 className="font-bold text-gray-800">Content Creation</h3>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>AI generating 15 Reels</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span>Brand voice optimization</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          <span>Trending hashtags added</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Platform Distribution */}
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Smartphone className="w-6 h-6 text-purple-600" />
+                        <h3 className="font-bold text-gray-800">Platform Distribution</h3>
+                      </div>
+                                              <div className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <img src="https://logo.clearbit.com/instagram.com" alt="Instagram" className="w-4 h-4 rounded" />
+                              <span>Instagram</span>
+                            </div>
+                            <span className="font-bold text-purple-600">12 posts</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <img src="https://logo.clearbit.com/tiktok.com" alt="TikTok" className="w-4 h-4 rounded" />
+                              <span>TikTok</span>
+                            </div>
+                            <span className="font-bold text-purple-600">8 videos</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <img src="https://logo.clearbit.com/twitter.com" alt="Twitter" className="w-4 h-4 rounded" />
+                              <span>Twitter</span>
+                            </div>
+                            <span className="font-bold text-purple-600">15 tweets</span>
+                          </div>
+                        </div>
+                    </div>
+
+                    {/* Performance Metrics */}
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <BarChart3 className="w-6 h-6 text-green-600" />
+                        <h3 className="font-bold text-gray-800">Performance</h3>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span>Reach</span>
+                          <span className="font-bold text-green-600">+2.4M</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Engagement</span>
+                          <span className="font-bold text-green-600">+156%</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Viral Posts</span>
+                          <span className="font-bold text-green-600">23</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Workflow Visualization */}
+                  <div className="mt-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Zap className="w-6 h-6 text-blue-600" />
+                      <h3 className="font-bold text-gray-800">Active Workflow: Product Launch Campaign</h3>
+                    </div>
+                    <div className="flex items-center justify-center gap-4 text-sm">
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow">
+                        <span className="text-green-500">●</span>
+                        <span>Product Upload</span>
+                      </div>
+                      <span className="text-gray-400">→</span>
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow">
+                        <span className="text-blue-500">●</span>
+                        <span>AI Content Generation</span>
+                      </div>
+                      <span className="text-gray-400">→</span>
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow">
+                        <span className="text-purple-500">●</span>
+                        <span>Multi-Platform Publishing</span>
+                      </div>
+                      <span className="text-gray-400">→</span>
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow">
+                        <span className="text-green-500">●</span>
+                        <span>Performance Tracking</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Feature Highlights */}
+              <motion.div
+                className="absolute -top-4 -right-4 bg-white rounded-xl p-3 shadow-lg border border-blue-200"
+                animate={{ y: [-5, 5, -5] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <div className="text-center">
+                  <Rocket className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                  <div className="text-xs font-bold text-blue-600">50+ Content Pieces</div>
+                  <div className="text-xs text-gray-500">Generated</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="absolute -bottom-4 -left-4 bg-white rounded-xl p-3 shadow-lg border border-cyan-200"
+                animate={{ y: [5, -5, 5] }}
+                transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+              >
+                <div className="text-center">
+                  <Zap className="w-6 h-6 text-cyan-600 mx-auto mb-1" />
+                  <div className="text-xs font-bold text-cyan-600">5min Setup</div>
+                  <div className="text-xs text-gray-500">Campaign Ready</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="absolute top-1/2 -right-8 bg-white rounded-xl p-3 shadow-lg border border-purple-200"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+              >
+                <div className="text-center">
+                  <Smartphone className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                  <div className="text-xs font-bold text-purple-600">8 Platforms</div>
+                  <div className="text-xs text-gray-500">Connected</div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+
+
+        {/* Call to action section */}
+        <motion.div
+          className="text-center mt-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+        >
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-8 shadow-lg border border-blue-200 max-w-3xl mx-auto">
+            <div className="text-center mb-4">
+              <h3 className="text-2xl font-bold text-gray-800">
+                Marketing That Doesn't Burn You Out
+              </h3>
+            </div>
+            <p className="text-gray-700 mb-6 text-lg leading-relaxed">
+              Zigsaw is your <span className="font-bold text-blue-600">24/7 marketing team</span>. No more late nights creating content, no more stress about posting schedules, no more burnout. 
+              <br /><br />
+              Just upload your product and watch your marketing run itself.
+            </p>
+            
+            {/* Feature highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg p-4 text-center">
+                <div className="flex justify-center mb-2">
+                  <Cpu className="w-8 h-8 text-blue-600" />
+                </div>
+                <div className="font-semibold text-gray-800">AI-Powered</div>
+                <div className="text-sm text-gray-600">Creates content for you</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 text-center">
+                <div className="flex justify-center mb-2">
+                  <Activity className="w-8 h-8 text-cyan-600" />
+                </div>
+                <div className="font-semibold text-gray-800">Always On</div>
+                <div className="text-sm text-gray-600">24/7 automation</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 text-center">
+                <div className="flex justify-center mb-2">
+                  <TrendingUp className="w-8 h-8 text-green-600" />
+                </div>
+                <div className="font-semibold text-gray-800">Results-Driven</div>
+                <div className="text-sm text-gray-600">Proven to grow brands</div>
+              </div>
+            </div>
+            
+            <motion.button
+              className="px-8 py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center gap-3 mx-auto group shadow-lg"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                const getStartedBtn = document.querySelector('[aria-label="Get Started"]') as HTMLElement
+                if (getStartedBtn) {
+                  getStartedBtn.click()
+                }
+              }}
+            >
+              <span>Hire Your AI Marketing Team</span>
+              <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+function CustomerReviews() {
+  const reviews = [
+    {
+      name: "Sarah Chen",
+      role: "Founder, Glow Beauty",
+      avatar: "user",
+      rating: 5,
+      review: "Zigsaw turned our product launches into viral moments. From 500 to 50K followers in 3 months!",
+      stats: "+10,000% growth"
+    },
+    {
+      name: "Marcus Rodriguez",
+      role: "Marketing Director, TechFlow",
+      avatar: "user",
+      rating: 5,
+      review: "The AI content generation is insane. One product photo created 23 different posts that all went viral.",
+      stats: "23 viral posts"
+    },
+    {
+      name: "Emma Thompson",
+      role: "Content Creator",
+      avatar: "user",
+      rating: 5,
+      review: "I used to spend 8 hours a day on content. Now it's 5 minutes and I get better results than ever.",
+      stats: "95% time saved"
+    },
+    {
+      name: "David Kim",
+      role: "E-commerce Owner",
+      avatar: "user",
+      rating: 5,
+      review: "Our sales increased 300% after implementing Zigsaw. The automated campaigns are pure magic.",
+      stats: "+300% sales"
+    },
+    {
+      name: "Lisa Park",
+      role: "Social Media Manager",
+      avatar: "user",
+      rating: 5,
+      review: "Managing 8 platforms used to be a nightmare. Zigsaw makes it feel like managing one.",
+      stats: "8 platforms, 1 tool"
+    },
+    {
+      name: "Alex Johnson",
+      role: "Brand Manager, FashionCo",
+      avatar: "user",
+      rating: 5,
+      review: "The brand voice learning is incredible. Every piece of content sounds exactly like us.",
+      stats: "100% brand consistency"
+    }
+  ]
+
+  return (
+    <section className="w-full py-20 bg-gradient-to-br from-gray-50 to-white text-gray-900">
+      <div className="max-w-6xl mx-auto px-4">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+            Loved by <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">thousands</span> of creators
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            See how Zigsaw is transforming social media marketing for brands and creators worldwide.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {reviews.map((review, index) => (
+            <motion.div
+              key={index}
+              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+            >
+              {/* Rating */}
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(review.rating)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                ))}
+              </div>
+
+              {/* Review Text */}
+              <p className="text-gray-700 mb-4 leading-relaxed">
+                "{review.review}"
+              </p>
+
+              {/* Stats */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 mb-4">
+                <span className="text-sm font-bold text-blue-600">{review.stats}</span>
+              </div>
+
+              {/* Author */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">{review.name}</div>
+                  <div className="text-sm text-gray-600">{review.role}</div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Trust Indicators */}
+        <motion.div
+          className="text-center mt-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+        >
+          <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-200 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">10,000+</div>
+                <div className="text-gray-600">Active Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-600 mb-2">4.9/5</div>
+                <div className="text-gray-600">Average Rating</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600 mb-2">50M+</div>
+                <div className="text-gray-600">Content Pieces Created</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 function Pricing() {
   const tiers = getPricingTiers()
-  // Sale timer for Pro plan
-  const [saleEndsAt] = React.useState(() => Date.now() + 24 * 60 * 60 * 1000)
-  const [saleTimeLeft, setSaleTimeLeft] = React.useState(saleEndsAt - Date.now())
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setSaleTimeLeft(saleEndsAt - Date.now())
-    }, 33)
-    return () => clearInterval(interval)
-  }, [saleEndsAt])
-  function formatTime(ms: number) {
-    if (ms <= 0) return '00:00:00.000000'
-    const totalSeconds = Math.floor(ms / 1000)
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0')
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0')
-    const seconds = String(totalSeconds % 60).padStart(2, '0')
-    const msStr = String(ms % 1000).padStart(3, '0')
-    // Add microseconds (simulate with random for demo)
-    const micro = String(Math.floor(Math.random() * 1000)).padStart(3, '0')
-    return `${hours}:${minutes}:${seconds}.${msStr}${micro}`
-  }
   return (
     <section id="pricing" className="w-full py-20 bg-gradient-to-b from-gray-50 to-white text-gray-900 flex flex-col items-center">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full font-sans">
@@ -818,21 +1373,9 @@ function Pricing() {
                 <span className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-700 text-white text-xs font-bold px-5 py-1 rounded-full shadow-lg animate-pricing-shine-text border-2 border-blue-300">Sale</span>
               )}
               <h3 className={`text-2xl font-extrabold mb-2 text-center tracking-tight ${isMiddle ? 'text-3xl' : ''}`}>{tier.name}</h3>
-              <div className={`flex flex-col items-center mb-4 ${isMiddle ? 'text-6xl' : 'text-5xl'} font-extrabold text-blue-400 tracking-tight`}>
-                {tier.featured && tier.oldPrice && (
-                  <span className="text-lg text-gray-400 font-semibold line-through mb-1">{tier.oldPrice}</span>
-                )}
+                            <div className={`flex flex-col items-center mb-4 ${isMiddle ? 'text-6xl' : 'text-5xl'} font-extrabold text-blue-400 tracking-tight`}>
                 <span>{tier.price}</span>
                 {tier.name !== 'Business' && <span className="text-lg text-gray-400 font-semibold mb-1">/mo</span>}
-                {/* Sale timer for Pro */}
-                {tier.featured && (
-                  <span
-                    className="mt-2 text-base font-mono tracking-widest text-red-500 bg-black/90 px-4 py-2 rounded shadow border border-red-700 flex justify-center items-center w-full"
-                    style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '0.15em' }}
-                  >
-                    {formatTime(saleTimeLeft)}
-                  </span>
-                )}
               </div>
               <ul className="text-gray-300 text-base mb-8 space-y-2 w-full md:text-left text-center md:pl-6 flex flex-col items-start md:items-start">
                 {tier.features.map((f, i) => {
@@ -971,19 +1514,19 @@ interface PricingTier {
 
 function Footer() {
   return (
-    <footer className="w-full bg-gray-900 border-t border-gray-700 py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+    <footer className="w-full bg-white border-t border-gray-200 py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-2">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#1f2937" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
-        <span className="font-mono font-bold text-lg text-white">zigsaw</span>
+        <span className="font-mono font-bold text-lg text-gray-900">zigsaw</span>
       </div>
-      <nav className="flex gap-6 text-gray-400 text-sm">
-        <a href="#about" className="hover:text-white transition">About</a>
-        <a href="#docs" className="hover:text-white transition">Docs</a>
-        <a href="#contact" className="hover:text-white transition">Contact</a>
-        <a href="/privacy-policy" className="hover:text-white transition">Privacy Policy</a>
-        <a href="/terms-and-conditions" className="hover:text-white transition">Terms & Conditions</a>
+      <nav className="flex gap-6 text-gray-600 text-sm">
+        <a href="#about" className="hover:text-gray-900 transition">About</a>
+        <a href="#docs" className="hover:text-gray-900 transition">Docs</a>
+        <a href="#contact" className="hover:text-gray-900 transition">Contact</a>
+        <a href="/privacy-policy" className="hover:text-gray-900 transition">Privacy Policy</a>
+        <a href="/terms-and-conditions" className="hover:text-gray-900 transition">Terms & Conditions</a>
       </nav>
       <div className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Zigsaw. All rights reserved.</div>
     </footer>
@@ -1041,7 +1584,29 @@ function FAQ() {
                   exit={{ maxHeight: 0, opacity: 0, transition: { opacity: { duration: 0.18 }, maxHeight: { duration: 0.28 } } }}
                   style={{ overflow: 'hidden' }}
                 >
-                  <div>{faq.a}</div>
+                  <div>
+                    {faq.q === 'Which social platforms are supported?' ? (
+                      <div>
+                        We support{' '}
+                        <img src="https://logo.clearbit.com/instagram.com" alt="Instagram" className="inline w-4 h-4 rounded mx-1" />
+                        Instagram,{' '}
+                        <img src="https://logo.clearbit.com/tiktok.com" alt="TikTok" className="inline w-4 h-4 rounded mx-1" />
+                        TikTok,{' '}
+                        <img src="https://logo.clearbit.com/twitter.com" alt="Twitter" className="inline w-4 h-4 rounded mx-1" />
+                        Twitter,{' '}
+                        <img src="https://logo.clearbit.com/linkedin.com" alt="LinkedIn" className="inline w-4 h-4 rounded mx-1" />
+                        LinkedIn,{' '}
+                        <img src="https://logo.clearbit.com/facebook.com" alt="Facebook" className="inline w-4 h-4 rounded mx-1" />
+                        Facebook,{' '}
+                        <img src="https://logo.clearbit.com/youtube.com" alt="YouTube" className="inline w-4 h-4 rounded mx-1" />
+                        YouTube,{' '}
+                        <img src="https://logo.clearbit.com/pinterest.com" alt="Pinterest" className="inline w-4 h-4 rounded mx-1" />
+                        Pinterest, and more. Post to all your platforms simultaneously with one click.
+                      </div>
+                    ) : (
+                      faq.a
+                    )}
+                  </div>
                 </m.div>
               )}
             </AnimatePresence>
@@ -1050,6 +1615,25 @@ function FAQ() {
       </div>
     </section>
   )
+}
+
+// Helper function to render platform names with logos
+function renderPlatformWithLogo(platformName: string) {
+  const platformLogos: { [key: string]: string } = {
+    'Instagram': 'https://logo.clearbit.com/instagram.com',
+    'TikTok': 'https://logo.clearbit.com/tiktok.com',
+    'Twitter': 'https://logo.clearbit.com/twitter.com',
+    'LinkedIn': 'https://logo.clearbit.com/linkedin.com',
+    'Facebook': 'https://logo.clearbit.com/facebook.com',
+    'YouTube': 'https://logo.clearbit.com/youtube.com',
+    'Pinterest': 'https://logo.clearbit.com/pinterest.com'
+  }
+  
+  const logoUrl = platformLogos[platformName]
+  if (logoUrl) {
+    return `<img src="${logoUrl}" alt="${platformName}" class="inline w-4 h-4 rounded mx-1" /> ${platformName}`
+  }
+  return platformName
 }
 
 // Helper: FAQ content (social media marketing focused)
@@ -1089,6 +1673,8 @@ export default function Login() {
       <Hero />
       <TrustedBy />
       <Features />
+      <PowerQuotes />
+      <CustomerReviews />
       <Pricing />
       <FAQ />
       <Footer />
