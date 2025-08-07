@@ -282,14 +282,16 @@ function Hero() {
       <div className="absolute inset-0 bg-black/70 z-10" />
       {/* Hero Content */}
       <div className="relative z-20 flex flex-col items-center text-center w-full max-w-4xl">
-        <motion.h1
-          className="text-5xl md:text-7xl font-bold mb-4 md:mb-6 text-white"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
-        >
-          Automate your tasks <span className="text-blue-400">with no code</span>
-        </motion.h1>
+                             <motion.h1
+             className="text-5xl md:text-7xl font-bold mb-4 md:mb-6 text-white"
+             initial={{ opacity: 0, y: 40 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
+           >
+             Scale your brand.
+             <br />
+             <span className="text-blue-400">Skip the burnout</span>
+           </motion.h1>
         {/* Animated typewriter subheadline */}
         <div className="h-10 md:h-14 flex items-center justify-center mb-6 md:mb-8 min-h-[2.5rem] md:min-h-[3rem]">
           <span className="text-xl md:text-2xl text-blue-300 font-mono whitespace-nowrap">
@@ -308,14 +310,14 @@ function Hero() {
             50% { opacity: 0; }
           }
         `}</style>
-        <motion.p
-          className="text-base md:text-lg text-gray-400 mb-6 md:mb-8 max-w-xl"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.1 }}
-        >
-          Empower your team to automate tasks, answer questions, and build smart solutions—just by speaking your mind. If you can use a mouse, you can use Zigsaw.
-        </motion.p>
+                  <motion.p
+            className="text-base md:text-lg text-gray-400 mb-6 md:mb-8 max-w-xl"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1 }}
+          >
+            Create viral content, schedule posts, and engage with your audience across all platforms—automatically. Scale your social media presence without the manual work.
+          </motion.p>
         {/* Get Started Button or Login Form */}
         {!showSignIn && (
           <motion.button
@@ -341,14 +343,14 @@ function Hero() {
           <>
             <form onSubmit={handleWorkflowCreate} className="w-full max-w-md flex flex-col items-center gap-2 mt-8 mb-2">
               <div className="relative w-full">
-                <input
-                  type="text"
-                  value={workflowInput}
-                  onChange={e => setWorkflowInput(e.target.value)}
-                  placeholder="Describe a workflow to automate..."
-                  className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow shiny-placeholder"
-                  disabled={workflowLoading}
-                />
+                                 <input
+                   type="text"
+                   value={workflowInput}
+                   onChange={e => setWorkflowInput(e.target.value)}
+                   placeholder="Describe a social media automation..."
+                   className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow shiny-placeholder"
+                   disabled={workflowLoading}
+                 />
                 <button
                   type="submit"
                   className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 shadow border border-blue-300 transition-all backdrop-blur"
@@ -368,7 +370,7 @@ function Hero() {
             {/* Show workflow placeholder message below input box if no workflow yet */}
             {workflowResponse == null || !workflowResponse.includes('Workflow created') ? (
               <div className="w-full flex flex-col items-center justify-center py-4">
-                <div className="text-gray-400 text-sm italic">Your workflow will appear here after you chat with FlowPilot.</div>
+                <div className="text-gray-400 text-sm italic">Your social media automation will appear here after you describe it.</div>
               </div>
             ) : null}
             {/* After the summary, show the mini workflow canvas if available */}
@@ -667,9 +669,9 @@ interface TrustedCompany {
 function Features() {
   // For logo nodes
   const nodeCompanies = [
-    { name: 'Google', domain: 'google.com', label: 'Email received' },
-    { name: 'Slack', domain: 'slack.com', label: 'Send alert' },
-    { name: 'Notion', domain: 'notion.so', label: 'Create page' }
+         { name: 'Instagram', domain: 'instagram.com', label: 'Create post' },
+     { name: 'TikTok', domain: 'tiktok.com', label: 'Schedule video' },
+     { name: 'Twitter', domain: 'twitter.com', label: 'Auto-reply' }
   ]
   // Animation state for glowing
   const [glowIdx, setGlowIdx] = React.useState(0)
@@ -704,9 +706,9 @@ function Features() {
             <rect x="16" y="8" width="3" height="9" rx="1.5" fill="currentColor" opacity="0.6" />
             <rect x="8" y="20" width="8" height="2" rx="1" fill="currentColor" opacity="0.3" />
           </svg>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight">Automate workflows at the speed of sound</h2>
+                     <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight">Get More Reach With Less Effort</h2>
         </div>
-        <span className="mt-3 inline-block bg-blue-700/80 text-blue-100 text-xs font-bold px-4 py-1 rounded-full tracking-wide shadow">Voice &amp; Chat powered automation</span>
+                 <span className="mt-3 inline-block bg-blue-700/80 text-blue-100 text-xs font-bold px-4 py-1 rounded-full tracking-wide shadow">Scale Your Brand. Skip the Burnout.</span>
       </div>
       <div className="flex flex-col md:flex-row gap-12 max-w-5xl w-full items-center justify-center">
         {/* Visual Workflow Builder Feature (logos as nodes) */}
@@ -718,8 +720,8 @@ function Features() {
           transition={{ duration: 0.8, type: 'spring', stiffness: 80 }}
         >
           <div className="w-full flex flex-col items-center mb-6">
-            <span className="text-blue-300 font-bold text-lg mb-2 tracking-wide">Visual Workflow Builder</span>
-            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Connect your favorite apps visually. Drag, drop, and link Google, Slack, Notion, and more.</span>
+                         <span className="text-blue-300 font-bold text-lg mb-2 tracking-wide">Visual Content Pipeline</span>
+             <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Connect Instagram, TikTok, Twitter, and LinkedIn. Create content once, publish everywhere automatically.</span>
           </div>
           {/* Logo node chain with animated glow and labels and visible arrows */}
           <div className="flex items-center gap-6 min-h-[100px]">
@@ -779,8 +781,8 @@ function Features() {
           transition={{ duration: 0.8, type: 'spring', stiffness: 80, delay: 0.2 }}
         >
           <div className="w-full flex flex-col items-center mb-6">
-            <span className="text-cyan-300 font-bold text-lg mb-2 tracking-wide">FlowPilot: Your Workflow Assistant</span>
-            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Just chat with FlowPilot and it instantly creates automations and workflows for you—no setup, no code, just conversation.</span>
+                         <span className="text-cyan-300 font-bold text-lg mb-2 tracking-wide">SocialPilot: Your Content Assistant</span>
+             <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Just chat with SocialPilot and it instantly creates viral content, schedules posts, and manages engagement across all platforms.</span>
           </div>
           <button
             className="mt-4 px-6 py-3 bg-gray-800/60 backdrop-blur font-bold rounded-full shadow-lg hover:scale-105 transition-all text-lg flex items-center gap-2 border border-gray-500/30"
@@ -793,7 +795,7 @@ function Features() {
             aria-label="Open FlowPilot Chat"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 21l1.8-4A7.97 7.97 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-            <span className="rainbow-animate-text">Chat with FlowPilot</span>
+                         <span className="rainbow-animate-text">Chat with SocialPilot</span>
           </button>
          <style>{`
            @keyframes rainbow {
@@ -819,26 +821,7 @@ function Features() {
 
 function Pricing() {
   const tiers = getPricingTiers()
-  // Sale timer for Pro plan
-  const [saleEndsAt] = React.useState(() => Date.now() + 24 * 60 * 60 * 1000)
-  const [saleTimeLeft, setSaleTimeLeft] = React.useState(saleEndsAt - Date.now())
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setSaleTimeLeft(saleEndsAt - Date.now())
-    }, 33)
-    return () => clearInterval(interval)
-  }, [saleEndsAt])
-  function formatTime(ms: number) {
-    if (ms <= 0) return '00:00:00.000000'
-    const totalSeconds = Math.floor(ms / 1000)
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0')
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0')
-    const seconds = String(totalSeconds % 60).padStart(2, '0')
-    const msStr = String(ms % 1000).padStart(3, '0')
-    // Add microseconds (simulate with random for demo)
-    const micro = String(Math.floor(Math.random() * 1000)).padStart(3, '0')
-    return `${hours}:${minutes}:${seconds}.${msStr}${micro}`
-  }
+  
   return (
     <section id="pricing" className="w-full py-20 bg-gradient-to-b from-gray-950 to-gray-900 text-white flex flex-col items-center">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full font-sans">
@@ -862,20 +845,8 @@ function Pricing() {
               )}
               <h3 className={`text-2xl font-extrabold mb-2 text-center tracking-tight ${isMiddle ? 'text-3xl' : ''}`}>{tier.name}</h3>
               <div className={`flex flex-col items-center mb-4 ${isMiddle ? 'text-6xl' : 'text-5xl'} font-extrabold text-blue-400 tracking-tight`}>
-                {tier.featured && tier.oldPrice && (
-                  <span className="text-lg text-gray-400 font-semibold line-through mb-1">{tier.oldPrice}</span>
-                )}
-                <span>{tier.price}</span>
-                {tier.name !== 'Business' && <span className="text-lg text-gray-400 font-semibold mb-1">/mo</span>}
-                {/* Sale timer for Pro */}
-                {tier.featured && (
-                  <span
-                    className="mt-2 text-base font-mono tracking-widest text-red-500 bg-black/90 px-4 py-2 rounded shadow border border-red-700 flex justify-center items-center w-full"
-                    style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '0.15em' }}
-                  >
-                    {formatTime(saleTimeLeft)}
-                  </span>
-                )}
+                                 <span>{tier.price}</span>
+                 {tier.name !== 'Business' && <span className="text-lg text-gray-400 font-semibold mb-1">/mo</span>}
               </div>
               <ul className="text-gray-300 text-base mb-8 space-y-2 w-full md:text-left text-center md:pl-6 flex flex-col items-start md:items-start">
                 {tier.features.map((f, i) => {
@@ -958,11 +929,11 @@ function getPricingTiers(): PricingTier[] {
       name: 'Free',
       price: '$0',
       features: [
-        'Unlimited workflows',
-        'Connect Slack, Gmail, Notion, GCal',
-        'Community support',
-        'Basic AI models',
-        '100 automation runs/month',
+                 '3 social platforms',
+         'Basic post scheduling',
+         'Community support',
+         'Basic AI content generation',
+         '30 posts/month',
       ],
       cta: 'Start Free',
       featured: false,
@@ -972,13 +943,13 @@ function getPricingTiers(): PricingTier[] {
       price: '$19',
       oldPrice: '$25',
       features: [
-        'Unlimited workflows',
-        'Premium AI models',
-        'Priority support',
-        'Advanced automations',
-        'Team collaboration',
-        '10,000 automation runs/month',
-        'Unlimited integrations',
+                 'Unlimited platforms',
+         'Premium AI models',
+         'Priority support',
+         'Advanced automations',
+         'Team collaboration',
+         '1,000 posts/month',
+         'Analytics & reporting',
       ],
       cta: 'Sale',
       featured: true,
@@ -987,13 +958,13 @@ function getPricingTiers(): PricingTier[] {
       name: 'Business',
       price: '$29',
       features: [
-        'Unlimited workflows',
-        'All Pro features',
-        'Custom integrations',
-        'Dedicated onboarding',
-        'SLA & compliance',
-        'Unlimited runs',
-        'Dedicated account manager',
+                 'All Pro features',
+         'Custom integrations',
+         'Dedicated onboarding',
+         'SLA & compliance',
+         'Unlimited posts',
+         'Dedicated account manager',
+         'White-label solution',
       ],
       cta: 'Contact Sales',
       featured: false,
@@ -1064,17 +1035,17 @@ function Footer() {
 // Helper: Hero workflow examples
 function getHeroWorkflows(): string[] {
   return [
-    'Automate Slack reminders for your team',
-    'Sync Gmail emails to Notion databases',
-    'Schedule meetings in Google Calendar with AI',
-    'Summarize customer support tickets from Zendesk',
-    'Send daily reports to your team on Slack',
-    'Create Notion pages from form submissions',
-    'Auto-reply to emails using AI',
-    'Log meeting notes to Notion automatically',
-    'Connect Google Sheets to your workflows',
-    'Build chatbots for your website in minutes',
-    'Integrate with 400+ apps and AI models',
+         'Auto-post viral TikTok content to Instagram',
+     'Generate trending captions with AI',
+     'Schedule posts at peak engagement times',
+     'Auto-reply to comments across all platforms',
+     'Create Instagram Stories from blog posts',
+     'Repurpose YouTube videos for TikTok',
+     'Generate hashtags that boost reach',
+     'Monitor brand mentions and respond instantly',
+     'Create content calendars automatically',
+     'Turn user reviews into social proof posts',
+     'Scale your social presence without the work',
   ]
 }
 
@@ -1127,24 +1098,24 @@ function FAQ() {
 function getFaqs(): FAQItem[] {
   return [
     {
-      q: 'What is Zigsaw?',
-      a: 'Zigsaw is a no-code platform for building, automating, and deploying AI-powered workflows and assistants. Anyone can use it—no coding required.'
+             q: 'What is Zigsaw for social media?',
+       a: 'Zigsaw is a no-code platform for automating your entire social media marketing workflow. Create viral content, schedule posts, and engage with audiences across all platforms—automatically.'
     },
     {
-      q: 'How does FlowPilot work?',
-      a: 'Just chat with FlowPilot and describe what you want to automate. FlowPilot will instantly create the workflow for you—no setup or technical skills needed.'
+             q: 'How does SocialPilot work?',
+       a: 'Just chat with SocialPilot and describe your content goals. It instantly creates engaging posts, schedules them at optimal times, and manages your entire social media presence.'
     },
     {
-      q: 'Can I connect my favorite apps?',
-      a: 'Yes! Zigsaw supports integrations with Slack, Gmail, Notion, Google Calendar, and 400+ other apps.'
+             q: 'Which social platforms are supported?',
+       a: 'We support Instagram, TikTok, Twitter, LinkedIn, Facebook, YouTube, Pinterest, and more. Post to all your platforms simultaneously with one click.'
     },
     {
-      q: 'Is there a free plan?',
-      a: 'Yes, the Free plan lets you build unlimited workflows and try out Zigsaw with basic AI models and popular integrations.'
+             q: 'Can I create content for my brand?',
+       a: 'Absolutely! Our AI learns your brand voice and creates on-brand content that matches your style, tone, and messaging across all platforms.'
     },
     {
-      q: 'How do I get support?',
-      a: 'Pro and Enterprise plans include priority support. Free users can access community support and documentation.'
+             q: 'How do I get started?',
+       a: 'Sign up for free and connect your social accounts. Start with 3 platforms and 30 posts per month. Upgrade anytime for unlimited access and premium features.'
     },
   ]
 }
