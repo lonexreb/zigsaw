@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, Layers, Clock, CheckCircle, Cpu, Bot, User, ArrowRight, GitMerge, Database, Shield, HelpCircle, HelpCircle as QuestionIcon, Twitter, Apple, Send } from 'lucide-react'
+import { Zap, CheckCircle, Cpu, Bot, User, GitMerge, HelpCircle, HelpCircle as QuestionIcon, Twitter, Apple, Send } from 'lucide-react'
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 import * as THREE from 'three'
-import { ChatWorkflowAssistant } from '../components/ChatWorkflowAssistant'
+
 import { AnimatePresence, motion as m } from 'framer-motion'
 
 function AnimatedGlobe() {
@@ -57,7 +57,7 @@ function AnimatedGlobe() {
 function Navbar() {
   return (
     <motion.nav 
-      className="w-full flex items-center justify-between px-8 py-4 bg-black/50 backdrop-blur border-b border-gray-800 sticky top-0 z-50"
+      className="w-full flex items-center justify-between px-8 py-4 bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-50 shadow-sm"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
@@ -70,7 +70,7 @@ function Navbar() {
           zigsaw
         </span>
       </div>
-      <div className="hidden md:flex gap-8 font-sans font-semibold tracking-tight text-gray-300 text-base">
+      <div className="hidden md:flex gap-8 font-sans font-semibold tracking-tight text-gray-700 text-base">
         <a href="#features" className="hover:text-blue-400 transition relative group">
           Features
           <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
@@ -182,50 +182,7 @@ function Hero() {
       setIsLoading(false)
     }
   }
-  async function handleGoogleSignIn() {
-    setIsLoading(true)
-    setError(null)
-    try {
-      if (signInWithGoogle) {
-        await signInWithGoogle()
-        // navigation handled by useEffect
-      } else {
-        alert('Google OAuth not yet implemented')
-      }
-    } catch {
-      setError('Google sign in failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  async function handleTwitterSignIn() {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const { getAuth, signInWithPopup, TwitterAuthProvider } = await import('firebase/auth')
-      const provider = new TwitterAuthProvider()
-      await signInWithPopup(getAuth(), provider)
-      // navigation handled by useEffect
-    } catch {
-      setError('Twitter sign in failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  async function handleAppleSignIn() {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const { getAuth, signInWithPopup, OAuthProvider } = await import('firebase/auth')
-      const provider = new OAuthProvider('apple.com')
-      await signInWithPopup(getAuth(), provider)
-      // navigation handled by useEffect
-    } catch {
-      setError('Apple sign in failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   async function handleWorkflowCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -277,22 +234,22 @@ function Hero() {
   }
 
   return (
-    <section className="relative w-full flex flex-col items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[60vh] md:min-h-[70vh]">
+    <section className="relative w-full flex flex-col items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[60vh] md:min-h-[70vh] bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       <AnimatedGlobe />
-      <div className="absolute inset-0 bg-black/70 z-10" />
+      <div className="absolute inset-0 bg-white/60 z-10" />
       {/* Hero Content */}
       <div className="relative z-20 flex flex-col items-center text-center w-full max-w-4xl">
         <motion.h1
-          className="text-5xl md:text-7xl font-bold mb-4 md:mb-6 text-white"
+          className="text-5xl md:text-7xl font-bold mb-4 md:mb-6 text-gray-900"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
         >
-          Automate your tasks <span className="text-blue-400">with no code</span>
+          Automate your <span className="text-blue-600">social media marketing</span>
         </motion.h1>
         {/* Animated typewriter subheadline */}
         <div className="h-10 md:h-14 flex items-center justify-center mb-6 md:mb-8 min-h-[2.5rem] md:min-h-[3rem]">
-          <span className="text-xl md:text-2xl text-blue-300 font-mono whitespace-nowrap">
+          <span className="text-xl md:text-2xl text-blue-600 font-mono whitespace-nowrap">
             {typed}
             <span className="blinking-cursor">|</span>
           </span>
@@ -309,12 +266,12 @@ function Hero() {
           }
         `}</style>
         <motion.p
-          className="text-base md:text-lg text-gray-400 mb-6 md:mb-8 max-w-xl"
+          className="text-base md:text-lg text-gray-700 mb-6 md:mb-8 max-w-xl"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.1 }}
         >
-          Empower your team to automate tasks, answer questions, and build smart solutions—just by speaking your mind. If you can use a mouse, you can use Zigsaw.
+          Create viral content, schedule posts, and engage with your audience across all platforms—automatically. Scale your social media presence without the manual work.
         </motion.p>
         {/* Get Started Button or Login Form */}
         {!showSignIn && (
@@ -345,8 +302,8 @@ function Hero() {
                   type="text"
                   value={workflowInput}
                   onChange={e => setWorkflowInput(e.target.value)}
-                  placeholder="Describe a workflow to automate..."
-                  className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow shiny-placeholder"
+                  placeholder="Describe a social media automation..."
+                  className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
                   disabled={workflowLoading}
                 />
                 <button
@@ -360,7 +317,7 @@ function Hero() {
                 </button>
               </div>
               {workflowResponse && (
-                <div className="w-full mt-2 text-sm text-blue-200 text-center bg-blue-900/40 rounded-lg px-3 py-2 shadow">
+                <div className="w-full mt-2 text-sm text-blue-700 text-center bg-blue-50 rounded-lg px-3 py-2 shadow border border-blue-200">
                   {workflowResponse}
                 </div>
               )}
@@ -368,7 +325,7 @@ function Hero() {
             {/* Show workflow placeholder message below input box if no workflow yet */}
             {workflowResponse == null || !workflowResponse.includes('Workflow created') ? (
               <div className="w-full flex flex-col items-center justify-center py-4">
-                <div className="text-gray-400 text-sm italic">Your workflow will appear here after you chat with FlowPilot.</div>
+                <div className="text-gray-600 text-sm italic">Your social media automation will appear here after you describe it.</div>
               </div>
             ) : null}
             {/* After the summary, show the mini workflow canvas if available */}
@@ -385,18 +342,18 @@ function Hero() {
           style={{ overflow: 'hidden' }}
         >
           {showSignIn && (
-            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm">
+            <div className="bg-white/90 border border-gray-300 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm">
           <form onSubmit={handleContinue} className="w-full flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 mb-2">
               <User className="w-6 h-6 text-blue-400" />
-                  <span className="font-bold text-xl text-white">Sign in to your account</span>
+                  <span className="font-bold text-xl text-gray-900">Sign in to your account</span>
             </div>
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
               autoComplete="email"
               required
               disabled={isLoading}
@@ -406,7 +363,7 @@ function Hero() {
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
               autoComplete="current-password"
               required
               disabled={isLoading}
@@ -541,7 +498,7 @@ function TrustedBy() {
   const row2 = companies.slice(half)
 
   return (
-    <section className="w-full py-6 md:py-8 bg-black flex flex-col items-center">
+    <section className="w-full py-6 md:py-8 bg-gray-50 flex flex-col items-center">
       <div className="uppercase text-xs text-gray-500 tracking-widest mb-2 md:mb-4">Trusted by teams at</div>
       <div className="relative w-screen left-1/2 right-1/2 -translate-x-1/2 flex flex-col gap-6 overflow-x-hidden">
         {/* Row 1: left to right */}
@@ -604,50 +561,50 @@ function CompanyLogoItem({ company }: { company: TrustedCompany }) {
   )
 }
 
-// Helper: List of companies (expanded)
+// Helper: List of companies (social media marketing focused)
 function getTrustedCompanies(): TrustedCompany[] {
   return [
-    { name: 'Microsoft', domain: 'microsoft.com' },
-    { name: 'Netflix', domain: 'netflix.com' },
-    { name: 'Stripe', domain: 'stripe.com' },
-    { name: 'Shopify', domain: 'shopify.com' },
-    { name: 'Atlassian', domain: 'atlassian.com' },
-    { name: 'Zoom', domain: 'zoom.us' },
-    { name: 'Salesforce', domain: 'salesforce.com' },
-    { name: 'HubSpot', domain: 'hubspot.com' },
-    { name: 'Asana', domain: 'asana.com' },
-    { name: 'GitHub', domain: 'github.com' },
-    { name: 'Twilio', domain: 'twilio.com' },
-    { name: 'Dropbox', domain: 'dropbox.com' },
-    { name: 'Intuit', domain: 'intuit.com' },
-    { name: 'Slack', domain: 'slack.com' },
-    { name: 'Notion', domain: 'notion.so' },
-    { name: 'Figma', domain: 'figma.com' },
-    { name: 'Canva', domain: 'canva.com' },
-    { name: 'Zapier', domain: 'zapier.com' },
-    { name: 'Airtable', domain: 'airtable.com' },
-    { name: 'Intercom', domain: 'intercom.com' },
-    { name: 'Datadog', domain: 'datadoghq.com' },
-    { name: 'Cloudflare', domain: 'cloudflare.com' },
-    { name: 'DigitalOcean', domain: 'digitalocean.com' },
-    { name: 'Okta', domain: 'okta.com' },
-    { name: 'Zendesk', domain: 'zendesk.com' },
-    { name: 'Monday.com', domain: 'monday.com' },
-    { name: 'Trello', domain: 'trello.com' },
-    { name: 'Segment', domain: 'segment.com' },
-    { name: 'Box', domain: 'box.com' },
+    { name: 'Hootsuite', domain: 'hootsuite.com' },
     { name: 'Buffer', domain: 'buffer.com' },
-    { name: 'Wistia', domain: 'wistia.com' },
-    { name: 'Gusto', domain: 'gusto.com' },
-    { name: 'Basecamp', domain: 'basecamp.com' },
+    { name: 'Sprout Social', domain: 'sproutsocial.com' },
+    { name: 'Later', domain: 'later.com' },
+    { name: 'Canva', domain: 'canva.com' },
+    { name: 'HubSpot', domain: 'hubspot.com' },
     { name: 'Mailchimp', domain: 'mailchimp.com' },
-    { name: 'Squarespace', domain: 'squarespace.com' },
-    { name: 'WeWork', domain: 'wework.com' },
-    { name: 'SurveyMonkey', domain: 'surveymonkey.com' },
-    { name: 'Calendly', domain: 'calendly.com' },
-    { name: 'Plaid', domain: 'plaid.com' },
-    { name: 'MongoDB', domain: 'mongodb.com' },
-    { name: 'PagerDuty', domain: 'pagerduty.com' },
+    { name: 'CoSchedule', domain: 'coschedule.com' },
+    { name: 'SocialBee', domain: 'socialbee.io' },
+    { name: 'Loomly', domain: 'loomly.com' },
+    { name: 'MeetEdgar', domain: 'meetedgar.com' },
+    { name: 'Sendible', domain: 'sendible.com' },
+    { name: 'Agorapulse', domain: 'agorapulse.com' },
+    { name: 'SocialPilot', domain: 'socialpilot.co' },
+    { name: 'Planoly', domain: 'planoly.com' },
+    { name: 'Creator.co', domain: 'creator.co' },
+    { name: 'Socialbakers', domain: 'socialbakers.com' },
+    { name: 'Brandwatch', domain: 'brandwatch.com' },
+    { name: 'Sprinklr', domain: 'sprinklr.com' },
+    { name: 'Falcon.io', domain: 'falcon.io' },
+    { name: 'ContentStudio', domain: 'contentstudio.io' },
+    { name: 'SocialFlow', domain: 'socialflow.com' },
+    { name: 'Oktopost', domain: 'oktopost.com' },
+    { name: 'eClincher', domain: 'eclincher.com' },
+    { name: 'Crowdfire', domain: 'crowdfire.com' },
+    { name: 'SocialChamp', domain: 'socialchamp.io' },
+    { name: 'Publer', domain: 'publer.io' },
+    { name: 'Postcron', domain: 'postcron.com' },
+    { name: 'SocialOomph', domain: 'socialoomph.com' },
+    { name: 'RecurPost', domain: 'recurpost.com' },
+    { name: 'SmarterQueue', domain: 'smarterqueue.com' },
+    { name: 'Sked Social', domain: 'skedsocial.com' },
+    { name: 'MavSocial', domain: 'mavsocial.com' },
+    { name: 'SocialReport', domain: 'socialreport.com' },
+    { name: 'ViralWoot', domain: 'viralwoot.com' },
+    { name: 'SocialBu', domain: 'socialbu.com' },
+    { name: 'Zoho Social', domain: 'zoho.com' },
+    { name: 'Kontentino', domain: 'kontentino.com' },
+    { name: 'Simplified', domain: 'simplified.com' },
+    { name: 'Iconosquare', domain: 'iconosquare.com' },
+    { name: 'Vista Social', domain: 'vista.com' },
   ]
 }
 
@@ -667,9 +624,9 @@ interface TrustedCompany {
 function Features() {
   // For logo nodes
   const nodeCompanies = [
-    { name: 'Google', domain: 'google.com', label: 'Email received' },
-    { name: 'Slack', domain: 'slack.com', label: 'Send alert' },
-    { name: 'Notion', domain: 'notion.so', label: 'Create page' }
+    { name: 'Instagram', domain: 'instagram.com', label: 'Create post' },
+    { name: 'TikTok', domain: 'tiktok.com', label: 'Schedule video' },
+    { name: 'Twitter', domain: 'twitter.com', label: 'Auto-reply' }
   ]
   // Animation state for glowing
   const [glowIdx, setGlowIdx] = React.useState(0)
@@ -695,7 +652,7 @@ function Features() {
   // For FlowPilot chat button
   // Remove local showFlowPilot state
   return (
-    <section id="features" className="w-full py-20 bg-gray-900 text-white flex flex-col items-center">
+    <section id="features" className="w-full py-20 bg-white text-gray-900 flex flex-col items-center">
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-center gap-4">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-blue-400">
@@ -704,22 +661,22 @@ function Features() {
             <rect x="16" y="8" width="3" height="9" rx="1.5" fill="currentColor" opacity="0.6" />
             <rect x="8" y="20" width="8" height="2" rx="1" fill="currentColor" opacity="0.3" />
           </svg>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight">Automate workflows at the speed of sound</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight">Scale your social media at the speed of sound</h2>
         </div>
-        <span className="mt-3 inline-block bg-blue-700/80 text-blue-100 text-xs font-bold px-4 py-1 rounded-full tracking-wide shadow">Voice &amp; Chat powered automation</span>
+        <span className="mt-3 inline-block bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full tracking-wide shadow">AI-powered social media automation</span>
       </div>
       <div className="flex flex-col md:flex-row gap-12 max-w-5xl w-full items-center justify-center">
         {/* Visual Workflow Builder Feature (logos as nodes) */}
         <motion.div
-          className="flex-1 bg-gradient-to-br from-blue-900/60 to-gray-800 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px]"
+          className="flex-1 bg-gradient-to-br from-blue-50 to-gray-50 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px] border border-gray-200"
           initial={{ x: -120, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.8, type: 'spring', stiffness: 80 }}
         >
           <div className="w-full flex flex-col items-center mb-6">
-            <span className="text-blue-300 font-bold text-lg mb-2 tracking-wide">Visual Workflow Builder</span>
-            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Connect your favorite apps visually. Drag, drop, and link Google, Slack, Notion, and more.</span>
+            <span className="text-blue-600 font-bold text-lg mb-2 tracking-wide">Visual Content Pipeline</span>
+            <span className="text-gray-700 text-center text-base mb-4 max-w-xs">Connect Instagram, TikTok, Twitter, and LinkedIn. Create content once, publish everywhere automatically.</span>
           </div>
           {/* Logo node chain with animated glow and labels and visible arrows */}
           <div className="flex items-center gap-6 min-h-[100px]">
@@ -746,7 +703,7 @@ function Features() {
                       style={{ background: '#fff', borderRadius: '9999px' }}
                     />
                   </span>
-                  <span className="text-xs text-blue-200 mt-2 font-semibold whitespace-nowrap">{company.label}</span>
+                  <span className="text-xs text-blue-600 mt-2 font-semibold whitespace-nowrap">{company.label}</span>
                 </div>
               )
               if (i < nodeCompanies.length - 1) {
@@ -772,18 +729,18 @@ function Features() {
         </motion.div>
         {/* FlowPilot Feature with chat button */}
         <motion.div
-          className="flex-1 bg-gradient-to-br from-cyan-900/60 to-gray-800 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px]"
+          className="flex-1 bg-gradient-to-br from-cyan-50 to-gray-50 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px] border border-gray-200"
           initial={{ x: 120, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.8, type: 'spring', stiffness: 80, delay: 0.2 }}
         >
           <div className="w-full flex flex-col items-center mb-6">
-            <span className="text-cyan-300 font-bold text-lg mb-2 tracking-wide">FlowPilot: Your Workflow Assistant</span>
-            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Just chat with FlowPilot and it instantly creates automations and workflows for you—no setup, no code, just conversation.</span>
+            <span className="text-cyan-600 font-bold text-lg mb-2 tracking-wide">SocialPilot: Your Content Assistant</span>
+            <span className="text-gray-700 text-center text-base mb-4 max-w-xs">Just chat with SocialPilot and it instantly creates viral content, schedules posts, and manages engagement across all platforms.</span>
           </div>
           <button
-            className="mt-4 px-6 py-3 bg-gray-800/60 backdrop-blur font-bold rounded-full shadow-lg hover:scale-105 transition-all text-lg flex items-center gap-2 border border-gray-500/30"
+            className="mt-4 px-6 py-3 bg-white backdrop-blur font-bold rounded-full shadow-lg hover:scale-105 transition-all text-lg flex items-center gap-2 border border-gray-300"
             onClick={() => {
               const chatBtn = document.querySelector('[aria-label="Open workflow assistant chat"]') as HTMLElement
               if (chatBtn) {
@@ -793,7 +750,7 @@ function Features() {
             aria-label="Open FlowPilot Chat"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 21l1.8-4A7.97 7.97 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-            <span className="rainbow-animate-text">Chat with FlowPilot</span>
+            <span className="rainbow-animate-text">Chat with SocialPilot</span>
           </button>
          <style>{`
            @keyframes rainbow {
@@ -840,7 +797,7 @@ function Pricing() {
     return `${hours}:${minutes}:${seconds}.${msStr}${micro}`
   }
   return (
-    <section id="pricing" className="w-full py-20 bg-gradient-to-b from-gray-950 to-gray-900 text-white flex flex-col items-center">
+    <section id="pricing" className="w-full py-20 bg-gradient-to-b from-gray-50 to-white text-gray-900 flex flex-col items-center">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full font-sans">
         {tiers.map((tier, idx) => {
           const isMiddle = idx === 1
@@ -849,10 +806,10 @@ function Pricing() {
           return (
             <div
               key={tier.name}
-              className={`flex flex-col items-center justify-between rounded-2xl p-10 min-h-[480px] h-full shadow-2xl border-2 relative transition bg-gray-800 ${
+              className={`flex flex-col items-center justify-between rounded-2xl p-10 min-h-[480px] h-full shadow-2xl border-2 relative transition bg-white ${
                 tier.featured
-                  ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-transparent animate-pricing-shine scale-110 z-20 ring-4 ring-blue-400/30'
-                  : 'border-gray-800'
+                  ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300 animate-pricing-shine scale-110 z-20 ring-4 ring-blue-400/30'
+                  : 'border-gray-300'
               } ${isLeft ? 'md:-rotate-8' : ''} ${isRight ? 'md:rotate-8' : ''}`}
               style={{ boxSizing: 'border-box' }}
             >
@@ -898,10 +855,10 @@ function Pricing() {
                     'manager',
                     'onboarding',
                   ]
-                  let bolded = f
+                  let bolded: React.ReactNode = f
                   for (const word of keywords) {
                     if (f.toLowerCase().startsWith(word.toLowerCase())) {
-                      bolded = <><span className="font-bold text-white">{word}</span>{f.slice(word.length)}</>
+                      bolded = <><span className="font-bold text-gray-900">{word}</span>{f.slice(word.length)}</>
                       break
                     }
                   }
@@ -958,11 +915,11 @@ function getPricingTiers(): PricingTier[] {
       name: 'Free',
       price: '$0',
       features: [
-        'Unlimited workflows',
-        'Connect Slack, Gmail, Notion, GCal',
+        '3 social platforms',
+        'Basic post scheduling',
         'Community support',
-        'Basic AI models',
-        '100 automation runs/month',
+        'Basic AI content generation',
+        '30 posts/month',
       ],
       cta: 'Start Free',
       featured: false,
@@ -972,28 +929,28 @@ function getPricingTiers(): PricingTier[] {
       price: '$19',
       oldPrice: '$25',
       features: [
-        'Unlimited workflows',
+        'Unlimited platforms',
         'Premium AI models',
         'Priority support',
         'Advanced automations',
         'Team collaboration',
-        '10,000 automation runs/month',
-        'Unlimited integrations',
+        '1,000 posts/month',
+        'Analytics & reporting',
       ],
       cta: 'Sale',
       featured: true,
     },
     {
       name: 'Business',
-      price: '$29',
+      price: '$49',
       features: [
-        'Unlimited workflows',
         'All Pro features',
         'Custom integrations',
         'Dedicated onboarding',
         'SLA & compliance',
-        'Unlimited runs',
+        'Unlimited posts',
         'Dedicated account manager',
+        'White-label solution',
       ],
       cta: 'Contact Sales',
       featured: false,
@@ -1010,39 +967,11 @@ interface PricingTier {
   oldPrice?: string
 }
 
-// Helper: Features list (upgraded)
-function getFeaturesList(): FeatureItem[] {
-  return [
-    {
-      icon: <Zap className="w-8 h-8 text-blue-400" />, title: 'No-Code Builder', desc: 'Design automations visually—no coding or setup required.'
-    },
-    {
-      icon: <Layers className="w-8 h-8 text-green-400" />, title: 'App Integrations', desc: 'Connect Slack, Gmail, Notion, Google Calendar, and 400+ more.'
-    },
-    {
-      icon: <CheckCircle className="w-8 h-8 text-yellow-400" />, title: 'Human in the Loop', desc: 'Easily add approvals and manual steps to any workflow.'
-    },
-    {
-      icon: <Cpu className="w-8 h-8 text-purple-400" />, title: 'AI-Powered', desc: 'Use the latest AI models for smart automations and chatbots.'
-    },
-    {
-      icon: <Clock className="w-8 h-8 text-pink-400" />, title: 'Scheduling', desc: 'Automate tasks on a schedule or trigger from events.'
-    },
-    {
-      icon: <Shield className="w-8 h-8 text-yellow-400" />, title: 'Enterprise-Grade', desc: 'Secure, scalable, and ready for business use.'
-    },
-  ]
-}
-// Types
-interface FeatureItem {
-  icon: React.ReactNode
-  title: string
-  desc: string
-}
+
 
 function Footer() {
   return (
-    <footer className="w-full bg-black border-t border-gray-800 py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+    <footer className="w-full bg-gray-900 border-t border-gray-700 py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-2">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
           <path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3H7v-3a1 1 0 00-1-1H5a2 2 0 110-4h1a1 1 0 001-1V7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -1061,20 +990,20 @@ function Footer() {
   )
 }
 
-// Helper: Hero workflow examples
+// Helper: Hero workflow examples (social media marketing focused)
 function getHeroWorkflows(): string[] {
   return [
-    'Automate Slack reminders for your team',
-    'Sync Gmail emails to Notion databases',
-    'Schedule meetings in Google Calendar with AI',
-    'Summarize customer support tickets from Zendesk',
-    'Send daily reports to your team on Slack',
-    'Create Notion pages from form submissions',
-    'Auto-reply to emails using AI',
-    'Log meeting notes to Notion automatically',
-    'Connect Google Sheets to your workflows',
-    'Build chatbots for your website in minutes',
-    'Integrate with 400+ apps and AI models',
+    'Auto-post viral TikTok content to Instagram',
+    'Generate trending captions with AI',
+    'Schedule posts at peak engagement times',
+    'Auto-reply to comments across all platforms',
+    'Create Instagram Stories from blog posts',
+    'Repurpose YouTube videos for TikTok',
+    'Generate hashtags that boost reach',
+    'Monitor brand mentions and respond instantly',
+    'Create content calendars automatically',
+    'Turn user reviews into social proof posts',
+    'Scale your social presence without the work',
   ]
 }
 
@@ -1083,14 +1012,14 @@ function FAQ() {
   const faqs = getFaqs()
   const [open, setOpen] = React.useState<number | null>(null)
   return (
-    <section className="w-full py-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-950 text-white flex flex-col items-center">
+    <section className="w-full py-20 bg-gradient-to-b from-white via-gray-50 to-gray-100 text-gray-900 flex flex-col items-center">
       <div className="flex items-center gap-4 mb-10">
-        <QuestionIcon className="w-10 h-10 text-white" />
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white text-center tracking-tight">FAQ</h2>
+        <QuestionIcon className="w-10 h-10 text-gray-900" />
+        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 text-center tracking-tight">FAQ</h2>
       </div>
       <div className="w-full max-w-2xl mx-auto space-y-6">
         {faqs.map((faq, i) => (
-          <div key={i} className="border border-gray-800/80 rounded-2xl bg-gradient-to-br from-gray-900/80 to-gray-950/60 shadow-lg overflow-hidden">
+          <div key={i} className="border border-gray-200 rounded-2xl bg-gradient-to-br from-white to-gray-50 shadow-lg overflow-hidden">
             <button
               className="w-full flex justify-between items-center px-8 py-6 text-left font-semibold text-lg focus:outline-none group"
               onClick={() => setOpen(open === i ? null : i)}
@@ -1123,28 +1052,28 @@ function FAQ() {
   )
 }
 
-// Helper: FAQ content
+// Helper: FAQ content (social media marketing focused)
 function getFaqs(): FAQItem[] {
   return [
     {
-      q: 'What is Zigsaw?',
-      a: 'Zigsaw is a no-code platform for building, automating, and deploying AI-powered workflows and assistants. Anyone can use it—no coding required.'
+      q: 'What is Zigsaw for social media?',
+      a: 'Zigsaw is a no-code platform for automating your entire social media marketing workflow. Create viral content, schedule posts, and engage with audiences across all platforms—automatically.'
     },
     {
-      q: 'How does FlowPilot work?',
-      a: 'Just chat with FlowPilot and describe what you want to automate. FlowPilot will instantly create the workflow for you—no setup or technical skills needed.'
+      q: 'How does SocialPilot work?',
+      a: 'Just chat with SocialPilot and describe your content goals. It instantly creates engaging posts, schedules them at optimal times, and manages your entire social media presence.'
     },
     {
-      q: 'Can I connect my favorite apps?',
-      a: 'Yes! Zigsaw supports integrations with Slack, Gmail, Notion, Google Calendar, and 400+ other apps.'
+      q: 'Which social platforms are supported?',
+      a: 'We support Instagram, TikTok, Twitter, LinkedIn, Facebook, YouTube, Pinterest, and more. Post to all your platforms simultaneously with one click.'
     },
     {
-      q: 'Is there a free plan?',
-      a: 'Yes, the Free plan lets you build unlimited workflows and try out Zigsaw with basic AI models and popular integrations.'
+      q: 'Can I create content for my brand?',
+      a: 'Absolutely! Our AI learns your brand voice and creates on-brand content that matches your style, tone, and messaging across all platforms.'
     },
     {
-      q: 'How do I get support?',
-      a: 'Pro and Enterprise plans include priority support. Free users can access community support and documentation.'
+      q: 'How do I get started?',
+      a: 'Sign up for free and connect your social accounts. Start with 3 platforms and 30 posts per month. Upgrade anytime for unlimited access and premium features.'
     },
   ]
 }
@@ -1154,14 +1083,12 @@ interface FAQItem {
 }
 
 export default function Login() {
-  const [miniWorkflow, setMiniWorkflow] = React.useState<MiniWorkflow | null>(null)
   return (
-    <div className="bg-black">
+    <div className="bg-white">
       <Navbar />
       <Hero />
       <TrustedBy />
       <Features />
-      <MiniWorkflowCanvas workflow={miniWorkflow} />
       <Pricing />
       <FAQ />
       <Footer />

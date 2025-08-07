@@ -2,6 +2,10 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getToken } from 'next-auth/jwt'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   // CORS headers
   const origin = req.headers.origin
   const allowedOrigins = [
@@ -9,7 +13,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     'http://localhost:3000',
     'https://zigsaw.dev',
     'https://zigsaw-frontend.vercel.app',
-    'https://zigsaw-backend.vercel.app',
     process.env.FRONTEND_URL
   ].filter(Boolean) as string[]
   
@@ -25,10 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return
   }
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
   try {
     // Get the JWT token from the request
     const token = await getToken({ 
@@ -36,43 +35,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       secret: process.env.NEXTAUTH_SECRET 
     })
 
-    // Return detailed debug information
-    return res.json({
+    // Debug information
+    const debugInfo = {
       hasToken: !!token,
-      token: token ? {
+      tokenKeys: token ? Object.keys(token) : [],
+      hasAccessToken: !!token?.accessToken,
+      hasRefreshToken: !!token?.refreshToken,
+      userEmail: token?.email,
+      userName: token?.name,
+      tokenExpiry: token?.exp,
+      currentTime: Math.floor(Date.now() / 1000),
+      isExpired: token?.exp ? token.exp < Math.floor(Date.now() / 1000) : null,
+      headers: {
+        cookie: req.headers.cookie ? 'Present' : 'Missing',
+        authorization: req.headers.authorization ? 'Present' : 'Missing'
+      }
+    }
+
+    if (!token) {
+      return res.status(401).json({ 
+        authenticated: false,
+        debug: debugInfo,
+        message: 'No session found' 
+      })
+    }
+
+    return res.json({
+      authenticated: true,
+      debug: debugInfo,
+      user: {
         email: token.email,
         name: token.name,
         picture: token.picture,
-        hasAccessToken: !!token.accessToken,
-        hasRefreshToken: !!token.refreshToken,
-        iat: token.iat,
-        exp: token.exp
-      } : null,
-      request: {
-        method: req.method,
-        url: req.url,
-        headers: {
-          origin: req.headers.origin,
-          host: req.headers.host,
-          cookie: req.headers.cookie ? 'Present' : 'Missing',
-          'user-agent': req.headers['user-agent']
-        },
-        cookies: req.cookies
       },
-      environment: {
-        nodeEnv: process.env.NODE_ENV,
-        hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
-        nextAuthUrl: process.env.NEXTAUTH_URL,
-        frontendUrl: process.env.FRONTEND_URL
-      }
+      hasGmailAccess: !!token.accessToken,
+      scopes: token.accessToken ? [
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.modify', 
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.compose',
+        'https://www.googleapis.com/auth/gmail.labels',
+        'https://www.googleapis.com/auth/calendar.readonly',
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/calendar.events'
+      ] : []
     })
 
   } catch (error) {
-    console.error('Debug session error:', error)
+    console.error('Session debug error:', error)
     return res.status(500).json({ 
+      authenticated: false,
       error: 'Internal server error',
-      message: 'Failed to debug session',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      message: 'Failed to debug session'
     })
   }
 } 
