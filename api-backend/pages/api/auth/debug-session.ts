@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userName: token?.name,
       tokenExpiry: token?.exp,
       currentTime: Math.floor(Date.now() / 1000),
-      isExpired: token?.exp ? token.exp < Math.floor(Date.now() / 1000) : null,
+      isExpired: token?.exp && typeof token.exp === 'number' ? token.exp < Math.floor(Date.now() / 1000) : null,
       headers: {
         cookie: req.headers.cookie ? 'Present' : 'Missing',
         authorization: req.headers.authorization ? 'Present' : 'Missing'
