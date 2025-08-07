@@ -8,7 +8,6 @@ interface GmailAuthStatus {
   scopes?: string[]
   loading: boolean
   error?: string
-  debug?: any
 }
 
 interface GmailTokens {
@@ -30,45 +29,27 @@ export function useGmailAuth() {
     try {
       setStatus(prev => ({ ...prev, loading: true, error: undefined }))
       
+      // Always use production backend URL for now
       const backendUrl = 'https://zigsaw-backend.vercel.app'
 
-      // First, try to get a session token if we don't have one
-      let sessionToken = localStorage.getItem('sessionToken')
-      
-      if (!sessionToken) {
-        // Try to get a session token from the backend
-        const tokenResponse = await fetch(`${backendUrl}/api/auth/get-session-token`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (tokenResponse.ok) {
-          const tokenData = await tokenResponse.json()
-          if (tokenData.authenticated && tokenData.sessionToken) {
-            sessionToken = tokenData.sessionToken
-            localStorage.setItem('sessionToken', sessionToken)
-          }
-        }
-      }
-
-      // Check authentication status using the session token or cookies
-      const authResponse = await fetch(`${backendUrl}/api/auth/session-check`, {
+      // First check if we have a valid session
+      const sessionResponse = await fetch(`${backendUrl}/api/auth/session-check`, {
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          ...(sessionToken && { 'Authorization': `Bearer ${sessionToken}` })
+          'Content-Type': 'application/json'
         }
       })
 
-      const authData = await authResponse.json()
-      
-      if (!authData.authenticated) {
-        // Clear any stored session token if not authenticated
-        localStorage.removeItem('sessionToken')
+      if (!sessionResponse.ok || sessionResponse.status === 401) {
+        // No valid session - retry a few times with delay for fresh sign-ins
+        if (retryCount < 3) {
+          console.log(`Session check failed (401), retrying in ${(retryCount + 1) * 2} seconds... (attempt ${retryCount + 1}/3)`)
+          setTimeout(() => {
+            checkGmailAuth(retryCount + 1)
+          }, (retryCount + 1) * 2000) // 2s, 4s, 6s delays
+          return
+        }
         
-        // User is not authenticated - this is normal, not an error
         setStatus({
           isConnected: false,
           hasTokens: false,
@@ -77,23 +58,22 @@ export function useGmailAuth() {
         return
       }
 
-      if (!authData.hasGmailAccess) {
+      const sessionData = await sessionResponse.json()
+      
+      if (!sessionData.authenticated || !sessionData.hasGmailAccess) {
         setStatus({
           isConnected: false,
           hasTokens: false,
-          loading: false,
-          error: 'No Gmail access found'
+          loading: false
         })
         return
       }
 
-      // User is authenticated and has Gmail access
       // Now check if we have Gmail tokens
       const response = await fetch(`${backendUrl}/api/gmail/tokens`, {
-        credentials: 'include',
+        credentials: 'include', // Include cookies for session
         headers: {
-          'Content-Type': 'application/json',
-          ...(sessionToken && { 'Authorization': `Bearer ${sessionToken}` })
+          'Content-Type': 'application/json'
         }
       })
 
@@ -110,9 +90,6 @@ export function useGmailAuth() {
           loading: false
         })
       } else if (response.status === 401) {
-        // Clear invalid session token
-        localStorage.removeItem('sessionToken')
-        
         // Not authenticated - retry a few times with delay for fresh sign-ins
         if (retryCount < 3) {
           console.log(`Gmail auth check failed (401), retrying in ${(retryCount + 1) * 2} seconds... (attempt ${retryCount + 1}/3)`)
@@ -125,8 +102,7 @@ export function useGmailAuth() {
         setStatus({
           isConnected: false,
           hasTokens: false,
-          loading: false,
-          error: 'Gmail authentication failed'
+          loading: false
         })
       } else {
         throw new Error(`HTTP ${response.status}`)
@@ -171,39 +147,26 @@ export function useGmailAuth() {
 
   // Check auth status on mount and when window gains focus
   useEffect(() => {
-    // Check for legacy URL-based auth (fallback for old flow)
-    const urlParams = new URLSearchParams(window.location.search)
-    const authSuccess = urlParams.get('auth')
-    const tokenFromUrl = urlParams.get('token')
-    
-    if (authSuccess === 'success' && tokenFromUrl) {
-      // Store the token and check auth (legacy flow)
-      localStorage.setItem('sessionToken', tokenFromUrl)
-      console.log('Session token received from URL and stored (legacy flow)')
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-      checkGmailAuth()
-    } else if (authSuccess || tokenFromUrl) {
-      // Clean up any auth parameters from URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-      checkGmailAuth()
-    } else {
-      // Normal startup - check auth status
-      checkGmailAuth()
-    }
+    checkGmailAuth()
 
     const handleFocus = () => checkGmailAuth()
     window.addEventListener('focus', handleFocus)
     
+    // Check if user just returned from Gmail or GCal sign-in
+    const hasGmailCallback = window.sessionStorage.getItem('gmailSignInCallback')
+    const hasGcalCallback = window.sessionStorage.getItem('gcalSignInCallback')
+    
+    if (hasGmailCallback || hasGcalCallback) {
+      if (hasGmailCallback) window.sessionStorage.removeItem('gmailSignInCallback')
+      if (hasGcalCallback) window.sessionStorage.removeItem('gcalSignInCallback')
+      // Wait a bit for the session to be established, then check auth
+      setTimeout(() => {
+        checkGmailAuth()
+      }, 2000)
+    }
+    
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
-
-  const createSessionToken = async () => {
-    // This function is now mostly handled by the popup flow
-    // Just check auth status after a brief delay
-    console.log('Legacy createSessionToken called - checking auth status')
-    setTimeout(() => checkGmailAuth(), 1000)
-  }
 
   return {
     ...status,

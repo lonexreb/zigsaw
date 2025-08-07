@@ -1476,7 +1476,7 @@ const WorkflowContent = () => {
         setNodes(workflow.nodes)
         setEdges(workflow.edges)
         // Optionally update nodeIdCounter to avoid ID collisions
-        const maxId = workflow.nodes.reduce((max, n) => {
+        const maxId = workflow.nodes.reduce((max: number, n: { id: string }) => {
           const match = /-(\d+)$/.exec(n.id)
           const num = match ? parseInt(match[1], 10) : 0
           return Math.max(max, num)
@@ -1681,8 +1681,8 @@ const WorkflowContent = () => {
       isDark={isDark} 
       onTemplateSelect={template => {
         // Map template id to a more complex workflow (nodes/edges)
-        let nodes = []
-        let edges = []
+        let nodes: any[] = []
+        let edges: any[] = []
         if (template.id === 'email-summary') {
           nodes = [
             {
