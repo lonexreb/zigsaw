@@ -57,7 +57,7 @@ function AnimatedGlobe() {
 function Navbar() {
   return (
     <motion.nav 
-      className="w-full flex items-center justify-between px-8 py-4 bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-50 shadow-sm"
+      className="w-full flex items-center justify-between px-8 py-4 bg-black/50 backdrop-blur border-b border-gray-800 sticky top-0 z-50 shadow-sm"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
@@ -70,7 +70,7 @@ function Navbar() {
           zigsaw
         </span>
       </div>
-      <div className="hidden md:flex gap-8 font-sans font-semibold tracking-tight text-gray-700 text-base">
+      <div className="hidden md:flex gap-8 font-sans font-semibold tracking-tight text-gray-300 text-base">
         <a href="#features" className="hover:text-blue-400 transition relative group">
           Features
           <span className="absolute left-0 -bottom-1 h-0.5 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{transitionProperty: 'transform, background'}} />
@@ -234,22 +234,22 @@ function Hero() {
   }
 
   return (
-    <section className="relative w-full flex flex-col items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[60vh] md:min-h-[70vh] bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+    <section className="relative w-full flex flex-col items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[60vh] md:min-h-[70vh]">
       <AnimatedGlobe />
-      <div className="absolute inset-0 bg-white/60 z-10" />
+      <div className="absolute inset-0 bg-black/70 z-10" />
       {/* Hero Content */}
       <div className="relative z-20 flex flex-col items-center text-center w-full max-w-4xl">
         <motion.h1
-          className="text-5xl md:text-7xl font-bold mb-4 md:mb-6 text-gray-900"
+          className="text-5xl md:text-7xl font-bold mb-4 md:mb-6 text-white"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
         >
-          Automate your <span className="text-blue-600">social media marketing</span>
+          Automate your <span className="text-blue-400">social media marketing</span>
         </motion.h1>
         {/* Animated typewriter subheadline */}
         <div className="h-10 md:h-14 flex items-center justify-center mb-6 md:mb-8 min-h-[2.5rem] md:min-h-[3rem]">
-          <span className="text-xl md:text-2xl text-blue-600 font-mono whitespace-nowrap">
+          <span className="text-xl md:text-2xl text-blue-300 font-mono whitespace-nowrap">
             {typed}
             <span className="blinking-cursor">|</span>
           </span>
@@ -266,7 +266,7 @@ function Hero() {
           }
         `}</style>
         <motion.p
-          className="text-base md:text-lg text-gray-700 mb-6 md:mb-8 max-w-xl"
+          className="text-base md:text-lg text-gray-400 mb-6 md:mb-8 max-w-xl"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.1 }}
@@ -303,7 +303,7 @@ function Hero() {
                   value={workflowInput}
                   onChange={e => setWorkflowInput(e.target.value)}
                   placeholder="Describe a social media automation..."
-                  className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
+                  className="w-full px-4 py-3 pr-14 rounded-lg border border-blue-400 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
                   disabled={workflowLoading}
                 />
                 <button
@@ -317,7 +317,7 @@ function Hero() {
                 </button>
               </div>
               {workflowResponse && (
-                <div className="w-full mt-2 text-sm text-blue-700 text-center bg-blue-50 rounded-lg px-3 py-2 shadow border border-blue-200">
+                <div className="w-full mt-2 text-sm text-blue-200 text-center bg-blue-900/40 rounded-lg px-3 py-2 shadow">
                   {workflowResponse}
                 </div>
               )}
@@ -325,7 +325,7 @@ function Hero() {
             {/* Show workflow placeholder message below input box if no workflow yet */}
             {workflowResponse == null || !workflowResponse.includes('Workflow created') ? (
               <div className="w-full flex flex-col items-center justify-center py-4">
-                <div className="text-gray-600 text-sm italic">Your social media automation will appear here after you describe it.</div>
+                <div className="text-gray-400 text-sm italic">Your social media automation will appear here after you describe it.</div>
               </div>
             ) : null}
             {/* After the summary, show the mini workflow canvas if available */}
@@ -342,18 +342,18 @@ function Hero() {
           style={{ overflow: 'hidden' }}
         >
           {showSignIn && (
-            <div className="bg-white/90 border border-gray-300 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm">
+            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 backdrop-blur-sm">
           <form onSubmit={handleContinue} className="w-full flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 mb-2">
               <User className="w-6 h-6 text-blue-400" />
-                  <span className="font-bold text-xl text-gray-900">Sign in to your account</span>
+                  <span className="font-bold text-xl text-white">Sign in to your account</span>
             </div>
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
               autoComplete="email"
               required
               disabled={isLoading}
@@ -363,7 +363,7 @@ function Hero() {
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white font-mono text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
               autoComplete="current-password"
               required
               disabled={isLoading}
@@ -498,7 +498,7 @@ function TrustedBy() {
   const row2 = companies.slice(half)
 
   return (
-    <section className="w-full py-6 md:py-8 bg-gray-50 flex flex-col items-center">
+    <section className="w-full py-6 md:py-8 bg-black flex flex-col items-center">
       <div className="uppercase text-xs text-gray-500 tracking-widest mb-2 md:mb-4">Trusted by teams at</div>
       <div className="relative w-screen left-1/2 right-1/2 -translate-x-1/2 flex flex-col gap-6 overflow-x-hidden">
         {/* Row 1: left to right */}
@@ -652,7 +652,7 @@ function Features() {
   // For FlowPilot chat button
   // Remove local showFlowPilot state
   return (
-    <section id="features" className="w-full py-20 bg-white text-gray-900 flex flex-col items-center">
+    <section id="features" className="w-full py-20 bg-gray-900 text-white flex flex-col items-center">
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-center gap-4">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-blue-400">
@@ -668,15 +668,15 @@ function Features() {
       <div className="flex flex-col md:flex-row gap-12 max-w-5xl w-full items-center justify-center">
         {/* Visual Workflow Builder Feature (logos as nodes) */}
         <motion.div
-          className="flex-1 bg-gradient-to-br from-blue-50 to-gray-50 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px] border border-gray-200"
+          className="flex-1 bg-gradient-to-br from-blue-900/60 to-gray-800 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px]"
           initial={{ x: -120, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.8, type: 'spring', stiffness: 80 }}
         >
           <div className="w-full flex flex-col items-center mb-6">
-            <span className="text-blue-600 font-bold text-lg mb-2 tracking-wide">Visual Content Pipeline</span>
-            <span className="text-gray-700 text-center text-base mb-4 max-w-xs">Connect Instagram, TikTok, Twitter, and LinkedIn. Create content once, publish everywhere automatically.</span>
+            <span className="text-blue-300 font-bold text-lg mb-2 tracking-wide">Visual Content Pipeline</span>
+            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Connect Instagram, TikTok, Twitter, and LinkedIn. Create content once, publish everywhere automatically.</span>
           </div>
           {/* Logo node chain with animated glow and labels and visible arrows */}
           <div className="flex items-center gap-6 min-h-[100px]">
@@ -703,7 +703,7 @@ function Features() {
                       style={{ background: '#fff', borderRadius: '9999px' }}
                     />
                   </span>
-                  <span className="text-xs text-blue-600 mt-2 font-semibold whitespace-nowrap">{company.label}</span>
+                  <span className="text-xs text-blue-200 mt-2 font-semibold whitespace-nowrap">{company.label}</span>
                 </div>
               )
               if (i < nodeCompanies.length - 1) {
@@ -729,18 +729,18 @@ function Features() {
         </motion.div>
         {/* FlowPilot Feature with chat button */}
         <motion.div
-          className="flex-1 bg-gradient-to-br from-cyan-50 to-gray-50 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px] border border-gray-200"
+          className="flex-1 bg-gradient-to-br from-cyan-900/60 to-gray-800 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[340px]"
           initial={{ x: 120, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.8, type: 'spring', stiffness: 80, delay: 0.2 }}
         >
           <div className="w-full flex flex-col items-center mb-6">
-            <span className="text-cyan-600 font-bold text-lg mb-2 tracking-wide">SocialPilot: Your Content Assistant</span>
-            <span className="text-gray-700 text-center text-base mb-4 max-w-xs">Just chat with SocialPilot and it instantly creates viral content, schedules posts, and manages engagement across all platforms.</span>
+            <span className="text-cyan-300 font-bold text-lg mb-2 tracking-wide">SocialPilot: Your Content Assistant</span>
+            <span className="text-gray-300 text-center text-base mb-4 max-w-xs">Just chat with SocialPilot and it instantly creates viral content, schedules posts, and manages engagement across all platforms.</span>
           </div>
           <button
-            className="mt-4 px-6 py-3 bg-white backdrop-blur font-bold rounded-full shadow-lg hover:scale-105 transition-all text-lg flex items-center gap-2 border border-gray-300"
+            className="mt-4 px-6 py-3 bg-gray-800/60 backdrop-blur font-bold rounded-full shadow-lg hover:scale-105 transition-all text-lg flex items-center gap-2 border border-gray-500/30"
             onClick={() => {
               const chatBtn = document.querySelector('[aria-label="Open workflow assistant chat"]') as HTMLElement
               if (chatBtn) {
@@ -1084,7 +1084,7 @@ interface FAQItem {
 
 export default function Login() {
   return (
-    <div className="bg-white">
+    <div className="bg-black">
       <Navbar />
       <Hero />
       <TrustedBy />
