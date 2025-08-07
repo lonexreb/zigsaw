@@ -797,7 +797,7 @@ function Pricing() {
     return `${hours}:${minutes}:${seconds}.${msStr}${micro}`
   }
   return (
-    <section id="pricing" className="w-full py-20 bg-gradient-to-b from-gray-50 to-white text-gray-900 flex flex-col items-center">
+    <section id="pricing" className="w-full py-20 bg-gradient-to-b from-gray-950 to-gray-900 text-white flex flex-col items-center">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full font-sans">
         {tiers.map((tier, idx) => {
           const isMiddle = idx === 1
@@ -806,10 +806,10 @@ function Pricing() {
           return (
             <div
               key={tier.name}
-              className={`flex flex-col items-center justify-between rounded-2xl p-10 min-h-[480px] h-full shadow-2xl border-2 relative transition bg-white ${
+              className={`flex flex-col items-center justify-between rounded-2xl p-10 min-h-[480px] h-full shadow-2xl border-2 relative transition bg-gray-800 ${
                 tier.featured
-                  ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300 animate-pricing-shine scale-110 z-20 ring-4 ring-blue-400/30'
-                  : 'border-gray-300'
+                  ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-transparent animate-pricing-shine scale-110 z-20 ring-4 ring-blue-400/30'
+                  : 'border-gray-800'
               } ${isLeft ? 'md:-rotate-8' : ''} ${isRight ? 'md:rotate-8' : ''}`}
               style={{ boxSizing: 'border-box' }}
             >
@@ -858,7 +858,7 @@ function Pricing() {
                   let bolded: React.ReactNode = f
                   for (const word of keywords) {
                     if (f.toLowerCase().startsWith(word.toLowerCase())) {
-                      bolded = <><span className="font-bold text-gray-900">{word}</span>{f.slice(word.length)}</>
+                      bolded = <><span className="font-bold text-white">{word}</span>{f.slice(word.length)}</>
                       break
                     }
                   }
@@ -1012,14 +1012,14 @@ function FAQ() {
   const faqs = getFaqs()
   const [open, setOpen] = React.useState<number | null>(null)
   return (
-    <section className="w-full py-20 bg-gradient-to-b from-white via-gray-50 to-gray-100 text-gray-900 flex flex-col items-center">
+    <section className="w-full py-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-950 text-white flex flex-col items-center">
       <div className="flex items-center gap-4 mb-10">
-        <QuestionIcon className="w-10 h-10 text-gray-900" />
-        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 text-center tracking-tight">FAQ</h2>
+        <QuestionIcon className="w-10 h-10 text-white" />
+        <h2 className="text-4xl md:text-5xl font-extrabold text-white text-center tracking-tight">FAQ</h2>
       </div>
       <div className="w-full max-w-2xl mx-auto space-y-6">
         {faqs.map((faq, i) => (
-          <div key={i} className="border border-gray-200 rounded-2xl bg-gradient-to-br from-white to-gray-50 shadow-lg overflow-hidden">
+          <div key={i} className="border border-gray-800/80 rounded-2xl bg-gradient-to-br from-gray-900/80 to-gray-950/60 shadow-lg overflow-hidden">
             <button
               className="w-full flex justify-between items-center px-8 py-6 text-left font-semibold text-lg focus:outline-none group"
               onClick={() => setOpen(open === i ? null : i)}
