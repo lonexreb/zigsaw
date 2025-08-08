@@ -245,7 +245,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
         >
-          Automate your <span className="text-blue-400">social media marketing</span>
+          Social Media <span className="text-blue-400">Content Generation and Posting</span>
         </motion.h1>
         {/* Animated typewriter subheadline */}
         <div className="h-10 md:h-14 flex items-center justify-center mb-6 md:mb-8 min-h-[2.5rem] md:min-h-[3rem]">
