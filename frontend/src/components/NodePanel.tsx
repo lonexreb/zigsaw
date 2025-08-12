@@ -154,6 +154,22 @@ const nodeTypes: NodeType[] = [
     category: 'Tools'
   },
   {
+    id: 'image_upload',
+    label: 'Image Upload',
+    description: 'Upload and process two images for marketing video generation with drag-and-drop support',
+    icon: <Image className="w-5 h-5" />,
+    color: { primary: 'purple', secondary: 'violet', glow: 'purple-400/20' },
+    category: 'Tools'
+  },
+  {
+    id: 'prompt_enhancement',
+    label: 'Prompt Enhancement',
+    description: 'Transform basic prompts into detailed Veo3-compatible JSON specifications for professional video generation',
+    icon: <MessageSquare className="w-5 h-5" />,
+    color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
+    category: 'Tools'
+  },
+  {
     id: 'imagen',
     label: 'Imagen-4 Generator',
     description: 'High-quality image generation using Google\'s Imagen-4',

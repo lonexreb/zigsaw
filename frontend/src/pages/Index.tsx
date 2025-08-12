@@ -56,6 +56,8 @@ import Veo3Node from '../components/nodes/Veo3Node';
 import Blip2Node from '../components/nodes/Blip2Node';
 import TriggerNode from '../components/nodes/TriggerNode';
 import FirecrawlNode from '../components/nodes/FirecrawlNode';
+import ImageUploadNode from '../components/nodes/ImageUploadNode';
+import PromptEnhancementNode from '../components/nodes/PromptEnhancementNode';
 
 import UniversalAgentNode from '../components/nodes/UniversalAgentNode';
 import LoopNode from '../components/nodes/LoopNode';
@@ -120,6 +122,8 @@ const nodeTypes = {
   database: createWrappedNode(DatabaseNode, 'Database'),
   api_connector: createWrappedNode(ApiConnectorNode, 'API Connector'),
   firecrawl: createWrappedNode(FirecrawlNode, 'Firecrawl'),
+  image_upload: createWrappedNode(ImageUploadNode, 'Image Upload'),
+  prompt_enhancement: createWrappedNode(PromptEnhancementNode, 'Prompt Enhancement'),
 };
 
 const initialNodes: Node[] = [
@@ -664,6 +668,8 @@ const WorkflowContent = () => {
       veo3: 'Veo-3 Video Generator',
       blip2: 'BLIP-2 Image Analyzer',
       firecrawl: 'Firecrawl Web Scraper',
+      image_upload: 'Image Upload',
+      prompt_enhancement: 'Prompt Enhancement',
     };
     return labels[type] || type;
   };
@@ -687,6 +693,8 @@ const WorkflowContent = () => {
       veo3: 'Advanced text-to-video generation with Google\'s Veo-3 model via Replicate',
       blip2: 'Advanced image understanding and visual question answering using BLIP-2 via Replicate',
       firecrawl: 'Professional web scraping and crawling with AI-powered content extraction and structured data output',
+      image_upload: 'Upload and process two images for marketing video generation with drag-and-drop support',
+      prompt_enhancement: 'Transform basic prompts into detailed Veo3-compatible JSON specifications for professional video generation',
     };
     return descriptions[type] || 'Node description not available';
   };

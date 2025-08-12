@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Video, Activity, Send, X, Eye, ChevronDown, ChevronUp, Settings, Sparkles } from 'lucide-react';
+import { Video, Activity, Send, X, Eye, ChevronDown, ChevronUp, Settings, Sparkles, Code, Edit3 } from 'lucide-react';
 import { NodeNameHeader } from '../ui/node-name-header';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -17,16 +17,20 @@ interface Veo3NodeProps {
     description: string;
     status: 'idle' | 'running' | 'completed' | 'error';
     inputData?: {
-      prompt?: string;
-      text?: string;
+      prompt?: string;           // Manual input fallback
+      text?: string;            // Legacy support
+      enhanced_json?: any;      // Enhanced JSON from PromptEnhancementNode
+      metadata?: any;           // Metadata from enhancement
+      type?: string;            // Input type indicator
     };
     outputData?: {
-      video_url: string;
-      metadata: {
+      video_url?: string;
+      video_blob?: string;      // Base64 video data
+      metadata?: {
         prompt: string;
-        enhance_prompt?: boolean;
-        negative_prompt?: string;
-        seed?: number;
+        model: string;
+        duration?: string;
+        timestamp?: string;
       };
     };
     onDataOutput?: (data: any) => void;
@@ -37,14 +41,26 @@ interface Veo3NodeProps {
 }
 
 const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
+  // Input handling states
   const [prompt, setPrompt] = useState('');
+  const [enhancedJson, setEnhancedJson] = useState<any>(null);
+  const [convertedPrompt, setConvertedPrompt] = useState('');
+  const [inputSource, setInputSource] = useState<'manual' | 'enhanced_json'>('manual');
+  
+  // Legacy states (kept for backward compatibility)
   const [enhancePrompt, setEnhancePrompt] = useState(false);
   const [negativePrompt, setNegativePrompt] = useState('');
   const [seed, setSeed] = useState<number | undefined>(undefined);
+  
+  // UI states
   const [showPreview, setShowPreview] = useState(false);
   const [isOutputExpanded, setIsOutputExpanded] = useState(false);
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
+  const [isJsonExpanded, setIsJsonExpanded] = useState(false);
+  
+  // Progress states
   const [localStatus, setLocalStatus] = useState<'idle' | 'running' | 'completed' | 'error'>(data.status || 'idle');
+  const [progressStage, setProgressStage] = useState<string>('');
   const [localOutputData, setLocalOutputData] = useState<any>(data.outputData);
 
   // Sync local state with props
@@ -63,13 +79,148 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
   // Handle incoming data from connected nodes
   useEffect(() => {
     if (data.inputData) {
-      if (data.inputData.prompt) {
+      if (data.inputData.enhanced_json) {
+        setEnhancedJson(data.inputData.enhanced_json);
+        setInputSource('enhanced_json');
+        // Convert JSON to readable prompt for preview
+        setConvertedPrompt(convertJsonToPrompt(data.inputData.enhanced_json));
+        setIsJsonExpanded(true); // Auto-expand JSON view
+      } else if (data.inputData.prompt) {
         setPrompt(data.inputData.prompt);
+        setInputSource('manual');
       } else if (data.inputData.text) {
         setPrompt(data.inputData.text);
+        setInputSource('manual');
       }
     }
   }, [data.inputData]);
+
+  // Convert enhanced JSON to natural language prompt (client-side preview)
+  const convertJsonToPrompt = (json: any): string => {
+    if (!json) return '';
+    
+    try {
+      const {
+        shot = {},
+        subject = {},
+        setting = {},
+        action = {},
+        style = {},
+        camera = {},
+        cinematic_controls = {}
+      } = json;
+
+      let prompt = '';
+      
+      // Camera shot and framing
+      if (shot.type) prompt += `${shot.type}`;
+      if (shot.framing) prompt += `, ${shot.framing}`;
+      
+      // Subject
+      if (subject.identity) prompt += ` of ${subject.identity}`;
+      if (subject.appearance) prompt += ` with ${subject.appearance}`;
+      
+      // Setting
+      if (setting.location) prompt += ` in ${setting.location}`;
+      if (setting.lighting) prompt += `, ${setting.lighting} lighting`;
+      
+      // Action
+      if (action.main_action) prompt += `, ${action.main_action}`;
+      
+      // Style and mood
+      if (style.aesthetic) prompt += `, ${style.aesthetic} style`;
+      if (style.mood) prompt += `, ${style.mood} mood`;
+      
+      // Camera work
+      if (camera.movement) prompt += `, ${camera.movement}`;
+      
+      // Technical specs
+      if (cinematic_controls.aspect_ratio) prompt += `, ${cinematic_controls.aspect_ratio} aspect ratio`;
+      if (cinematic_controls.duration) prompt += `, ${cinematic_controls.duration} duration`;
+      
+      return prompt.replace(/^,\s*/, '').trim(); // Clean up leading comma
+    } catch (error) {
+      console.error('Error converting JSON to prompt:', error);
+      return 'Error converting enhanced JSON to prompt';
+    }
+  };
+
+  // Zigsaw Puzzle Progress Animation Component
+  const ZigsawProgress: React.FC<{ stage: string; isAnimating: boolean }> = ({ stage, isAnimating }) => {
+    const pieces = [
+      { id: 1, delay: 0, x: -20, y: -15, rotate: -15 },
+      { id: 2, delay: 0.2, x: 20, y: -15, rotate: 15 },
+      { id: 3, delay: 0.4, x: -20, y: 15, rotate: 10 },
+      { id: 4, delay: 0.6, x: 20, y: 15, rotate: -10 }
+    ];
+
+    return (
+      <div className="flex flex-col items-center space-y-4 py-6">
+        {/* Puzzle Animation Container */}
+        <div className="relative w-16 h-16">
+          {pieces.map((piece) => (
+            <div
+              key={piece.id}
+              className={`absolute w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 border border-orange-400/30 transition-all duration-1000 ease-in-out ${
+                isAnimating 
+                  ? 'opacity-100'
+                  : 'opacity-60'
+              }`}
+              style={{
+                transform: isAnimating 
+                  ? `translate(${piece.x}px, ${piece.y}px) rotate(${piece.rotate}deg) scale(0.9)`
+                  : 'translate(4px, 4px) rotate(0deg) scale(1)',
+                transitionDelay: `${piece.delay}s`,
+                clipPath: piece.id === 1 ? 'polygon(0% 0%, 70% 0%, 85% 50%, 70% 100%, 0% 100%, 15% 50%)' :
+                         piece.id === 2 ? 'polygon(30% 0%, 100% 0%, 85% 50%, 100% 100%, 30% 100%, 15% 50%)' :
+                         piece.id === 3 ? 'polygon(0% 0%, 70% 0%, 85% 50%, 70% 100%, 0% 100%, 15% 50%)' :
+                         'polygon(30% 0%, 100% 0%, 85% 50%, 100% 100%, 30% 100%, 15% 50%)',
+                top: piece.id <= 2 ? '0px' : '50%',
+                left: piece.id % 2 === 1 ? '0px' : '50%',
+              }}
+            >
+              {/* Inner glow effect */}
+              <div className="absolute inset-0 bg-orange-400/20 rounded-sm" />
+              
+              {/* Video icon in center piece */}
+              {piece.id === 1 && !isAnimating && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Video className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </div>
+          ))}
+          
+          {/* Center assembly point */}
+          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
+            !isAnimating ? 'opacity-100' : 'opacity-0'
+          }`}>
+            <div className="w-6 h-6 bg-orange-500/20 rounded-full border border-orange-400/30 flex items-center justify-center">
+              <Video className="w-3 h-3 text-orange-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Text */}
+        <div className="text-center">
+          <div className="text-sm font-medium text-orange-300 mb-1">{stage}</div>
+          <div className="flex space-x-1 justify-center">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  isAnimating 
+                    ? 'bg-orange-400 animate-pulse' 
+                    : 'bg-orange-600/40'
+                }`}
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const getStatusColor = () => {
     switch (localStatus) {
@@ -81,31 +232,68 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
   };
 
   const handleGenerateAndSend = useCallback(async () => {
-    if (!prompt.trim()) {
-      alert('Please enter a prompt for video generation');
+    // Validation based on input source
+    const hasInput = inputSource === 'enhanced_json' 
+      ? enhancedJson 
+      : prompt.trim();
+      
+    if (!hasInput) {
+      alert(inputSource === 'enhanced_json' 
+        ? 'No enhanced JSON data received from previous node' 
+        : 'Please enter a prompt for video generation'
+      );
       return;
     }
 
     setLocalStatus('running');
     data.onStatusChange?.('running');
 
+    // Progress stages with zigsaw animation
+    const stages = [
+      'Parsing JSON specification...',
+      'Converting to video prompt...',
+      'Generating video with Veo 3...',
+      'Finalizing video output...'
+    ];
+    
+    let currentStage = 0;
+    setProgressStage(stages[currentStage]);
+
+    // Simulate stage progression (in real app, backend would provide this)
+    const progressInterval = setInterval(() => {
+      currentStage = (currentStage + 1) % stages.length;
+      setProgressStage(stages[currentStage]);
+    }, 2000);
+
     try {
       const request: Veo3Request = {
-        prompt: prompt.trim(),
-        enhance_prompt: enhancePrompt,
-        negative_prompt: negativePrompt.trim() || undefined,
-        seed: seed
+        enhanced_json: inputSource === 'enhanced_json' ? enhancedJson : undefined,
+        prompt: inputSource === 'enhanced_json' ? undefined : prompt.trim(),
+        model: 'veo-3.0-fast-generate-preview'
       };
 
+      console.log('🎬 Generating video with request:', {
+        inputSource,
+        hasEnhancedJson: !!request.enhanced_json,
+        hasPrompt: !!request.prompt
+      });
+
       const result = await veo3Service.generateVideo(request);
+      clearInterval(progressInterval);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Video generation failed');
+      }
 
       const outputData = {
         video_url: result.video_url,
-        metadata: {
-          prompt: request.prompt,
-          enhance_prompt: request.enhance_prompt,
-          negative_prompt: request.negative_prompt,
-          seed: request.seed,
+        video_blob: result.video_blob,
+        metadata: result.metadata || {
+          prompt: inputSource === 'enhanced_json' ? convertedPrompt : request.prompt,
+          model: request.model,
+          input_source: inputSource,
+          enhanced_json_used: inputSource === 'enhanced_json',
+          timestamp: new Date().toISOString()
         }
       };
 
@@ -117,22 +305,26 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
         data.onDataOutput({
           type: 'video_generated',
           video_url: result.video_url,
-          prompt: request.prompt,
+          video_blob: result.video_blob,
+          prompt: outputData.metadata.prompt,
           metadata: outputData.metadata,
           timestamp: new Date().toISOString()
         });
       }
 
+      setProgressStage('Video generated successfully!');
       setLocalStatus('completed');
       data.onStatusChange?.('completed');
 
     } catch (error) {
+      clearInterval(progressInterval);
       setLocalStatus('error');
       data.onStatusChange?.('error');
+      setProgressStage('Generation failed');
       console.error('Video generation error:', error);
       alert(`Video generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [prompt, enhancePrompt, negativePrompt, seed, data]);
+  }, [prompt, enhancedJson, convertedPrompt, inputSource, data]);
 
   const handleSeedChange = (value: string) => {
     if (value === '') {
@@ -173,22 +365,78 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
 
       {/* Content */}
       <div className="p-4 space-y-4">
-        {/* Prompt Input */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300 block">
-            Video Prompt
-          </label>
-          <Textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe the video you want to generate with Google's Veo-3 model. Example: 'A serene lake at sunset with gentle waves and flying birds'"
-            className="bg-gray-800/50 border-gray-600 text-white min-h-20 resize-none"
-            disabled={localStatus === 'running'}
-          />
-          <div className="text-xs text-gray-400">
-            {prompt.length}/2000 characters
-          </div>
+        {/* Input Source Indicator */}
+        <div className="flex items-center space-x-2 text-xs text-gray-400 bg-gray-800/30 rounded-lg p-2">
+          <div className={`w-2 h-2 rounded-full ${inputSource === 'enhanced_json' ? 'bg-green-400' : 'bg-orange-400'}`} />
+          <span>
+            {inputSource === 'enhanced_json' ? 'Using Enhanced JSON from PromptEnhancementNode' : 'Manual Input Mode'}
+          </span>
         </div>
+
+        {/* Enhanced JSON Section */}
+        {inputSource === 'enhanced_json' && enhancedJson && (
+          <Collapsible open={isJsonExpanded} onOpenChange={setIsJsonExpanded}>
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full flex items-center justify-between text-gray-300 hover:text-white hover:bg-white/5"
+              >
+                <div className="flex items-center space-x-2">
+                  <Code className="w-4 h-4" />
+                  <span>Enhanced JSON Specification</span>
+                </div>
+                {isJsonExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-600">
+                <pre className="text-xs text-green-300 whitespace-pre-wrap max-h-40 overflow-y-auto">
+                  {JSON.stringify(enhancedJson, null, 2)}
+                </pre>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {/* Converted Prompt Section */}
+        {inputSource === 'enhanced_json' && convertedPrompt ? (
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Edit3 className="w-4 h-4 text-gray-300" />
+              <label className="text-sm font-medium text-gray-300">
+                Converted Prompt (Editable)
+              </label>
+            </div>
+            <Textarea
+              value={convertedPrompt}
+              onChange={(e) => setConvertedPrompt(e.target.value)}
+              placeholder="Auto-generated prompt from JSON..."
+              className="bg-gray-800/50 border-gray-600 text-white min-h-20 resize-none"
+              disabled={localStatus === 'running'}
+            />
+            <div className="text-xs text-gray-400">
+              This prompt was generated from your JSON. You can edit it before generation.
+            </div>
+          </div>
+        ) : (
+          /* Manual Prompt Input (shown when no JSON input) */
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300 block">
+              Video Prompt
+            </label>
+            <Textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Describe the video you want to generate with Google's Veo-3 model. Example: 'A serene lake at sunset with gentle waves and flying birds'"
+              className="bg-gray-800/50 border-gray-600 text-white min-h-20 resize-none"
+              disabled={localStatus === 'running'}
+            />
+            <div className="text-xs text-gray-400">
+              {prompt.length}/2000 characters
+            </div>
+          </div>
+        )}
 
         {/* Configuration Panel */}
         <Collapsible open={isConfigExpanded} onOpenChange={setIsConfigExpanded}>
@@ -249,15 +497,29 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
           </CollapsibleContent>
         </Collapsible>
 
+        {/* Progress Section - Show during generation */}
+        {localStatus === 'running' && (
+          <div className="bg-gray-800/30 rounded-lg border border-gray-600">
+            <ZigsawProgress 
+              stage={progressStage} 
+              isAnimating={localStatus === 'running'} 
+            />
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex space-x-2">
           <Button
             onClick={handleGenerateAndSend}
-            disabled={!prompt.trim() || localStatus === 'running'}
+            disabled={
+              (inputSource === 'enhanced_json' && !enhancedJson) || 
+              (inputSource === 'manual' && !prompt.trim()) || 
+              localStatus === 'running'
+            }
             className="flex-1 bg-orange-600 hover:bg-orange-500 text-white disabled:opacity-50"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            {localStatus === 'running' ? 'Generating...' : 'Generate & Send'}
+            {localStatus === 'running' ? 'Generating...' : 'Generate Video'}
           </Button>
 
           {localOutputData && (
@@ -273,18 +535,15 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
         </div>
 
         {/* Status Indicator */}
-        {localStatus !== 'idle' && (
+        {localStatus !== 'idle' && localStatus !== 'running' && (
           <div className="flex items-center space-x-2 text-sm">
             <Activity className={`w-4 h-4 ${
-              localStatus === 'running' ? 'text-blue-400 animate-pulse' :
               localStatus === 'completed' ? 'text-green-400' : 'text-red-400'
             }`} />
             <span className={`${
-              localStatus === 'running' ? 'text-blue-300' :
               localStatus === 'completed' ? 'text-green-300' : 'text-red-300'
             }`}>
-              {localStatus === 'running' ? 'Generating video...' :
-               localStatus === 'completed' ? 'Video generated successfully' : 'Generation failed'}
+              {localStatus === 'completed' ? 'Video generated successfully' : 'Generation failed'}
             </span>
           </div>
         )}
