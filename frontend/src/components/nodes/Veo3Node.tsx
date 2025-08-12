@@ -339,7 +339,9 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
 
   return (
     <div 
-      className={`bg-gray-900/90 backdrop-blur-xl border-2 rounded-2xl shadow-2xl transition-all duration-300 w-80 ${getStatusColor()} ${
+      className={`bg-gray-900/90 backdrop-blur-xl border-2 rounded-2xl shadow-2xl transition-all duration-300 ${
+        localOutputData ? 'w-96' : 'w-80'  // Auto-expand when video is generated
+      } ${getStatusColor()} ${
         selected ? 'ring-2 ring-orange-400/50 ring-offset-2 ring-offset-gray-900' : ''
       }`}
     >
