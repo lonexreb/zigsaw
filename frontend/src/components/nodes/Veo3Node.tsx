@@ -575,8 +575,14 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
                     controls
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                      console.log('🎥 Video load error, trying HTTP serving fallback...');
+                      // Try HTTP serving fallback if file:// URL fails
+                      if (localOutputData.video_file_path && !e.currentTarget.src.includes('/api/videos/serve')) {
+                        e.currentTarget.src = `/api/videos/serve?path=${encodeURIComponent(localOutputData.video_file_path)}`;
+                      } else {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling.style.display = 'flex';
+                      }
                     }}
                   />
                   <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
@@ -648,6 +654,13 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
                   src={localOutputData.video_url} 
                   controls
                   className="max-w-full max-h-96 rounded-lg shadow-lg"
+                  onError={(e) => {
+                    console.log('🎥 Preview video load error, trying HTTP serving fallback...');
+                    // Try HTTP serving fallback if file:// URL fails
+                    if (localOutputData.video_file_path && !e.currentTarget.src.includes('/api/videos/serve')) {
+                      e.currentTarget.src = `/api/videos/serve?path=${encodeURIComponent(localOutputData.video_file_path)}`;
+                    }
+                  }}
                 />
               </div>
             </div>

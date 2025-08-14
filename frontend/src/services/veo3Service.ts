@@ -9,14 +9,19 @@ export interface Veo3Request {
 
 export interface Veo3Response {
   success: boolean;
-  video_url?: string;               // Blob URL for video display
-  video_blob?: string;              // Base64 encoded video data
+  video_url?: string;               // File URL or HTTP URL for video display
+  video_file_path?: string;         // Local file path (for reference)
+  video_file_name?: string;         // Just the filename
+  video_blob?: string;              // Base64 encoded video data (legacy)
   error?: string;
   metadata?: {
     prompt: string;
     model: string;
     duration: string;
     timestamp: string;
+    fileSize?: number;
+    localPath?: string;
+    videoId?: string;
   };
 }
 
@@ -26,7 +31,7 @@ export const veo3Service = {
       console.log('🎬 Calling backend for Veo 3 video generation:', {
         hasEnhancedJson: !!request.enhanced_json,
         hasPrompt: !!request.prompt,
-        model: request.model || 'veo-3.0-fast-generate-preview'
+        model: request.model || 'veo-3.0-generate-preview'
       });
 
       const response = await fetch('/api/veo3/generate', {
@@ -37,7 +42,7 @@ export const veo3Service = {
         body: JSON.stringify({
           enhanced_json: request.enhanced_json,
           prompt: request.prompt,
-          model: request.model || 'veo-3.0-fast-generate-preview'
+          model: request.model || 'veo-3.0-generate-preview'
         }),
       });
 
@@ -51,11 +56,26 @@ export const veo3Service = {
         throw new Error(data.error || 'Video generation failed');
       }
 
-      // Convert base64 video to blob URL for display
-      let videoUrl = '';
-      if (data.video_blob) {
+      console.log('📹 Video generation response:', {
+        hasVideoUrl: !!data.video_url,
+        hasFilePath: !!data.video_file_path,
+        hasFileName: !!data.video_file_name,
+        hasVideoBlob: !!data.video_blob
+      });
+
+      // Primary: Use file URL if available
+      let videoUrl = data.video_url;
+      
+      // Fallback: If file URL doesn't work, create HTTP serving URL
+      if (data.video_file_path && !videoUrl) {
+        videoUrl = `/api/videos/serve?path=${encodeURIComponent(data.video_file_path)}`;
+        console.log('🔄 Using HTTP serving fallback:', videoUrl);
+      }
+      
+      // Legacy fallback: Convert base64 to blob URL if available
+      if (!videoUrl && data.video_blob) {
         try {
-          // Convert base64 to blob
+          console.log('🔄 Converting base64 to blob URL as fallback...');
           const binaryString = atob(data.video_blob);
           const bytes = new Uint8Array(binaryString.length);
           for (let i = 0; i < binaryString.length; i++) {
@@ -71,9 +91,17 @@ export const veo3Service = {
         }
       }
 
+      if (!videoUrl) {
+        throw new Error('No video URL available from any method');
+      }
+
+      console.log('✅ Final video URL:', videoUrl);
+
       return {
         success: true,
         video_url: videoUrl,
+        video_file_path: data.video_file_path,
+        video_file_name: data.video_file_name,
         video_blob: data.video_blob,
         metadata: data.metadata
       };
