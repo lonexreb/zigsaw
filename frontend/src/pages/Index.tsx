@@ -17,7 +17,7 @@ import {
   NodeTypes,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Activity, Zap, Database, Workflow, X, Github, Bot, Layers } from 'lucide-react';
+import { Activity, Zap, Database, Workflow, X, Github, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MetricsPanel from '../components/MetricsPanel';
 import { ChatWorkflowAssistant } from '../components/ChatWorkflowAssistant';
@@ -27,41 +27,20 @@ import DeploymentModal from '../components/DeploymentModal';
 import MultiWorkflowProgress from '../components/MultiWorkflowProgress';
 import { workflowExecutionService, WorkflowExecutionUpdate } from '../services/workflowExecutionService';
 import { detectWorkflows } from '../lib/utils';
-import GroqLlamaNode from '../components/nodes/GroqLlamaNode';
 import NaturalLanguageWorkflowCreator from '../components/NaturalLanguageWorkflowCreator';
 
-
-
-
-
-import DocumentNode from '../components/nodes/DocumentNode';
 import HumanInTheLoopNode from '../components/nodes/HumanInTheLoopNode';
-import { DatabaseNode } from '../components/nodes/DatabaseNode'
-import { ApiConnectorNode } from '../components/nodes/ApiConnectorNode'
-
-
-
 
 import { ThemeProvider, useTheme } from '../components/theme/ThemeProvider'
 
 import { useNavigate } from 'react-router-dom';
-import GmailNode from '../components/nodes/GmailNode';
-import GmailLabelEmailNode from '../components/nodes/GmailLabelEmailNode';
-import GmailDraftReplyNode from '../components/nodes/GmailDraftReplyNode';
 import { workflowPersistenceService, WorkflowConfig } from '../services/workflowPersistenceService';
-import GoogleCalendarNode from '../components/nodes/GoogleCalendarNode';
-import WhisperNode from '../components/nodes/WhisperNode';
-import ImagenNode from '../components/nodes/ImagenNode';
 import Veo3Node from '../components/nodes/Veo3Node';
 import Blip2Node from '../components/nodes/Blip2Node';
-import TriggerNode from '../components/nodes/TriggerNode';
 import FirecrawlNode from '../components/nodes/FirecrawlNode';
 import ImageUploadNode from '../components/nodes/ImageUploadNode';
 import PromptEnhancementNode from '../components/nodes/PromptEnhancementNode';
 
-import UniversalAgentNode from '../components/nodes/UniversalAgentNode';
-import LoopNode from '../components/nodes/LoopNode';
-import RouterNode from '../components/nodes/RouterNode';
 import { UniversalNodeWrapper } from '../components/ui/universal-node-wrapper';
 import NetworkingTab from '../components/NetworkingTab';
 import { NetworkAnalyticsProvider } from '../contexts/NetworkAnalyticsContext';
@@ -79,7 +58,7 @@ import { auth as firebaseAuth } from '@/lib/firebase';
 import { WorkflowHeader } from '../components/workflow/WorkflowHeader'
 import { WorkflowCanvas } from '../components/workflow/WorkflowCanvas'
 import { WorkflowProvider } from '../contexts/WorkflowContext';
-import WorkflowTemplatesPanel from '../components/WorkflowTemplatesPanel';
+
 
 async function getAuthToken(): Promise<string | null> {
   const user = firebaseAuth.currentUser;
@@ -104,23 +83,9 @@ const createWrappedNode = (OriginalNode: React.ComponentType<any>, nodeTypeName:
 };
 
 const nodeTypes = {
-  groqllama: createWrappedNode(GroqLlamaNode, 'Groq Llama'),
-  universal_agent: createWrappedNode(UniversalAgentNode, 'Universal Agent'),
-  router: createWrappedNode(RouterNode, 'Router'),
-  document: createWrappedNode(DocumentNode, 'Document'),
-  trigger: createWrappedNode(TriggerNode, 'Trigger'),
-  loop: createWrappedNode(LoopNode, 'Loop'),
-  gmail: createWrappedNode(GmailNode, 'Gmail'),
-  gmail_label_email: createWrappedNode(GmailLabelEmailNode, 'Gmail Label Email'),
-  gmail_draft_reply: createWrappedNode(GmailDraftReplyNode, 'Gmail Draft Reply'),
-  google_calendar: createWrappedNode(GoogleCalendarNode, 'Google Calendar'),
-  whisper: createWrappedNode(WhisperNode, 'Whisper'),
-  imagen: createWrappedNode(ImagenNode, 'Imagen'),
   veo3: createWrappedNode(Veo3Node, 'Veo3'),
   blip2: createWrappedNode(Blip2Node, 'Blip2'),
   human_in_loop: createWrappedNode(HumanInTheLoopNode, 'Human in the Loop'),
-  database: createWrappedNode(DatabaseNode, 'Database'),
-  api_connector: createWrappedNode(ApiConnectorNode, 'API Connector'),
   firecrawl: createWrappedNode(FirecrawlNode, 'Firecrawl'),
   image_upload: createWrappedNode(ImageUploadNode, 'Image Upload'),
   prompt_enhancement: createWrappedNode(PromptEnhancementNode, 'Prompt Enhancement'),
@@ -128,38 +93,26 @@ const nodeTypes = {
 
 const initialNodes: Node[] = [
   {
-    id: 'trigger-1',
-    type: 'trigger',
+    id: 'image-upload-1',
+    type: 'image_upload',
     position: { x: 100, y: 100 },
     data: { 
-      label: 'Trigger Node',
-      description: 'Initiate workflows based on events',
+      label: 'Image Upload',
+      description: 'Upload and process two images for marketing video generation',
       status: 'idle',
       outputData: undefined,
       onShowOutputData: () => {},
     },
   },
   {
-    id: 'document-1',
-    type: 'document',
+    id: 'prompt-enhancement-1',
+    type: 'prompt_enhancement',
     position: { x: 400, y: 100 },
     data: { 
-      label: 'Document Node',
-      description: 'Upload and process PDF documents',
+      label: 'Prompt Enhancement',
+      description: 'Transform basic prompts into detailed Veo3-compatible JSON specifications',
       status: 'idle',
       outputData: undefined,
-    },
-  },
-  {
-    id: 'universal-agent-1',
-    type: 'universal_agent',
-    position: { x: 700, y: 100 },
-    data: { 
-      label: 'Universal Agent',
-      description: 'Advanced AI agent supporting multiple providers (Claude, GPT, Groq) with extensible tool integration, dynamic configuration, and intelligent workflow automation capabilities',
-      status: 'idle',
-      outputData: undefined,
-      onShowOutputData: () => {},
     },
   },
 ];
@@ -350,7 +303,7 @@ const WorkflowContent = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   // Metrics are now handled by MetricsPanel component directly
   const [isNodePanelOpen, setIsNodePanelOpen] = useState(true);
-  const [isTemplatesPanelOpen, setIsTemplatesPanelOpen] = useState(false);
+
   const [nodeIdCounter, setNodeIdCounter] = useState(2);
   const [isWorkflowLoaded, setIsWorkflowLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState('workflow');
@@ -935,77 +888,7 @@ const WorkflowContent = () => {
     }
   };
 
-  const handleTestPost = async () => {
-    // Define default configs for agent node types
-    const defaultConfigs: Record<string, any> = {
-      universal_agent: {
-        provider: 'anthropic',
-        model: 'claude-3-5-sonnet',
-        temperature: 0.7,
-        maxTokens: 1000,
-        systemPrompt: 'You are a helpful AI assistant with access to various tools. Use them appropriately to help the user.',
-        messages: [
-          { role: 'user', content: 'Hello! How can I help you today?', timestamp: new Date() }
-        ],
-        tools: [],
-        toolPresets: [],
-        streamResponse: true,
-        autoRetry: true,
-        retryCount: 3,
-        timeout: 30000,
-      },
-      groqllama: {
-        model: 'llama-3.1-8b-instant',
-        temperature: 0.7,
-        max_tokens: 1000,
-        system_prompt: 'You are a helpful AI assistant.',
-        user_prompt: '',
-      },
-      // Add more agent node types and their defaults as needed
-    }
 
-    const agentNodeTypes = Object.keys(defaultConfigs)
-    // Only include nodes with a defined string type
-    const agentConfigs = nodes
-      .filter(node => typeof node.type === 'string' && agentNodeTypes.includes(node.type))
-      .map(node => {
-        const type = node.type as string
-        const defaults = defaultConfigs[type] || {}
-        const config = { ...defaults, ...(node.data?.config || {}) }
-        return {
-          id: node.id,
-          type,
-          config,
-        }
-      })
-
-    // Use environment variable or fallback to Vercel backend
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://zigsaw-backend.vercel.app'
-    const apiEndpoint = `${backendUrl.replace(/\/$/, '')}/api/workflow/execute`
-
-    try {
-      console.log(`🚀 Testing POST to: ${apiEndpoint}`)
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workflow: { nodes, edges },
-          agentConfigs,
-        }),
-      })
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data = await response.json()
-      console.log('✅ Test POST successful:', data)
-      alert('Test POST response:\n' + JSON.stringify(data, null, 2))
-    } catch (error) {
-      console.error('❌ Test POST failed:', error)
-      alert('Test POST failed: ' + (error instanceof Error ? error.message : String(error)))
-    }
-  }
 
   // Universal animated edges with special cases
   const computedEdges = useMemo(() => {
@@ -1140,7 +1023,7 @@ const WorkflowContent = () => {
           handleRunWorkflow={handleRunWorkflow}
           handleOpenDeployment={handleOpenDeployment}
           signOut={signOut}
-          onTestPost={handleTestPost}
+  
         />
 
         {/* Tab Content Panel */}
@@ -1497,33 +1380,8 @@ const WorkflowContent = () => {
 
     {/* Floating Node Panel Toggle Button */}
     <AnimatePresence>
-      {!isTemplatesPanelOpen && !isNodePanelOpen && activeTab !== 'knowledge-graph' && activeTab !== 'networking' && (
-        <motion.button
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -100, opacity: 0 }}
-          transition={{ duration: 0.3, type: "spring", damping: 25 }}
-          onClick={() => setIsTemplatesPanelOpen(true)}
-          whileHover={{ 
-            scale: 1.1, 
-            boxShadow: isDark ? "0 0 25px rgba(168, 85, 247, 0.4)" : "0 0 25px rgba(236, 72, 153, 0.4)",
-            x: 10
-          }}
-          whileTap={{ scale: 0.9 }}
-          className={`fixed left-4 top-[calc(50%-80px)] z-50 p-4 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 backdrop-blur-xl border shadow-2xl bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white border-purple-500/40`}
-        >
-          <Layers className="w-6 h-6" />
-          <motion.div
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            transition={{ delay: 0.1 }}
-            className="overflow-hidden"
-          >
-            <span className="whitespace-nowrap">Templates</span>
-          </motion.div>
-        </motion.button>
-      )}
-      {!isTemplatesPanelOpen && !isNodePanelOpen && activeTab !== 'knowledge-graph' && activeTab !== 'networking' && (
+
+      {!isNodePanelOpen && activeTab !== 'knowledge-graph' && activeTab !== 'networking' && (
         <motion.button
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -1682,130 +1540,7 @@ const WorkflowContent = () => {
       </AlertDialog>
     )}
 
-    {/* Workflow Templates Panel */}
-    <WorkflowTemplatesPanel 
-      isOpen={isTemplatesPanelOpen} 
-      onToggle={() => setIsTemplatesPanelOpen(false)} 
-      isDark={isDark} 
-      onTemplateSelect={template => {
-        // Map template id to a more complex workflow (nodes/edges)
-        let nodes: any[] = []
-        let edges: any[] = []
-        if (template.id === 'email-summary') {
-          nodes = [
-            {
-              id: 'trigger-1',
-              type: 'trigger',
-              position: { x: 100, y: 100 },
-              data: { label: 'When email received', description: 'Trigger on new email', status: 'idle' }
-            },
-            {
-              id: 'document-1',
-              type: 'document',
-              position: { x: 350, y: 100 },
-              data: { label: 'Summarize Email', description: 'Summarize email content', status: 'idle' }
-            },
-            {
-              id: 'slack-1',
-              type: 'universal_agent',
-              position: { x: 600, y: 100 },
-              data: { label: 'Send to Slack', description: 'Send summary to Slack', status: 'idle' }
-            }
-          ]
-          edges = [
-            { id: 'e1', source: 'trigger-1', target: 'document-1' },
-            { id: 'e2', source: 'document-1', target: 'slack-1' }
-          ]
-        } else if (template.id === 'calendar-digest') {
-          nodes = [
-            {
-              id: 'trigger-2',
-              type: 'trigger',
-              position: { x: 100, y: 100 },
-              data: { label: 'Daily Trigger', description: 'Every day at 8am', status: 'idle' }
-            },
-            {
-              id: 'calendar-1',
-              type: 'document',
-              position: { x: 350, y: 100 },
-              data: { label: 'Get Events', description: 'Fetch today\'s events', status: 'idle' }
-            },
-            {
-              id: 'summary-1',
-              type: 'document',
-              position: { x: 600, y: 100 },
-              data: { label: 'Summarize', description: 'Summarize events', status: 'idle' }
-            },
-            {
-              id: 'slack-2',
-              type: 'universal_agent',
-              position: { x: 850, y: 100 },
-              data: { label: 'Send to Slack', description: 'Send digest to Slack', status: 'idle' }
-            }
-          ]
-          edges = [
-            { id: 'e1', source: 'trigger-2', target: 'calendar-1' },
-            { id: 'e2', source: 'calendar-1', target: 'summary-1' },
-            { id: 'e3', source: 'summary-1', target: 'slack-2' }
-          ]
-        } else if (template.id === 'notion-task') {
-          nodes = [
-            {
-              id: 'trigger-3',
-              type: 'trigger',
-              position: { x: 100, y: 100 },
-              data: { label: 'When Slack message', description: 'Trigger on new Slack message', status: 'idle' }
-            },
-            {
-              id: 'notion-1',
-              type: 'universal_agent',
-              position: { x: 350, y: 100 },
-              data: { label: 'Create Notion Task', description: 'Create task in Notion', status: 'idle' }
-            }
-          ]
-          edges = [
-            { id: 'e1', source: 'trigger-3', target: 'notion-1' }
-          ]
-        } else if (template.id === 'auto-reply') {
-          nodes = [
-            {
-              id: 'trigger-4',
-              type: 'trigger',
-              position: { x: 100, y: 100 },
-              data: { label: 'When email received', description: 'Trigger on new email', status: 'idle' }
-            },
-            {
-              id: 'reply-1',
-              type: 'universal_agent',
-              position: { x: 350, y: 100 },
-              data: { label: 'Auto Reply', description: 'Send auto-reply', status: 'idle' }
-            }
-          ]
-          edges = [
-            { id: 'e1', source: 'trigger-4', target: 'reply-1' }
-          ]
-        } else {
-          // fallback: single node
-          nodes = [
-            {
-              id: `template-${template.id}-${Date.now()}`,
-              type: 'document',
-              position: { x: 200, y: 200 },
-              data: {
-                label: template.name,
-                description: template.description,
-                status: 'idle',
-                outputData: undefined,
-              },
-            },
-          ]
-          edges = []
-        }
-        setNodes(nodes)
-        setEdges(edges)
-        setIsTemplatesPanelOpen(false)
-      }}
-    />
+
 
   </div>
 );

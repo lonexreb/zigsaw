@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Logo from '../Logo'
-import { Sun, Moon, Settings, Rocket, LogOut, Crown, Play, Square, Save, Zap, ZapOff, User } from 'lucide-react'
+import { Sun, Moon, Settings, Rocket, LogOut, Play, Square, Save, Zap, ZapOff, User } from 'lucide-react'
 import TabBar from '../TabBar'
 import TierIndicator from '../TierIndicator'
 import { useTheme } from '../theme/ThemeProvider'
 import { Settings as SettingsIcon } from 'lucide-react'
-import WorkflowTemplatesPanel from '../WorkflowTemplatesPanel'
+
 import { Layers } from 'lucide-react'
 import { AuthStatusIndicator } from '../AuthStatusIndicator'
 import { useGmailAuth } from '../../hooks/useGmailAuth'
@@ -25,7 +25,7 @@ interface WorkflowHeaderProps {
   handleRunWorkflow: () => void
   handleOpenDeployment: () => void
   signOut: () => void
-  onTestPost: () => void
+
 }
 
 export function WorkflowHeader({
@@ -41,8 +41,7 @@ export function WorkflowHeader({
   nodes,
   handleRunWorkflow,
   handleOpenDeployment,
-  signOut,
-  onTestPost
+  signOut
 }: WorkflowHeaderProps) {
   const { backgroundEffectsEnabled, setBackgroundEffectsEnabled } = useTheme()
   
@@ -80,21 +79,6 @@ export function WorkflowHeader({
         </div>
         {/* Center: Main Action Buttons (truly centered) */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2 z-10">
-          {/* Buy Premium Button */}
-          <motion.button
-            onClick={() => navigate('/subscription')}
-            whileHover={{ scale: 1.07, boxShadow: isDark ? "0 0 24px 0 #facc15cc" : "0 0 24px 0 #fbbf24cc" }}
-            whileTap={{ scale: 0.96 }}
-            className={`px-2 py-1 rounded-lg transition-all duration-300 backdrop-blur-sm border shadow-lg flex items-center gap-2 font-semibold text-xs shiny-premium-btn ${
-              isDark 
-                ? 'bg-gradient-to-r from-yellow-600/80 to-orange-600/80 hover:from-yellow-500/90 hover:to-orange-500/90 text-white border-yellow-500/30' 
-                : 'bg-gradient-to-r from-yellow-500/80 to-orange-500/80 hover:from-yellow-400/90 hover:to-orange-400/90 text-white border-yellow-400/50'
-            }`}
-            title="Upgrade your plan"
-          >
-            <Crown className="w-4 h-4" />
-            <span className="shiny-premium-text">Upgrade</span>
-          </motion.button>
           {/* Manual Save Button - Debug Only */}
           <motion.button
             onClick={handleManualSave}
@@ -133,21 +117,6 @@ export function WorkflowHeader({
             >
               {isWorkflowExecuting ? <Square className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </motion.div>
-          </motion.button>
-          {/* Test POST Button */}
-          <motion.button
-            onClick={onTestPost}
-            whileHover={{ scale: 1.05, boxShadow: isDark ? "0 0 20px rgba(59, 130, 246, 0.4)" : "0 0 20px rgba(59, 130, 246, 0.4)" }}
-            whileTap={{ scale: 0.95 }}
-            className={`px-2 py-1 rounded-lg font-medium text-xs transition-all duration-300 flex items-center space-x-1 backdrop-blur-sm border shadow-lg ${
-              isDark
-                ? 'bg-gradient-to-r from-blue-500/80 to-blue-600/80 hover:from-blue-400/90 hover:to-blue-500/90 text-white border-blue-400/30'
-                : 'bg-gradient-to-r from-blue-600/80 to-blue-700/80 hover:from-blue-500/90 hover:to-blue-600/90 text-white border-blue-500/50'
-            }`}
-            title="Test Run"
-          >
-            <Play className="w-4 h-4" />
-            <span className="hidden sm:inline">Test Run</span>
           </motion.button>
         </div>
         {/* Right: Auth Status, Theme, Settings, Account, Sign Out */}

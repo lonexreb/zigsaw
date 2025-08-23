@@ -2,27 +2,15 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scrollbars } from 'react-custom-scrollbars-2';
 import { 
-  Cpu, 
-  Zap, 
-  Bot, 
-  FileText, 
   Image, 
   MessageSquare, 
   Search,
   ChevronDown,
-  Plus,
-  Mic,
-  GitBranch,
-  Calendar,
-  Video,
-  Repeat,
-  Tag,
-  Mail,
-  UserCheck,
   ChevronRight,
-  Layers,
+  Plus,
+  Video,
+  UserCheck,
   Wrench,
-  Database,
   Globe} from 'lucide-react';
 
 interface NodeType {
@@ -40,119 +28,7 @@ interface NodeType {
 }
 
 const nodeTypes: NodeType[] = [
-  // TRIGGER NODES - Event-Based
-  // Removed all trigger nodes
-
-  // ACTION NODES - Perform a Task
-  // Removed all action nodes
-
-  // NODES - Core Workflow Components
-  {
-    id: 'trigger',
-    label: 'Trigger Node',
-    description: 'Initiate workflows based on events',
-    icon: <Zap className="w-5 h-5" />, 
-    color: { primary: 'yellow', secondary: 'orange', glow: 'yellow-400/20' },
-    category: 'Nodes'
-  },
-  {
-    id: 'universal_agent',
-    label: 'Universal Agent',
-    description: 'Multi-provider AI agent with tool integration',
-    icon: <Bot className="w-5 h-5" />, 
-    color: { primary: 'purple', secondary: 'violet', glow: 'purple-400/20' },
-    category: 'Nodes'
-  },
-  {
-    id: 'router',
-    label: 'Router Node',
-    description: 'AI-powered routing for dynamic workflow paths',
-    icon: <GitBranch className="w-5 h-5" />, 
-    color: { primary: 'purple', secondary: 'indigo', glow: 'purple-400/20' },
-    category: 'Nodes'
-  },
-  {
-    id: 'loop',
-    label: 'Loop Node',
-    description: 'Repeat a sub-workflow for each item in a list',
-    icon: <Repeat className="w-5 h-5" />, 
-    color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
-    category: 'Nodes'
-  },
-  {
-    id: 'document',
-    label: 'Document Processor',
-    description: 'Parse and process documents',
-    icon: <FileText className="w-5 h-5" />, 
-    color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
-    category: 'Nodes'
-  },
-  {
-    id: 'groqllama',
-    label: 'Groq Llama',
-    description: 'Ultra-fast LLM inference',
-    icon: <Cpu className="w-5 h-5" />, 
-    color: { primary: 'purple', secondary: 'violet', glow: 'purple-400/20' },
-    category: 'Nodes'
-  },
-  {
-    id: 'database',
-    label: 'Database Node',
-    description: 'Query and manage tabular data',
-    icon: <Database className="w-5 h-5" />, 
-    color: { primary: 'blue', secondary: 'cyan', glow: 'blue-400/20' },
-    category: 'Nodes'
-  },
-  {
-    id: 'api_connector',
-    label: 'API Connector',
-    description: 'Connect to any HTTP API endpoint',
-    icon: <Globe className="w-5 h-5" />, 
-    color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
-    category: 'Nodes'
-  },
-
   // TOOLS - Integrations & Utilities
-  {
-    id: 'gmail',
-    label: 'Gmail API',
-    description: 'Gmail integration and email management',
-    icon: <MessageSquare className="w-5 h-5" />,
-    color: { primary: 'red', secondary: 'blue', glow: 'red-400/20' },
-    category: 'Tools'
-  },
-  {
-    id: 'gmail_label_email',
-    label: 'Gmail Label Email',
-    description: 'Add or remove labels from emails automatically',
-    icon: <Tag className="w-5 h-5" />,
-    color: { primary: 'red', secondary: 'orange', glow: 'red-400/20' },
-    category: 'Tools'
-  },
-  {
-    id: 'gmail_draft_reply',
-    label: 'Gmail Draft Reply',
-    description: 'Create automated draft replies to emails',
-    icon: <Mail className="w-5 h-5" />,
-    color: { primary: 'blue', secondary: 'red', glow: 'blue-400/20' },
-    category: 'Tools'
-  },
-  {
-    id: 'google_calendar',
-    label: 'Google Calendar',
-    description: 'Google Calendar integration and event management',
-    icon: <Calendar className="w-5 h-5" />,
-    color: { primary: 'blue', secondary: 'green', glow: 'blue-400/20' },
-    category: 'Tools'
-  },
-  {
-    id: 'whisper',
-    label: 'Whisper Transcription',
-    description: 'AI-powered audio transcription using OpenAI Whisper',
-    icon: <Mic className="w-5 h-5" />,
-    color: { primary: 'purple', secondary: 'indigo', glow: 'purple-400/20' },
-    category: 'Tools'
-  },
   {
     id: 'image_upload',
     label: 'Image Upload',
@@ -167,14 +43,6 @@ const nodeTypes: NodeType[] = [
     description: 'Transform basic prompts into detailed Veo3-compatible JSON specifications for professional video generation',
     icon: <MessageSquare className="w-5 h-5" />,
     color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
-    category: 'Tools'
-  },
-  {
-    id: 'imagen',
-    label: 'Imagen-4 Generator',
-    description: 'High-quality image generation using Google\'s Imagen-4',
-    icon: <Image className="w-5 h-5" />,
-    color: { primary: 'pink', secondary: 'rose', glow: 'pink-400/20' },
     category: 'Tools'
   },
   {
@@ -376,9 +244,6 @@ const CategorySection: React.FC<CategorySectionProps> = ({
 
 const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [triggerExpanded, setTriggerExpanded] = useState(true);
-  const [actionExpanded, setActionExpanded] = useState(true);
-  const [nodesExpanded, setNodesExpanded] = useState(true);
   const [toolsExpanded, setToolsExpanded] = useState(true);
 
   // onDragStart should use node.id as the nodeType
@@ -387,25 +252,8 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
     event.dataTransfer.effectAllowed = 'move'
   }
 
-  // Split nodeTypes into categories
-  const triggerNodes = nodeTypes.filter(node => node.category === 'Trigger Nodes');
-  const actionNodes = nodeTypes.filter(node => node.category === 'Action Nodes');
-  const nodeNodes = nodeTypes.filter(node => node.category === 'Nodes');
-  const toolNodes = nodeTypes.filter(node => node.category === 'Tools');
-
-  const filteredTriggerNodes = triggerNodes.filter(node =>
-    node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    node.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const filteredActionNodes = actionNodes.filter(node =>
-    node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    node.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const filteredNodeNodes = nodeNodes.filter(node =>
-    node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    node.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const filteredToolNodes = toolNodes.filter(node =>
+  // Filter tools based on search term
+  const filteredToolNodes = nodeTypes.filter(node =>
     node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
     node.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -514,7 +362,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search nodes and tools..."
+            placeholder="Search tools..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full border rounded-lg py-3 pl-10 pr-4 text-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 ${
@@ -537,20 +385,9 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
           autoHideDuration={200}
         >
           <div className="p-4 space-y-4">
-            {/* Nodes Category */}
-            <CategorySection
-              title="Workflow Nodes"
-              icon={<Layers className="w-4 h-4" />}
-              nodes={filteredNodeNodes}
-              colorTheme="blue"
-              isOpen={nodesExpanded}
-              onToggle={() => setNodesExpanded(!nodesExpanded)}
-              isDark={isDark}
-              onDragStart={onDragStart}
-            />
             {/* Tools Category */}
             <CategorySection
-              title="Integration Tools"
+              title="Available Tools"
               icon={<Wrench className="w-4 h-4" />}
               nodes={filteredToolNodes}
               colorTheme="green"
@@ -560,7 +397,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
               onDragStart={onDragStart}
             />
             {/* Empty State */}
-            {filteredNodeNodes.length === 0 && filteredToolNodes.length === 0 && searchTerm && (
+            {filteredToolNodes.length === 0 && searchTerm && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -583,8 +420,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ isOpen, onToggle, isDark = true }
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <span>{filteredNodeNodes.length} Nodes</span>
-        <span>{filteredToolNodes.length} Tools</span>
+        <span>{filteredToolNodes.length} Tools Available</span>
       </motion.div>
     </motion.div>
   );
