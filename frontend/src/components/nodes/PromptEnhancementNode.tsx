@@ -120,7 +120,7 @@ const DEFAULT_JSON_TEMPLATE = {
   }
 };
 
-const VIDEO_ENHANCEMENT_SYSTEM_PROMPT = `You are an expert video generation specialist for creating Instagram Reel marketing videos. Your task is to transform user prompts into detailed, structured JSON specifications for Veo3 video generation.
+const VIDEO_ENHANCEMENT_SYSTEM_PROMPT = `You are an expert video generation specialist for creating Instagram Reel marketing videos. Your task is to transform user prompts into detailed, structured JSON specifications for video generation.
 
 CRITICAL REQUIREMENTS:
 1. Output ONLY valid JSON - no other text before or after
@@ -538,7 +538,7 @@ const PromptEnhancementNode: React.FC<PromptEnhancementNodeProps> = ({ id, data,
                   className="w-full bg-green-600 hover:bg-green-500 text-white"
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  Send to Veo3
+                  Send to Next Node
                 </Button>
               </div>
             </CollapsibleContent>

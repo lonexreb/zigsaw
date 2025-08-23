@@ -35,7 +35,7 @@ import { ThemeProvider, useTheme } from '../components/theme/ThemeProvider'
 
 import { useNavigate } from 'react-router-dom';
 import { workflowPersistenceService, WorkflowConfig } from '../services/workflowPersistenceService';
-import Veo3Node from '../components/nodes/Veo3Node';
+
 import Blip2Node from '../components/nodes/Blip2Node';
 import FirecrawlNode from '../components/nodes/FirecrawlNode';
 import ImageUploadNode from '../components/nodes/ImageUploadNode';
@@ -84,7 +84,6 @@ const createWrappedNode = (OriginalNode: React.ComponentType<any>, nodeTypeName:
 };
 
 const nodeTypes = {
-  veo3: createWrappedNode(Veo3Node, 'Veo3'),
   blip2: createWrappedNode(Blip2Node, 'Blip2'),
   human_in_loop: createWrappedNode(HumanInTheLoopNode, 'Human in the Loop'),
   firecrawl: createWrappedNode(FirecrawlNode, 'Firecrawl'),
@@ -112,7 +111,7 @@ const initialNodes: Node[] = [
     position: { x: 400, y: 100 },
     data: { 
       label: 'Prompt Enhancement',
-      description: 'Transform basic prompts into detailed Veo3-compatible JSON specifications',
+      description: 'Transform basic prompts into detailed JSON specifications for video generation',
       status: 'idle',
       outputData: undefined,
     },

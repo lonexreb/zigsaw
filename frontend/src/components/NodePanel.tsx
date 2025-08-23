@@ -40,19 +40,12 @@ const nodeTypes: NodeType[] = [
   {
     id: 'prompt_enhancement',
     label: 'Prompt Enhancement',
-    description: 'Transform basic prompts into detailed Veo3-compatible JSON specifications for professional video generation',
+    description: 'Transform basic prompts into detailed JSON specifications for professional video generation',
     icon: <MessageSquare className="w-5 h-5" />,
     color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
     category: 'Tools'
   },
-  {
-    id: 'veo3',
-    label: 'Veo-3 Video Generator',
-    description: 'Advanced text-to-video generation with Google\'s Veo-3 model via Replicate',
-    icon: <Video className="w-5 h-5" />,
-    color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
-    category: 'Tools'
-  },
+
   {
     id: 'blip2',
     label: 'BLIP-2 Image Analyzer',
