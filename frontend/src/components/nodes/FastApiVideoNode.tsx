@@ -70,6 +70,8 @@ const FastApiVideoNode: React.FC<FastApiVideoNodeProps> = ({ id, data, selected 
       return;
     }
 
+
+
     setLocalStatus('running');
     data.onStatusChange?.('running');
 
@@ -289,6 +291,38 @@ const FastApiVideoNode: React.FC<FastApiVideoNodeProps> = ({ id, data, selected 
             Provide an image URL for reference. The AI will use this as inspiration for the video generation.
           </p>
         </div>
+
+        {/* Test Video Streaming Button */}
+        <Button
+          onClick={() => {
+            const testVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+            
+            const outputData = {
+              success: true,
+              prompt: "Test video for streaming functionality",
+              data: {
+                video_url: testVideoUrl,
+                prompt: "Test video for streaming functionality",
+                style: "test",
+                duration: 10,
+                quality: "high",
+                source: 'test-streaming'
+              },
+              source: 'test-streaming'
+            };
+            
+            setLocalOutputData(outputData);
+            data.onOutputDataChange?.(outputData);
+            setLocalStatus('completed');
+            data.onStatusChange?.('completed');
+            
+            console.log('🧪 Test streaming: Loaded Big Buck Bunny video:', testVideoUrl);
+          }}
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white mb-2"
+        >
+          <Play className="w-4 h-4 mr-2" />
+          Test Video Streaming
+        </Button>
 
         {/* Execute Button */}
         <Button
