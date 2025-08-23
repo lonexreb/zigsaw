@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Video, Activity, Send, X, Eye, ChevronDown, ChevronUp, Settings, Play } from 'lucide-react';
+import { Video, Activity, Send, X, Eye, ChevronDown, ChevronUp, Settings, Play, Download } from 'lucide-react';
 import { NodeNameHeader } from '../ui/node-name-header';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -85,10 +85,29 @@ const FastApiVideoNode: React.FC<FastApiVideoNodeProps> = ({ id, data, selected 
       const result = await fastApiService.generateVideo(requestData);
       
       if (result.success) {
+        // Extract video URL from different possible response formats
+        let videoUrl = result.data?.video_url || result.data?.url || result.data?.video_path;
+        
+        // Log the response structure for debugging
+        console.log('🎬 FastAPI response structure:', result);
+        console.log('🎬 Extracted video URL:', videoUrl);
+        
+        // If no direct URL, try to construct one from the FastAPI backend
+        if (!videoUrl && result.data?.video_id) {
+          videoUrl = `https://degree-works-backend-hydrabeans.replit.app/videos/${result.data.video_id}`;
+          console.log('🎬 Constructed video URL from ID:', videoUrl);
+        }
+        
+        // Update the data with the extracted video URL
+        const enhancedData = {
+          ...result.data,
+          video_url: videoUrl
+        };
+        
         const outputData = {
           success: true,
           prompt: prompt.trim(),
-          data: result.data,
+          data: enhancedData,
           source: 'fastapi'
         };
         
@@ -322,8 +341,53 @@ const FastApiVideoNode: React.FC<FastApiVideoNodeProps> = ({ id, data, selected 
                     <div className="text-xs text-gray-300">
                       <strong>Prompt:</strong> {localOutputData.prompt}
                     </div>
+                    
+                    {/* Video Player */}
+                    {localOutputData.data?.video_url && (
+                      <div className="space-y-2">
+                        <div className="text-xs text-gray-300">
+                          <strong>Generated Video:</strong>
+                        </div>
+                        <div className="aspect-video bg-gray-900/50 rounded overflow-hidden">
+                          <video 
+                            src={localOutputData.data.video_url} 
+                            controls
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.log('🎥 Video load error for URL:', localOutputData.data.video_url);
+                              console.log('🎥 Error details:', e);
+                            }}
+                            onLoadStart={() => console.log('🎥 Video loading started for:', localOutputData.data.video_url)}
+                            onCanPlay={() => console.log('🎥 Video can play for:', localOutputData.data.video_url)}
+                          />
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Video URL: {localOutputData.data.video_url}
+                        </div>
+                        
+                        {/* Download Button */}
+                        <Button
+                          onClick={() => {
+                            if (localOutputData.data?.video_url) {
+                              const a = document.createElement('a');
+                              a.href = localOutputData.data.video_url;
+                              a.download = `fastapi-video-${Date.now()}.mp4`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                            }
+                          }}
+                          className="w-full bg-green-600 hover:bg-green-500 text-white text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download Video
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Raw Data */}
                     <div className="text-xs text-gray-300">
-                      <strong>Data:</strong>
+                      <strong>Raw Response Data:</strong>
                       <pre className="mt-1 bg-gray-900/50 p-2 rounded text-xs overflow-x-auto">
                         {JSON.stringify(localOutputData.data, null, 2)}
                       </pre>

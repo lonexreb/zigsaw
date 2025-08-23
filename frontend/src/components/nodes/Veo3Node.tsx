@@ -287,8 +287,21 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
         throw new Error(result.error || 'Video generation failed');
       }
 
+      // Extract video URL from FastAPI response
+      let videoUrl = result.data?.video_url || result.data?.url || result.data?.video_path;
+      
+      // Log the response structure for debugging
+      console.log('🎬 FastAPI response structure:', result);
+      console.log('🎬 Extracted video URL:', videoUrl);
+      
+      // If no direct URL, try to construct one from the FastAPI backend
+      if (!videoUrl && result.data?.video_id) {
+        videoUrl = `https://degree-works-backend-hydrabeans.replit.app/videos/${result.data.video_id}`;
+        console.log('🎬 Constructed video URL from ID:', videoUrl);
+      }
+      
       const outputData = {
-        video_url: result.data?.video_url || result.data?.url,
+        video_url: videoUrl,
         video_blob: result.data?.video_blob,
         metadata: {
           prompt: inputSource === 'enhanced_json' ? convertedPrompt : request.prompt,
@@ -300,6 +313,8 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
           timestamp: new Date().toISOString()
         }
       };
+      
+      console.log('🎬 Final output data:', outputData);
 
       setLocalOutputData(outputData);
       data.onOutputDataChange?.(outputData);
@@ -583,24 +598,44 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
                   <div>Quality: {localOutputData.metadata?.quality || 'high'}</div>
                   <div>Source: {localOutputData.metadata?.input_source || 'manual'}</div>
                 </div>
+                
+                {/* Debug Info */}
+                <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded">
+                  <div className="font-medium mb-1">Debug Info:</div>
+                  <div>Video URL: {localOutputData.video_url || 'None'}</div>
+                  <div>Has Video Blob: {localOutputData.video_blob ? 'Yes' : 'No'}</div>
+                </div>
                 <div className="aspect-video bg-gray-900/50 rounded overflow-hidden">
-                  <video 
-                    src={localOutputData.video_url} 
-                    controls
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.log('🎥 Video load error, trying HTTP serving fallback...');
-                      // Try HTTP serving fallback if file:// URL fails
-                      if (localOutputData.video_file_path && !e.currentTarget.src.includes('/api/videos/serve')) {
-                        e.currentTarget.src = `/api/videos/serve?path=${encodeURIComponent(localOutputData.video_file_path)}`;
-                      } else {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling.style.display = 'flex';
-                      }
-                    }}
-                  />
+                  {localOutputData.video_url ? (
+                    <video 
+                      src={localOutputData.video_url} 
+                      controls
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log('🎥 Video load error for URL:', localOutputData.video_url);
+                        console.log('🎥 Error details:', e);
+                        // Try HTTP serving fallback if file:// URL fails
+                        if (localOutputData.video_file_path && !e.currentTarget.src.includes('/api/videos/serve')) {
+                          e.currentTarget.src = `/api/videos/serve?path=${encodeURIComponent(localOutputData.video_file_path)}`;
+                        } else {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                        }
+                      }}
+                      onLoadStart={() => console.log('🎥 Video loading started for:', localOutputData.video_url)}
+                      onCanPlay={() => console.log('🎥 Video can play for:', localOutputData.video_url)}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                      No video URL available
+                    </div>
+                  )}
                   <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
-                    Failed to load video
+                    <div className="text-center">
+                      <div className="text-red-400 mb-2">Failed to load video</div>
+                      <div className="text-xs text-gray-500">URL: {localOutputData.video_url}</div>
+                      <div className="text-xs text-gray-500">Check console for details</div>
+                    </div>
                   </div>
                 </div>
               </div>
