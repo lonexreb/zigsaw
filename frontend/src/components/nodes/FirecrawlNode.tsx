@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/colla
 import { Textarea } from '../ui/textarea';
 import { Switch } from '../ui/switch';
 import { createFirecrawlService } from '@/services/firecrawlService';
+import { fastApiService } from '@/services/fastapiService';
 
 interface FirecrawlNodeProps {
   id: string;
@@ -51,6 +52,7 @@ const FirecrawlNode: React.FC<FirecrawlNodeProps> = ({ id, data, selected }) => 
   const [excludePaths, setExcludePaths] = useState('');
   const [extractionPrompt, setExtractionPrompt] = useState('');
   const [includeSubdomains, setIncludeSubdomains] = useState(false);
+  const [useFastApiBackend, setUseFastApiBackend] = useState(false);
 
   // Sync local state with props
   useEffect(() => {
@@ -84,34 +86,56 @@ const FirecrawlNode: React.FC<FirecrawlNodeProps> = ({ id, data, selected }) => 
     data.onStatusChange?.('running');
 
     try {
-      const firecrawlService = createFirecrawlService(id);
       let result;
 
-      if (operation === 'scrape') {
-        const requestData = {
+      // Use FastAPI backend if enabled and operation is scrape
+      if (useFastApiBackend && operation === 'scrape') {
+        const fastApiResult = await fastApiService.scrapeUrl({
           url: url.trim(),
-          formats: formats,
-          only_main_content: onlyMainContent,
-          extraction_prompt: extractionPrompt.trim() || undefined,
-        };
-        result = await firecrawlService.scrapeUrl(requestData);
-      } else if (operation === 'crawl') {
-        const requestData = {
-          url: url.trim(),
-          limit: limit,
-          include_paths: includePaths.trim() ? includePaths.split(',').map(p => p.trim()) : undefined,
-          exclude_paths: excludePaths.trim() ? excludePaths.split(',').map(p => p.trim()) : undefined,
-        };
-        result = await firecrawlService.crawlUrl(requestData);
-      } else if (operation === 'map') {
-        const requestData = {
-          url: url.trim(),
-          limit: limit,
-          include_subdomains: includeSubdomains,
-        };
-        result = await firecrawlService.mapUrl(requestData);
+          prompt: extractionPrompt.trim() || 'Extract all relevant information from this webpage'
+        });
+        
+        if (fastApiResult.success) {
+          result = {
+            success: true,
+            operation: 'scrape',
+            url: url.trim(),
+            data: fastApiResult.data,
+            source: 'fastapi'
+          };
+        } else {
+          throw new Error(fastApiResult.error || 'FastAPI scraping failed');
+        }
       } else {
-        throw new Error(`Unsupported operation: ${operation}`);
+        // Use regular Firecrawl service
+        const firecrawlService = createFirecrawlService(id);
+        
+        if (operation === 'scrape') {
+          const requestData = {
+            url: url.trim(),
+            formats: formats,
+            only_main_content: onlyMainContent,
+            extraction_prompt: extractionPrompt.trim() || undefined,
+          };
+          result = await firecrawlService.scrapeUrl(requestData);
+        } else if (operation === 'crawl') {
+          const requestData = {
+            url: url.trim(),
+            limit: limit,
+            include_paths: includePaths.trim() ? includePaths.split(',').map(p => p.trim()) : undefined,
+            exclude_paths: excludePaths.trim() ? excludePaths.split(',').map(p => p.trim()) : undefined,
+          };
+          result = await firecrawlService.crawlUrl(requestData);
+        } else if (operation === 'map') {
+          const requestData = {
+            url: url.trim(),
+            limit: limit,
+            include_subdomains: includeSubdomains,
+          };
+          result = await firecrawlService.mapUrl(requestData);
+        } else {
+          throw new Error(`Unsupported operation: ${operation}`);
+        }
       }
 
       setLocalOutputData(result);
@@ -150,7 +174,7 @@ const FirecrawlNode: React.FC<FirecrawlNodeProps> = ({ id, data, selected }) => 
       setLocalOutputData(errorData);
       data.onOutputDataChange?.(errorData);
     }
-  }, [id, url, operation, formats, onlyMainContent, limit, includePaths, excludePaths, extractionPrompt, includeSubdomains, data]);
+  }, [id, url, operation, formats, onlyMainContent, limit, includePaths, excludePaths, extractionPrompt, includeSubdomains, useFastApiBackend, data]);
 
   const operationOptions = [
     { value: 'scrape', label: 'Scrape (Single Page)', description: 'Extract content from a single URL' },
@@ -260,6 +284,22 @@ const FirecrawlNode: React.FC<FirecrawlNodeProps> = ({ id, data, selected }) => 
                 ))}
               </div>
             </div>
+
+            {/* FastAPI Backend Toggle */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-300">
+                Use FastAPI Backend
+              </label>
+              <Switch 
+                checked={useFastApiBackend} 
+                onCheckedChange={setUseFastApiBackend}
+              />
+            </div>
+            {useFastApiBackend && (
+              <div className="text-xs text-gray-400 bg-gray-800/30 p-2 rounded">
+                Using FastAPI backend for enhanced scraping capabilities
+              </div>
+            )}
 
             {/* Operation-specific options */}
             {operation === 'scrape' && (

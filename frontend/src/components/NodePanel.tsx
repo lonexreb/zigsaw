@@ -76,6 +76,14 @@ const nodeTypes: NodeType[] = [
     icon: <Globe className="w-5 h-5" />,
     color: { primary: 'orange', secondary: 'amber', glow: 'orange-400/20' },
     category: 'Tools'
+  },
+  {
+    id: 'fastapi_video',
+    label: 'FastAPI Video Generator',
+    description: 'Generate videos using the FastAPI backend with customizable style, duration, and quality',
+    icon: <Video className="w-5 h-5" />,
+    color: { primary: 'purple', secondary: 'violet', glow: 'purple-400/20' },
+    category: 'Tools'
   }
 ];
 

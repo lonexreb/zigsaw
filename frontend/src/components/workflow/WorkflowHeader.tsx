@@ -251,26 +251,7 @@ export function WorkflowHeader({
            0% { background-position: 200% 0; }
            100% { background-position: 0 200%; }
          }
-         .shiny-premium-btn {
-           position: relative;
-           overflow: hidden;
-         }
-         .shiny-premium-text {
-           background: linear-gradient(90deg, #fff 0%, #facc15 30%, #fbbf24 60%, #fff 100%);
-           background-size: 200% auto;
-           color: #fff;
-           background-clip: text;
-           -webkit-background-clip: text;
-           -webkit-text-fill-color: transparent;
-           animation: shine-premium 2.2s linear infinite;
-           font-weight: 700;
-           letter-spacing: 0.01em;
-           text-shadow: 0 1px 8px rgba(0,0,0,0.18);
-         }
-         @keyframes shine-premium {
-           0% { background-position: 200% center; }
-           100% { background-position: 0% center; }
-         }
+
          .zigsaw-logo-shiny {
            background: linear-gradient(90deg, #ffffff 0%, #87ceeb 25%, #4682b4 50%, #1e90ff 75%, #ffffff 100%);
            background-size: 200% auto;

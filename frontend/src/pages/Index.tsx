@@ -40,6 +40,7 @@ import Blip2Node from '../components/nodes/Blip2Node';
 import FirecrawlNode from '../components/nodes/FirecrawlNode';
 import ImageUploadNode from '../components/nodes/ImageUploadNode';
 import PromptEnhancementNode from '../components/nodes/PromptEnhancementNode';
+import FastApiVideoNode from '../components/nodes/FastApiVideoNode';
 
 import { UniversalNodeWrapper } from '../components/ui/universal-node-wrapper';
 import NetworkingTab from '../components/NetworkingTab';
@@ -89,6 +90,7 @@ const nodeTypes = {
   firecrawl: createWrappedNode(FirecrawlNode, 'Firecrawl'),
   image_upload: createWrappedNode(ImageUploadNode, 'Image Upload'),
   prompt_enhancement: createWrappedNode(PromptEnhancementNode, 'Prompt Enhancement'),
+  fastapi_video: createWrappedNode(FastApiVideoNode, 'FastAPI Video'),
 };
 
 const initialNodes: Node[] = [

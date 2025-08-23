@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Video, Activity, Send, X, Eye, ChevronDown, ChevronUp, Settings, Sparkles, Code, Edit3 } from 'lucide-react';
+import { Video, Activity, Send, X, Eye, ChevronDown, ChevronUp, Settings, Sparkles, Code, Edit3, Download } from 'lucide-react';
 import { NodeNameHeader } from '../ui/node-name-header';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -8,7 +8,7 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Checkbox } from '../ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
-import { veo3Service, Veo3Request } from '@/services/veo3Service';
+import { fastApiService, GenerateVideoRequest } from '@/services/fastapiService';
 
 interface Veo3NodeProps {
   id: string;
@@ -250,10 +250,10 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
 
     // Progress stages with zigsaw animation
     const stages = [
-      'Parsing JSON specification...',
-      'Converting to video prompt...',
-      'Generating video with Veo 3...',
-      'Finalizing video output...'
+      'Preparing video prompt...',
+      'Sending to FastAPI backend...',
+      'Generating video with AI...',
+      'Processing video output...'
     ];
     
     let currentStage = 0;
@@ -266,10 +266,12 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
     }, 2000);
 
     try {
-      const request: Veo3Request = {
-        enhanced_json: inputSource === 'enhanced_json' ? enhancedJson : undefined,
-        prompt: inputSource === 'enhanced_json' ? undefined : prompt.trim(),
-        model: 'veo-3.0-fast-generate-preview'
+      const request: GenerateVideoRequest = {
+        prompt: inputSource === 'enhanced_json' ? convertedPrompt : prompt.trim(),
+        image_url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', // Default reference image
+        style: 'cinematic',
+        duration: 10,
+        quality: 'high'
       };
 
       console.log('🎬 Generating video with request:', {
@@ -278,7 +280,7 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
         hasPrompt: !!request.prompt
       });
 
-      const result = await veo3Service.generateVideo(request);
+      const result = await fastApiService.generateVideo(request);
       clearInterval(progressInterval);
 
       if (!result.success) {
@@ -286,11 +288,13 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
       }
 
       const outputData = {
-        video_url: result.video_url,
-        video_blob: result.video_blob,
-        metadata: result.metadata || {
+        video_url: result.data?.video_url || result.data?.url,
+        video_blob: result.data?.video_blob,
+        metadata: {
           prompt: inputSource === 'enhanced_json' ? convertedPrompt : request.prompt,
-          model: request.model,
+          style: request.style,
+          duration: request.duration,
+          quality: request.quality,
           input_source: inputSource,
           enhanced_json_used: inputSource === 'enhanced_json',
           timestamp: new Date().toISOString()
@@ -304,8 +308,8 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
       if (data.onDataOutput) {
         data.onDataOutput({
           type: 'video_generated',
-          video_url: result.video_url,
-          video_blob: result.video_blob,
+          video_url: outputData.video_url,
+          video_blob: outputData.video_blob,
           prompt: outputData.metadata.prompt,
           metadata: outputData.metadata,
           timestamp: new Date().toISOString()
@@ -324,7 +328,7 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
       console.error('Video generation error:', error);
       alert(`Video generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [prompt, enhancedJson, convertedPrompt, inputSource, data]);
+  }, [prompt, enhancedJson, convertedPrompt, inputSource, data, enhancePrompt, negativePrompt, seed]);
 
   const handleSeedChange = (value: string) => {
     if (value === '') {
@@ -334,6 +338,41 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
       if (!isNaN(numValue)) {
         setSeed(numValue);
       }
+    }
+  };
+
+  // Download video function
+  const handleDownloadVideo = async () => {
+    if (!localOutputData?.video_url) {
+      alert('No video available for download');
+      return;
+    }
+
+    try {
+      // Fetch the video as a blob
+      const response = await fetch(localOutputData.video_url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch video');
+      }
+      
+      const videoBlob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(videoBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `veo3-video-${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      console.log('✅ Video downloaded successfully');
+    } catch (error) {
+      console.error('❌ Download failed:', error);
+      alert(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -361,7 +400,7 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
           <Video className="w-5 h-5" />
         </NodeNameHeader>
         <p className="text-gray-300 text-xs mt-1">
-          {data.description}
+          Generate videos using FastAPI backend with AI-powered video creation
         </p>
       </div>
 
@@ -456,45 +495,8 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 mt-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="enhance-prompt"
-                checked={enhancePrompt}
-                onCheckedChange={(checked) => setEnhancePrompt(checked as boolean)}
-              />
-              <label htmlFor="enhance-prompt" className="text-sm font-medium text-gray-300">
-                Enhance prompt with Gemini
-              </label>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Negative Prompt (optional)
-              </label>
-              <Textarea
-                value={negativePrompt}
-                onChange={(e) => setNegativePrompt(e.target.value)}
-                placeholder="Describe what to discourage in the video..."
-                className="bg-gray-800/50 border-gray-600 text-white min-h-16 resize-none"
-                disabled={localStatus === 'running'}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Seed (optional)
-              </label>
-              <Input
-                value={seed?.toString() || ''}
-                onChange={(e) => handleSeedChange(e.target.value)}
-                placeholder="Random seed for reproducible results"
-                className="bg-gray-800/50 border-gray-600 text-white"
-                disabled={localStatus === 'running'}
-                type="number"
-              />
-              <div className="text-xs text-gray-400 mt-1">
-                Leave empty for random generation
-              </div>
+            <div className="text-sm text-gray-400 bg-gray-800/30 p-2 rounded">
+              Using FastAPI backend for enhanced video generation capabilities
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -525,14 +527,24 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
           </Button>
 
           {localOutputData && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(true)}
-              className="border-gray-600 text-gray-300 hover:text-white hover:bg-white/5"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(true)}
+                className="border-gray-600 text-gray-300 hover:text-white hover:bg-white/5"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadVideo}
+                className="border-green-600 text-green-300 hover:text-white hover:bg-green-500/20"
+              >
+                <Download className="w-4 h-4" />
+              </Button>
+            </>
           )}
         </div>
 
@@ -566,8 +578,10 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
             <CollapsibleContent className="mt-2">
               <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-600 space-y-2">
                 <div className="text-xs text-gray-400 grid grid-cols-2 gap-2">
-                  <div>Enhanced: {localOutputData.metadata?.enhance_prompt ? 'Yes' : 'No'}</div>
-                  <div>Seed: {localOutputData.metadata?.seed || 'Random'}</div>
+                  <div>Style: {localOutputData.metadata?.style || 'cinematic'}</div>
+                  <div>Duration: {localOutputData.metadata?.duration || 10}s</div>
+                  <div>Quality: {localOutputData.metadata?.quality || 'high'}</div>
+                  <div>Source: {localOutputData.metadata?.input_source || 'manual'}</div>
                 </div>
                 <div className="aspect-video bg-gray-900/50 rounded overflow-hidden">
                   <video 
@@ -624,12 +638,20 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="bg-gray-800/50 rounded-lg p-3">
-                  <div className="text-gray-400">Enhanced Prompt</div>
-                  <div className="text-white">{localOutputData.metadata?.enhance_prompt ? 'Yes' : 'No'}</div>
+                  <div className="text-gray-400">Style</div>
+                  <div className="text-white">{localOutputData.metadata?.style || 'cinematic'}</div>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-3">
-                  <div className="text-gray-400">Seed</div>
-                  <div className="text-white">{localOutputData.metadata?.seed || 'Random'}</div>
+                  <div className="text-gray-400">Duration</div>
+                  <div className="text-white">{localOutputData.metadata?.duration || 10}s</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-3">
+                  <div className="text-gray-400">Quality</div>
+                  <div className="text-white">{localOutputData.metadata?.quality || 'high'}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-3">
+                  <div className="text-gray-400">Input Source</div>
+                  <div className="text-white">{localOutputData.metadata?.input_source || 'manual'}</div>
                 </div>
               </div>
               
@@ -662,6 +684,16 @@ const Veo3Node: React.FC<Veo3NodeProps> = ({ id, data, selected }) => {
                     }
                   }}
                 />
+              </div>
+              
+              <div className="flex justify-center">
+                <Button
+                  onClick={handleDownloadVideo}
+                  className="bg-green-600 hover:bg-green-500 text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Video
+                </Button>
               </div>
             </div>
           </div>
