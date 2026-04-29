@@ -25,6 +25,16 @@
 * [🎯 Use Case Examples](workflow-building/examples.md)
 * [🛠️ Best Practices](workflow-building/best-practices.md)
 
+## Node Reference
+
+* [📚 All Nodes](features/nodes/index.md)
+* [🚀 Trigger](features/nodes/trigger.md)
+* [🤖 Universal Agent (Claude)](features/nodes/universal-agent.md)
+* [📧 Gmail](features/nodes/gmail.md)
+* [🐙 GitHub](features/nodes/github.md)
+* [🔀 Router](features/nodes/router.md)
+* [📋 Per-node template](features/nodes/_template.md)
+
 ## Integrations
 
 * [🤖 AI Providers](integrations/ai-providers.md)
