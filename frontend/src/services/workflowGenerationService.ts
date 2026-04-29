@@ -3,15 +3,16 @@
 
 import { Node, Edge } from '@xyflow/react';
 
-// SECURITY: Browser-bundled code MUST NOT carry production API keys.
-// The previously hardcoded Anthropic key has been rotated and revoked.
-// Local dev can populate `VITE_*_API_KEY` in `.env.local` (gitignored), but
-// production calls MUST be proxied through `api-backend/` so the secret
-// never reaches the browser. See root `CLAUDE.md` §8.
-const DEMO_API_KEYS = {
-  anthropic: import.meta.env.VITE_ANTHROPIC_API_KEY || '',
-  openai: import.meta.env.VITE_OPENAI_API_KEY || '',
-  groq: import.meta.env.VITE_GROQ_API_KEY || ''
+// SECURITY (issue #5): The browser bundle MUST NOT carry provider keys.
+// All AI calls go through `api-backend/v1/chat`, which reads server-side
+// env vars (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`).
+// The user may also bring-their-own key via the in-app API Keys panel — that
+// flow stores the key in localStorage under `universal-agent-api-keys` and
+// is sent per-request in the body, but is never bundled at build time.
+const DEMO_API_KEYS: Record<'anthropic' | 'openai' | 'groq', string> = {
+  anthropic: '',
+  openai: '',
+  groq: '',
 };
 
 export interface WorkflowGenerationRequest {
@@ -374,14 +375,13 @@ Position nodes with x-spacing of 300px, starting at (100, 100).
       const provider = request.userPreferences?.preferredAIProvider || 'anthropic';
       const apiKey = this.getApiKey(provider);
       
-      // Real API integration when key is available
-      if (apiKey && !apiKey.includes('demo') && apiKey.length > 20) {
-        try {
-          return await this.generateWithAI(request, provider, apiKey);
-        } catch (aiError) {
-          console.warn('AI service failed, falling back to templates:', aiError);
-          // Continue to fallback logic below
-        }
+      // Always attempt the AI proxy first. The backend resolves the key from
+      // server-side env vars; the browser passes the BYO key only if the user
+      // has explicitly stored one. (Issue #5 — no provider keys in the bundle.)
+      try {
+        return await this.generateWithAI(request, provider, apiKey ?? '');
+      } catch (aiError) {
+        console.warn('AI service failed, falling back to templates:', aiError);
       }
       
       // Smart fallback based on workflow type
