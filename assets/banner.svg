@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 480" role="img" aria-label="Zigsaw — Chat your automation. Connect the pieces.">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08080F"/>
+      <stop offset="55%" stop-color="#0E0F1B"/>
+      <stop offset="100%" stop-color="#150E2B"/>
+    </linearGradient>
+
+    <!-- Accent glow -->
+    <radialGradient id="glow" cx="0.78" cy="0.32" r="0.7">
+      <stop offset="0%" stop-color="#7C5CFF" stop-opacity="0.55"/>
+      <stop offset="40%" stop-color="#3F2BCC" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Edge stroke -->
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7C5CFF"/>
+      <stop offset="100%" stop-color="#27D2C5"/>
+    </linearGradient>
+
+    <!-- Node fills -->
+    <linearGradient id="node-violet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#6D4FE0"/>
+    </linearGradient>
+    <linearGradient id="node-teal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5EEAD4"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </linearGradient>
+    <linearGradient id="node-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD27A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="node-pink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FDA4AF"/>
+      <stop offset="100%" stop-color="#F43F5E"/>
+    </linearGradient>
+
+    <!-- Subtle grid pattern -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#FFFFFF" stroke-opacity="0.03" stroke-width="1"/>
+    </pattern>
+
+    <!-- Soft shadow for nodes -->
+    <filter id="nodeShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8"/>
+      <feOffset dx="0" dy="6" result="offsetblur"/>
+      <feFlood flood-color="#000" flood-opacity="0.45"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Glow filter for the wordmark -->
+    <filter id="textGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Base background -->
+  <rect width="1600" height="480" fill="url(#bg)"/>
+  <rect width="1600" height="480" fill="url(#grid)"/>
+  <rect width="1600" height="480" fill="url(#glow)"/>
+
+  <!-- Decorative jigsaw silhouettes (top-left + bottom-right) -->
+  <g opacity="0.08" fill="#FFFFFF">
+    <path d="M 80 60 h 90 v 25 a 18 18 0 0 1 0 30 v 35 h -35 a 18 18 0 0 1 -30 0 H 80 Z"/>
+    <path d="M 1430 360 h 90 v 25 a 18 18 0 0 1 0 30 v 35 h -35 a 18 18 0 0 1 -30 0 H 1430 Z"/>
+  </g>
+
+  <!-- Workflow graph: 4 nodes + connecting edges (right half) -->
+  <g transform="translate(820, 120)">
+    <!-- Edges (drawn first so nodes overlay) -->
+    <g stroke="url(#edge)" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.85">
+      <path d="M 105 70 C 165 70, 165 70, 230 70"/>
+      <path d="M 335 70 C 395 70, 395 145, 460 145"/>
+      <path d="M 335 70 C 395 70, 395 -5, 460 -5"/>
+      <path d="M 565 145 C 625 145, 625 70, 690 70"/>
+      <path d="M 565 -5 C 625 -5, 625 70, 690 70"/>
+    </g>
+
+    <!-- Node 1 — Trigger -->
+    <g filter="url(#nodeShadow)">
+      <rect x="0" y="40" width="105" height="60" rx="14" fill="url(#node-amber)"/>
+      <circle cx="22" cy="70" r="8" fill="#FFFFFF" fill-opacity="0.9"/>
+      <text x="40" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="700" fill="#1B1306">Trigger</text>
+      <text x="40" y="82" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#1B1306" fill-opacity="0.75">Webhook</text>
+    </g>
+
+    <!-- Node 2 — Claude -->
+    <g filter="url(#nodeShadow)">
+      <rect x="230" y="40" width="105" height="60" rx="14" fill="url(#node-violet)"/>
+      <circle cx="252" cy="70" r="8" fill="#FFFFFF" fill-opacity="0.9"/>
+      <text x="270" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="700" fill="#1A0F36">Claude</text>
+      <text x="270" y="82" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#1A0F36" fill-opacity="0.75">Reason</text>
+    </g>
+
+    <!-- Node 3a — GitHub (top fork) -->
+    <g filter="url(#nodeShadow)">
+      <rect x="460" y="-35" width="105" height="60" rx="14" fill="url(#node-teal)"/>
+      <circle cx="482" cy="-5" r="8" fill="#FFFFFF" fill-opacity="0.9"/>
+      <text x="500" y="-11" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="700" fill="#0B2E2A">GitHub</text>
+      <text x="500" y="7" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#0B2E2A" fill-opacity="0.75">Open PR</text>
+    </g>
+
+    <!-- Node 3b — Gmail (bottom fork) -->
+    <g filter="url(#nodeShadow)">
+      <rect x="460" y="115" width="105" height="60" rx="14" fill="url(#node-pink)"/>
+      <circle cx="482" cy="145" r="8" fill="#FFFFFF" fill-opacity="0.9"/>
+      <text x="500" y="139" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="700" fill="#3A0712">Gmail</text>
+      <text x="500" y="157" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#3A0712" fill-opacity="0.75">Send</text>
+    </g>
+
+    <!-- Node 4 — Done -->
+    <g filter="url(#nodeShadow)">
+      <rect x="690" y="40" width="105" height="60" rx="14" fill="#FFFFFF" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.2"/>
+      <circle cx="712" cy="70" r="8" fill="url(#edge)"/>
+      <text x="730" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">Deployed</text>
+      <text x="730" y="82" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#FFFFFF" fill-opacity="0.65">Live API</text>
+    </g>
+  </g>
+
+  <!-- Wordmark + tagline (left half) -->
+  <g transform="translate(110, 170)">
+    <!-- Eyebrow -->
+    <text font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" letter-spacing="6" fill="#7C5CFF" opacity="0.95">
+      THE ONE-STOP WORKFLOW PLATFORM
+    </text>
+
+    <!-- Wordmark -->
+    <g filter="url(#textGlow)">
+      <text y="100" font-family="-apple-system, system-ui, sans-serif" font-size="120" font-weight="800" fill="#FFFFFF" letter-spacing="-3">
+        Zigsaw
+      </text>
+    </g>
+
+    <!-- Tagline line 1 -->
+    <text y="160" font-family="-apple-system, system-ui, sans-serif" font-size="28" font-weight="500" fill="#E5E7F0" opacity="0.95">
+      Chat your automation.
+    </text>
+    <!-- Tagline line 2 -->
+    <text y="200" font-family="-apple-system, system-ui, sans-serif" font-size="28" font-weight="500" fill="#A78BFA" opacity="0.95">
+      Connect the pieces.
+    </text>
+
+    <!-- Pill badges -->
+    <g transform="translate(0, 230)" font-family="-apple-system, system-ui, sans-serif" font-size="12" font-weight="600">
+      <g>
+        <rect width="118" height="28" rx="14" fill="#FFFFFF" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.18"/>
+        <text x="14" y="18" fill="#E5E7F0">Chat → Workflow</text>
+      </g>
+      <g transform="translate(130, 0)">
+        <rect width="100" height="28" rx="14" fill="#FFFFFF" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.18"/>
+        <text x="14" y="18" fill="#E5E7F0">25+ Nodes</text>
+      </g>
+      <g transform="translate(242, 0)">
+        <rect width="118" height="28" rx="14" fill="#FFFFFF" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.18"/>
+        <text x="14" y="18" fill="#E5E7F0">Multi-AI Routing</text>
+      </g>
+      <g transform="translate(372, 0)">
+        <rect width="106" height="28" rx="14" fill="#FFFFFF" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.18"/>
+        <text x="14" y="18" fill="#E5E7F0">Auto-API Deploy</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Footer hairline -->
+  <line x1="0" y1="479" x2="1600" y2="479" stroke="#FFFFFF" stroke-opacity="0.1"/>
+</svg>
