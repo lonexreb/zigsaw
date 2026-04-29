@@ -14,6 +14,9 @@
     "test:phase2": "tsx tests/test-phase2-improvements.ts",
     "test:phase3": "tsx tests/test-phase3-advanced.ts",
     "test:all": "npm run test:ai-creator && npm run test:phase2 && npm run test:phase3",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install --with-deps",
     "start": "serve -s dist -l ${PORT:-4173} -H 0.0.0.0",
     "serve": "serve -s dist"
   },
@@ -88,6 +91,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.48.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
