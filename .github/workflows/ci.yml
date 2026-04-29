@@ -106,6 +106,43 @@ jobs:
           echo "No leaked secrets found."
 
   # ──────────────────────────────────────────────
+  # E2E + a11y — Playwright + axe-core
+  # ──────────────────────────────────────────────
+  e2e:
+    name: E2E + accessibility (Playwright + axe)
+    runs-on: ubuntu-latest
+    needs: frontend
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium firefox
+
+      - name: Run smoke + a11y suite
+        env:
+          CI: 'true'
+        run: bunx playwright test --project=chromium-desktop tests/e2e/smoke.spec.ts tests/e2e/a11y.spec.ts
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 14
+
+  # ──────────────────────────────────────────────
   # Dependency audit — flag known CVEs
   # ──────────────────────────────────────────────
   audit:
