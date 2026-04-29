@@ -3,12 +3,15 @@
 
 import { Node, Edge } from '@xyflow/react';
 
-// Real API keys for development/testing
-// NOTE: In production, these should be environment variables or securely stored
+// SECURITY: Browser-bundled code MUST NOT carry production API keys.
+// The previously hardcoded Anthropic key has been rotated and revoked.
+// Local dev can populate `VITE_*_API_KEY` in `.env.local` (gitignored), but
+// production calls MUST be proxied through `api-backend/` so the secret
+// never reaches the browser. See root `CLAUDE.md` §8.
 const DEMO_API_KEYS = {
-  anthropic: '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',
-  openai: '', // Disabled - using only Anthropic
-  groq: '' // Disabled - using only Anthropic
+  anthropic: import.meta.env.VITE_ANTHROPIC_API_KEY || '',
+  openai: import.meta.env.VITE_OPENAI_API_KEY || '',
+  groq: import.meta.env.VITE_GROQ_API_KEY || ''
 };
 
 export interface WorkflowGenerationRequest {
