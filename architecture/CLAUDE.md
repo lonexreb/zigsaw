@@ -42,7 +42,7 @@
 - **GitBook documentation**: Public user documentation is in `/gitbook/` folder for docs.figsaw.dev
 - **Natural Language First**: The primary interface is conversational - users chat to create workflows
 - **Enterprise Focus**: Security, scalability, and professional deployment patterns
-- **Real Anthropic API Key**: `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`
+- **Anthropic API key**: load from `ANTHROPIC_API_KEY` (backend) / `VITE_ANTHROPIC_API_KEY` (frontend dev only). Never hardcode keys in this file or in source. The key that previously lived here has been **rotated and revoked** — any references in older commits should be considered burned. See root `CLAUDE.md` §8 for the full security policy.
 
 ### AI Pragmatic Programmer Approach
 Following the 5-step methodology for all AI-powered features:
