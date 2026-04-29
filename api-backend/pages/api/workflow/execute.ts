@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { addAPICallLog } from '../logs';
 import { incrementRequestCount } from '../stats';
+import { rateLimit, applyHeaders } from '../../../lib/rate-limit';
 
 // In-memory storage for tracking frontend requests (in production, use a database)
 let frontendRequestCount = 0;
@@ -23,6 +24,13 @@ export default async function handler(
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Rate limit (issue #7): 10 executions/min per user, 15 burst.
+  const verdict = await rateLimit(req, { kind: 'workflow-execute' });
+  applyHeaders(res, verdict);
+  if (!verdict.ok) {
+    return res.status(429).json({ error: 'Execution rate limit exceeded', retryAfter: verdict.retryAfterSec });
   }
 
   try {

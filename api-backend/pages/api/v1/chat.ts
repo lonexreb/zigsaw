@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { rateLimit, applyHeaders } from '../../../lib/rate-limit';
 
 // Allowed AI providers — keep this in sync with frontend `getModelForProvider`.
 type Provider = 'anthropic' | 'openai' | 'groq';
@@ -32,6 +33,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Rate limit (issue #7): 60 chat req/min per user, 90 burst.
+  const verdict = await rateLimit(req, { kind: 'chat' });
+  applyHeaders(res, verdict);
+  if (!verdict.ok) {
+    return res.status(429).json({ error: 'Rate limit exceeded', retryAfter: verdict.retryAfterSec });
   }
 
   try {
