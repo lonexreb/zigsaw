@@ -20,6 +20,8 @@ import UseCasesPage from "./pages/marketing/UseCasesPage";
 import SupportPage from "./pages/marketing/SupportPage";
 import ProductPage from "./pages/marketing/ProductPage";
 import LearnPage from "./pages/marketing/LearnPage";
+// First-time user onboarding wizard (issue #16)
+import OnboardingWizard from "./pages/OnboardingWizard";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { currentUser, loading } = useAuth();
@@ -67,6 +69,7 @@ const App = () => (
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/product" element={<ProductPage />} />
                 <Route path="/learn" element={<LearnPage />} />
+                <Route path="/welcome" element={<OnboardingWizard />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
