@@ -1,377 +1,258 @@
-# 🧩 Zigsaw - AI Workflow Automation Platform
-
-> **The first platform where you can chat your way to automation** - Create powerful AI-driven workflows using natural language or visual drag-and-drop interface.
-
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](frontend/package.json)
-[![Tech Stack](https://img.shields.io/badge/stack-React%20%7C%20FastAPI%20%7C%20Firebase-green.svg)](#tech-stack)
-[![AI Providers](https://img.shields.io/badge/AI-Claude%20%7C%20GPT%20%7C%20Gemini%20%7C%20Groq-purple.svg)](#ai-integration)
-[![Documentation](https://img.shields.io/badge/docs-docs.figsaw.dev-orange.svg)](https://docs.figsaw.dev)
-
-## 🎯 **What is Zigsaw?**
-
-Zigsaw is a revolutionary AI workflow automation platform that democratizes the creation of complex automation workflows. Whether you're a business user who wants to describe workflows in plain English or a technical user who prefers visual drag-and-drop interfaces, Zigsaw makes automation accessible to everyone.
-
-### 🌟 **Key Features**
-
-- **🗣️ Natural Language Workflow Creation**: Simply describe what you want to automate in plain English
-- **🎨 Visual Workflow Builder**: Drag-and-drop interface with 25+ pre-built node types
-- **🤖 Multi-AI Integration**: Claude 4, GPT-4, Gemini, Groq, and specialized AI models
-- **⚡ Real-time Execution**: Live monitoring with streaming results and progress tracking
-- **🚀 Instant API Deployment**: Turn any workflow into a REST API with one click
-- **🔗 Universal Integrations**: GitHub, Gmail, Calendar, Slack, and 100+ services
-- **👥 Enterprise Ready**: Multi-tenant platform with role-based access control
-- **📊 Advanced Analytics**: Performance monitoring and cost optimization
-- **🔒 Bank-Grade Security**: OAuth2, JWT, encrypted API keys
-
-## 🚀 **Getting Started**
-
-### **1. Natural Language Workflow Creation**
-
-The fastest way to create workflows is through our AI chat interface:
-
-1. **Describe Your Automation**: 
-   ```
-   "When someone creates a GitHub PR, have AI review the code and send me an email summary"
-   ```
-
-2. **AI Generates Workflow**: Zigsaw automatically creates the optimal workflow with:
-   - GitHub PR Trigger
-   - Claude Code Reviewer
-   - Gmail Email Sender
-
-3. **Review & Execute**: Preview the workflow, answer any clarifying questions, then deploy
-
-### **2. Visual Workflow Builder**
-
-For users who prefer visual control:
-
-1. **Drag & Drop Nodes**: Choose from 25+ node types
-2. **Connect with Flow Lines**: Link nodes to create execution paths
-3. **Configure Each Step**: Set up API keys, parameters, and logic
-4. **Test & Deploy**: Run workflows and deploy as live APIs
-
-## 🎬 **Common Use Cases**
-
-### **Business Automation**
-```
-📧 Email Processing → AI Analysis → CRM Update → Slack Notification
-📝 Document Upload → AI Summarization → Team Distribution
-📅 Calendar Event → Meeting Prep → AI Briefing → Email Reminder
-```
-
-### **Developer Workflows**
-```
-🔄 GitHub PR → Code Review (AI) → Auto-merge → Deployment
-🐛 Issue Created → AI Classification → Team Assignment → Progress Tracking
-📊 Performance Data → AI Analysis → Alert Generation → Dashboard Update
-```
-
-### **Content & Marketing**
-```
-📱 Social Mention → Sentiment Analysis → Response Generation → Engagement
-📰 RSS Feed → Content Summarization → Multi-platform Publishing
-🎯 Lead Capture → AI Qualification → CRM Entry → Follow-up Sequence
-```
-
-### **Data Processing**
-```
-📄 Document Upload → Text Extraction → AI Processing → Database Storage
-🔍 Web Scraping → Data Validation → AI Enrichment → Report Generation
-📈 Analytics Data → Trend Analysis → Insight Generation → Stakeholder Report
-```
-
-## 🛠️ **Platform Components**
-
-### **AI Workflow Creator** 
-**NEW**: Chat interface that converts natural language into executable workflows
-- **Smart Prompt Engineering**: Understands complex automation requirements
-- **Multi-Provider Support**: Anthropic Claude, OpenAI GPT, Google Gemini, Groq
-- **Interactive Configuration**: Asks clarifying questions to perfect workflows
-- **One-Click Deployment**: From conversation to live workflow in minutes
-
-### **Visual Workflow Editor**
-Intuitive drag-and-drop interface powered by ReactFlow
-- **25+ Node Types**: AI, integrations, data processing, logic, and triggers
-- **Real-time Validation**: Immediate feedback on workflow structure
-- **Collaborative Editing**: Team-based workflow development
-- **Version Control**: Track changes and rollback capabilities
-
-### **Execution Engine**
-Enterprise-grade workflow processing with Python FastAPI backend
-- **Parallel Processing**: Execute independent workflow branches simultaneously
-- **Error Recovery**: Automatic retries and graceful error handling
-- **Live Monitoring**: Real-time progress tracking and logging
-- **Scalable Architecture**: Handle thousands of concurrent workflows
-
-### **Integration Hub**
-Connect to 100+ services and APIs
-- **Authentication Management**: OAuth2, API keys, JWT tokens
-- **Pre-built Connectors**: GitHub, Gmail, Slack, Salesforce, and more
-- **Custom API Nodes**: Connect to any REST API or webhook
-- **Data Transformation**: Built-in data mapping and conversion tools
-
-## 🏗️ **Architecture Overview**
-
-```
-┌─────────────────────┐    ┌─────────────────────┐
-│   React Frontend    │────│   FastAPI Backend  │
-│ (Visual + Chat UI)  │    │  (Execution Engine) │
-└─────────────────────┘    └─────────────────────┘
-           │                          │
-           │                          │
-┌─────────────────────┐    ┌─────────────────────┐
-│   Firebase Auth     │    │  Firebase Firestore │
-│  (User Management)  │    │  (Workflow Storage) │
-└─────────────────────┘    └─────────────────────┘
-                                      │
-                            ┌─────────────────────┐
-                            │   External APIs     │
-                            │ (AI, Integrations)  │
-                            └─────────────────────┘
-```
-
-### **Technology Stack**
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Frontend** | React 18 + TypeScript | Natural language chat + Visual editor |
-| **Backend** | Python FastAPI | Workflow execution engine |
-| **AI Integration** | Anthropic, OpenAI, Google, Groq | Multi-provider AI processing |
-| **Database** | Firebase Firestore | User data and workflow storage |
-| **Authentication** | Firebase Auth + JWT | Secure user management |
-| **UI Framework** | ReactFlow + Tailwind + Framer Motion | Interactive workflow canvas |
-| **Deployment** | Docker + Railway/Heroku | Containerized deployment |
-
-## 🔧 **Installation & Setup**
-
-### **Prerequisites**
-- Node.js 18+ and npm
-- Python 3.12+
-- Firebase project with Firestore
-- API keys for desired AI providers
-
-### **Quick Start**
-
-1. **Clone Repository**
-   ```bash
-   git clone https://github.com/your-org/zigsaw.git
-   cd zigsaw
-   ```
-
-2. **Backend Setup**
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-3. **Frontend Setup**
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-4. **Environment Configuration**
-   ```bash
-   # Copy and configure environment files
-   cp frontend/.env.example frontend/.env
-   cp backend/.env.example backend/.env
-   
-   # Add your API keys to both .env files
-   ANTHROPIC_API_KEY=your_claude_key
-   OPENAI_API_KEY=your_openai_key
-   GOOGLE_API_KEY=your_google_key
-   GROQ_API_KEY=your_groq_key
-   
-   # Firebase configuration
-   FIREBASE_SERVICE_ACCOUNT_KEY_PATH=path/to/firebase/key.json
-   ```
-
-5. **Start Services**
-   ```bash
-   # Terminal 1 - Backend API
-   cd backend
-   uvicorn app.main:app --reload --port 8000
-   
-   # Terminal 2 - Frontend App
-   cd frontend
-   npm run dev
-   ```
-
-6. **Access Platform**
-   - **Application**: http://localhost:3000
-   - **API Documentation**: http://localhost:8000/docs
-   - **Health Check**: http://localhost:8000/health
-
-## 📊 **Platform Features**
-
-### **Recently Completed Features** ✅
-
-**Natural Language Workflow Creation** (Latest)
-- AI-powered chat interface that converts plain English to executable workflows
-- Supports complex automation requirements like "GitHub PR → AI Review → Email Reports"
-- Interactive configuration with clarifying questions
-- One-click deployment from conversation to live workflow
-- Comprehensive test coverage with 31+ test cases
-
-**Advanced Workflow Management**
-- Multi-workflow execution and monitoring
-- Real-time progress tracking with streaming updates
-- Dynamic API generation for workflow deployment
-- Comprehensive error handling and recovery
-- Performance analytics and cost optimization
-
-**Enterprise Security & Authentication**
-- Firebase JWT authentication with role-based access
-- Encrypted API key storage and management
-- OAuth2 flows for external service integration
-- Multi-tenant architecture with user isolation
-
-### **Platform Capabilities**
-
-**Workflow Node Types** (25+ Available)
-- **Triggers**: Manual, Webhook, Schedule, Email, GitHub events
-- **AI Models**: Claude 4, GPT-4, Gemini, Groq, Custom models
-- **Integrations**: GitHub, Gmail, Google Calendar, Slack, APIs
-- **Data Processing**: Document parsing, Web scraping, Embeddings
-- **Logic & Control**: Conditionals, Loops, Data transformation
-- **Output**: Email, Notifications, Database writes, API calls
-
-**Execution Features**
-- **Parallel Processing**: Independent workflow branches run simultaneously
-- **Error Recovery**: Automatic retries with exponential backoff
-- **Real-time Monitoring**: Live progress updates and detailed logging
-- **Performance Optimization**: Intelligent caching and resource management
-
-**Data Management**
-- **Secure Storage**: Encrypted API keys and sensitive configurations
-- **Workflow Persistence**: Firebase Firestore for reliable storage
-- **Version Control**: Track workflow changes and enable rollbacks
-- **Export/Import**: Share workflows across teams and environments
-
-## 🎯 **Success Metrics**
-
-### **Performance Benchmarks**
-- ⚡ **Workflow Creation Time**: < 2 minutes with natural language
-- 🚀 **Execution Speed**: < 200ms average response time
-- 📈 **Throughput**: 1000+ concurrent workflow executions
-- 🎯 **Reliability**: 99.9% uptime with automatic failover
-- 💰 **Cost Efficiency**: 75% reduction in automation development time
-
-### **User Adoption**
-- 📊 **Workflow Success Rate**: 95%+ successful executions
-- 👥 **User Retention**: 85%+ monthly active users
-- 🔄 **Integration Usage**: 50+ external services connected
-- 📈 **Business Impact**: 10x faster workflow deployment vs traditional tools
-
-## 🔐 **Security & Compliance**
-
-### **Data Protection**
-- **Encryption**: All data encrypted in transit (TLS 1.3) and at rest (AES-256)
-- **API Security**: Rate limiting, input validation, and CORS protection
-- **Access Control**: Role-based permissions with granular controls
-- **Audit Logging**: Comprehensive activity tracking and compliance reporting
-
-### **Privacy & Governance**
-- **Data Residency**: Choose your preferred data storage region
-- **GDPR Compliance**: Full data portability and deletion capabilities
-- **SOC 2 Ready**: Security controls for enterprise deployments
-- **Private Cloud**: On-premises deployment options available
-
-## 📈 **Pricing & Plans**
-
-### **Free Tier**
-- 100 workflow executions/month
-- Basic AI model access (Claude Haiku, GPT-3.5)
-- Community support
-- Standard integrations
-
-### **Pro Plan** ($29/month)
-- 10,000 workflow executions/month
-- Advanced AI models (Claude Sonnet, GPT-4)
-- Priority support
-- Advanced analytics
-- Team collaboration (up to 5 users)
-
-### **Enterprise** (Custom)
-- Unlimited workflow executions
-- Premium AI models (Claude Opus, GPT-4 Turbo)
-- Dedicated support manager
-- Custom integrations
-- On-premises deployment
-- Advanced security features
-
-## 🤝 **Community & Support**
-
-### **Documentation**
-- **Quick Start Guide**: Get up and running in 10 minutes
-- **API Reference**: Comprehensive endpoint documentation
-- **Workflow Examples**: 50+ pre-built workflow templates
-- **Best Practices**: Optimization and security guidelines
-
-### **Support Channels**
-- **Documentation**: [docs.figsaw.dev](https://docs.figsaw.dev)
-- **GitHub Issues**: Bug reports and feature requests
-- **Community Forum**: User discussions and sharing
-- **Enterprise Support**: Dedicated support for business customers
-
-### **Contributing**
-We welcome contributions from the community:
-- **Bug Reports**: Help us improve platform stability
-- **Feature Requests**: Suggest new capabilities and integrations
-- **Code Contributions**: Submit pull requests for review
-- **Documentation**: Help improve user guides and examples
-
-## 🚀 **Roadmap**
-
-### **Q1 2025**
-- [ ] **Advanced AI Agents**: Multi-step reasoning and tool usage
-- [ ] **Workflow Marketplace**: Community-driven template sharing
-- [ ] **Mobile Apps**: iOS and Android workflow management
-- [ ] **Enhanced Analytics**: ML-driven workflow optimization
-
-### **Q2 2025**
-- [ ] **Multi-cloud Deployment**: AWS, GCP, Azure native support
-- [ ] **Advanced Collaboration**: Real-time team editing
-- [ ] **Custom Node Development**: Plugin system for third-party integrations
-- [ ] **Enterprise SSO**: SAML, LDAP, and Active Directory integration
-
-### **Beyond 2025**
-- [ ] **AI Workflow Optimization**: Automatic performance tuning
-- [ ] **Visual Analytics Dashboard**: Advanced workflow insights
-- [ ] **Edge Computing**: Deploy workflows at the edge
-- [ ] **Industry Solutions**: Pre-built vertical market solutions
-
-## 📄 **License & Legal**
-
-This project is available under multiple licensing options:
-- **Open Source**: MIT License for community use
-- **Commercial**: Enterprise license for business deployments
-- **Custom**: Tailored licensing for specific use cases
-
-## 🎉 **Success Stories**
-
-> *"Zigsaw's natural language interface revolutionized how our team creates automation. What used to take hours now takes minutes!"*  
-> — **Sarah Chen**, Operations Director, TechFlow Inc.
-
-> *"The GitHub integration alone saved us 25 hours per week on code reviews and deployment automation."*  
-> — **Mike Rodriguez**, Senior DevOps Engineer, CloudScale
-
-> *"Being able to chat our automation requirements and see them become real workflows instantly is game-changing."*  
-> — **Lisa Park**, Business Analyst, DataFirst Corp.
+<p align="center">
+  <img src="./assets/banner.svg" alt="Zigsaw — Chat your automation. Connect the pieces." width="100%"/>
+</p>
+
+<p align="center">
+  <a href="./CLAUDE.md"><img alt="Claude Manual" src="https://img.shields.io/badge/Claude-manual-7C5CFF?style=for-the-badge"/></a>
+  <a href="./ONE-STOP-WORKFLOW.md"><img alt="One-Stop Workflow" src="https://img.shields.io/badge/Workflow-one--stop-27D2C5?style=for-the-badge"/></a>
+  <img alt="Stack" src="https://img.shields.io/badge/stack-React%20%7C%20Next.js%20%7C%20Firebase-0EA5E9?style=for-the-badge"/>
+  <img alt="AI" src="https://img.shields.io/badge/AI-Claude%20%7C%20GPT--4%20%7C%20Gemini%20%7C%20Groq-A78BFA?style=for-the-badge"/>
+  <img alt="License" src="https://img.shields.io/badge/license-MIT%20%7C%20Commercial-F59E0B?style=for-the-badge"/>
+</p>
 
 ---
 
-## 🧩 **Why Choose Zigsaw?**
+## What Zigsaw is
 
-Like a jigsaw puzzle, **Zigsaw** helps you connect different pieces (AI models, APIs, services) to create a complete picture - your perfect automated workflow. But unlike traditional automation tools, Zigsaw speaks your language. Just describe what you need, and watch as your words transform into powerful automation.
+**Zigsaw is the one-stop platform that turns plain English into shipped automation.** Type what you want. Watch a workflow appear on the canvas. Run it. Deploy it as a live API. Iterate.
+
+It is the unified product surface that consolidates everything previously split across `zigsaw`, `zigsaw-labs`, `zigsaw-yc`, `zigsaw-mac`, `zigsaw-frontend`, `zigsaw-backend`, and `Zigsaw-lab` — without breaking the UI you already use.
+
+> **Connect the pieces. Chat your automation. Run the loop. Compound the wins.**
+
+---
+
+## Why one repo, four tracks
+
+Zigsaw exposes four on-ramps to the same execution loop. You pick the entry point that matches your problem; the platform handles the rest.
+
+| Track                    | For when you…                                                                 | Drives                                  |
+| ------------------------ | ----------------------------------------------------------------------------- | --------------------------------------- |
+| **Chat-to-Workflow**     | Know the outcome but not which integrations to wire up.                       | `NaturalLanguageWorkflowCreator`        |
+| **Visual Editor**        | Need explicit branching, parallelism, retries, or human approvals.            | ReactFlow canvas + 25+ nodes            |
+| **Creative Engine**      | Need to produce, A/B test, and publish short-form video ads at scale.         | Veo 3 + multi-platform publishing       |
+| **GitHub Co-pilot**      | Want repo automation: PR review, issue triage, commit audits, security scan. | Mastra + MCP + Claude                   |
+
+All four flow through the **same execution engine, the same observability surface, and the same auto-API deploy** — see [`ONE-STOP-WORKFLOW.md`](./ONE-STOP-WORKFLOW.md).
+
+---
+
+## The 60-second demo
+
+```
+User:    "When a GitHub PR opens on lonexreb/zigsaw, summarize it
+          with Claude and email me the highlights."
+
+Zigsaw:  → Trigger: GitHub PR Open
+         → Claude: Summarize diff
+         → Gmail: Send to you
+         → Deploy: https://api.figsaw.dev/w/pr-summary
+
+Time:    47 seconds.
+Cost:    $0.0021 per run.
+```
+
+That's the entire promise. Everything else in this repo exists to make the next run cheaper, faster, smarter, or more powerful.
+
+---
+
+## At a glance
+
+- 🗣️ **Natural-language workflow creation** with multi-provider fallback (Claude → GPT-4 → Groq → templates).
+- 🎨 **25+ workflow node types** — AI models, integrations, data, logic, triggers, outputs.
+- ⚡ **Real-time streaming execution** — see every node fire, with per-node tokens, latency, and $ cost.
+- 🚀 **One-click deploy** — every workflow becomes a live REST endpoint with an auto-published OpenAPI spec.
+- 🤖 **First-class AI integration** — Claude, GPT-4, Gemini, Groq, Whisper, BLIP-2, Imagen, Veo3.
+- 🔗 **Native integrations** — GitHub, Gmail, Google Calendar, Firecrawl, plus a custom-API connector.
+- 🎬 **AI ad creative engine** — generate, test, and publish short-form video ads (TikTok / Reels / Shorts).
+- 🐙 **GitHub co-pilot via MCP** — natural-language repo automation as a single composable node.
+- 📱 **Mobile-first + WCAG 2.1 AA** — full keyboard, screen-reader, and touch support.
+- 🔐 **Enterprise-ready security** — encrypted secrets, OAuth2, Firebase JWT, rate limiting, audit logs.
+
+---
+
+## Repository layout
+
+```
+zigsaw/
+├── frontend/         Vite + React 18 + TS + ReactFlow + shadcn/ui  ← canonical UI
+├── api-backend/      Next.js API routes — chat, firecrawl, workflow execute
+├── architecture/     Internal team docs (Northstar, Layered, Diagrams, Refactor)
+├── gitbook/          Public docs — published at docs.figsaw.dev
+├── assets/           Static assets (banner.svg lives here)
+├── CLAUDE.md         Manual for Claude Code & every AI agent
+├── ONE-STOP-WORKFLOW.md  End-to-end product workflow + research
+└── README.md         You are here
+```
+
+For the full layout and per-folder responsibilities, read [`CLAUDE.md`](./CLAUDE.md) §1.
+
+---
+
+## Quickstart (local)
+
+> Prereqs: Node 18+, Bun (or npm), Python 3.12+ if you wire up the optional Python sidecar, a Firebase project, and at least one AI-provider key.
+
+```bash
+git clone https://github.com/lonexreb/zigsaw.git
+cd zigsaw
+
+# 1. Frontend
+cd frontend
+bun install          # or: npm install
+cp env.example .env  # fill in Firebase + provider keys
+bun run dev          # http://localhost:8081
+
+# 2. API backend (separate terminal)
+cd ../api-backend
+npm install
+npm run dev          # Next.js dev server
+```
+
+Then open `http://localhost:8081`, sign in, and type your first automation in the chat panel.
+
+### Required environment variables
+
+```bash
+# AI providers (set at least one)
+ANTHROPIC_API_KEY=…
+OPENAI_API_KEY=…
+GOOGLE_API_KEY=…
+GROQ_API_KEY=…
+
+# Firebase
+FIREBASE_API_KEY=…
+FIREBASE_AUTH_DOMAIN=…
+FIREBASE_PROJECT_ID=…
+FIREBASE_SERVICE_ACCOUNT_KEY_PATH=./secrets/firebase.json
+
+# Stripe (optional — only if testing billing)
+STRIPE_PUBLISHABLE_KEY=…
+STRIPE_SECRET_KEY=…
+```
+
+> ⚠️ **Never commit secrets.** If a secret leaks into the repo, rotate it immediately. See [`CLAUDE.md`](./CLAUDE.md) §8.
+
+---
+
+## Tech stack
+
+| Layer        | Choice                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------- |
+| **Frontend** | React 18 · TypeScript (strict) · Vite · ReactFlow · shadcn/ui · Tailwind · Framer Motion · TanStack Query · dnd-kit · 3d-force-graph |
+| **Backend**  | Next.js API routes (TS) · optional Python FastAPI sidecar inherited from `zigsaw-backend` |
+| **AI**       | Anthropic Claude · OpenAI · Google Gemini · Groq · Veo 3 · Whisper · BLIP-2 · Imagen   |
+| **Data**     | Firebase Firestore · encrypted secrets vault · append-only run log                     |
+| **Auth**     | Firebase JWT · OAuth2 for external integrations · SAML/OIDC (enterprise)               |
+| **Billing**  | Stripe (`@stripe/react-stripe-js`)                                                     |
+| **Tooling**  | Bun · ESLint · Prettier · Jest · Playwright · TypeScript                               |
+
+---
+
+## Architecture (compressed)
+
+```
+Browser  →  Edge (Next.js API)  →  Workflow Executor  →  Provider Layer
+                  │                       │                    │
+                  ▼                       ▼                    ▼
+            Auth + Validation     Topo-sorted DAG       Claude / GPT / Veo3
+                                  Streaming runtime     GitHub / Gmail / Calendar
+                                  Retry + recovery
+                                          │
+                                          ▼
+                                   Firestore + Vault
+                                   (state, secrets, runs)
+```
+
+Detailed reference architecture lives in [`ONE-STOP-WORKFLOW.md`](./ONE-STOP-WORKFLOW.md) §13 and [`architecture/NORTHSTAR_ARCHITECTURE.md`](./architecture/NORTHSTAR_ARCHITECTURE.md).
+
+---
+
+## Common workflows people ship in week 1
+
+```
+GitHub PR opened     →  Claude review     →  Slack post + auto-label
+Gmail "invoice"      →  Doc parse         →  Sheet append + reply ack
+Webhook (Stripe)     →  Risk score        →  Notion task if flagged
+Daily 9am cron       →  Summarize PRs     →  Email digest to team
+Image upload         →  BLIP-2 caption    →  Imagen variation + Drive store
+Brief + product imgs →  Veo3 ad variants  →  Approval gate → publish
+```
+
+Every example above works today on the platform; the chat track will generate any of them in under two seconds.
+
+---
+
+## Documentation
+
+| Where                                     | What you'll find                                    |
+| ----------------------------------------- | --------------------------------------------------- |
+| [`CLAUDE.md`](./CLAUDE.md)                | Operating manual for Claude Code & every AI agent.  |
+| [`ONE-STOP-WORKFLOW.md`](./ONE-STOP-WORKFLOW.md) | End-to-end product workflow, every track, every loop. |
+| [`architecture/`](./architecture/)        | Internal team docs (Northstar, Layered, Refactor).  |
+| [`gitbook/`](./gitbook/)                  | Public docs — published at docs.figsaw.dev.         |
+| [`FIRECRAWL_DEBUG_GUIDE.md`](./FIRECRAWL_DEBUG_GUIDE.md) | Firecrawl integration troubleshooting. |
+
+---
+
+## Pricing tiers
+
+| Tier            | Per month   | Executions | Models                                | Best for                  |
+| --------------- | ----------- | ---------- | ------------------------------------- | ------------------------- |
+| **Free**        | $0          | 100        | Claude Haiku, GPT-3.5, Groq Llama     | Hobby, prototyping        |
+| **7-day Trial** | $0          | 1,000      | Everything                            | Real evaluation           |
+| **Pro**         | $29         | 10,000     | + Claude Sonnet, GPT-4, Gemini Pro    | Solo & small teams        |
+| **Enterprise**  | Custom      | Unlimited  | + Claude Opus, GPT-4 Turbo + SSO/SLA  | Regulated, on-prem, scale |
+
+Full breakdown in [`ONE-STOP-WORKFLOW.md`](./ONE-STOP-WORKFLOW.md) §11.
+
+---
+
+## Roadmap
+
+- [x] Phase 1 — chat-to-workflow state sync, real Anthropic key plumbing.
+- [x] Phase 2 — single-tab UX, inline preview, auto-save, error recovery.
+- [x] Phase 3 — mobile responsive, WCAG 2.1 AA, multi-provider fallback.
+- [x] Stripe subscriptions + Firebase auth + 25+ workflow nodes.
+- [ ] Encrypted API key vault + per-user rate limits.
+- [ ] 7-day trial + credit metering.
+- [ ] Workflow marketplace (community templates).
+- [ ] GitHub Mastra co-pilot surfaced as a Zigsaw node.
+- [ ] AI ad creative engine (Veo 3 + multi-platform publishing) merged into the canvas.
+- [ ] Enterprise SSO (SAML / OIDC) + immutable audit log.
+- [ ] Desktop wrapper (`zigsaw-mac`) once product-market fit is confirmed.
+
+---
+
+## Contributing
+
+Pull requests welcome. Read [`CLAUDE.md`](./CLAUDE.md) first — it spells out conventions, security rules, and the agent delegation map.
+
+Quick checklist before opening a PR:
+
+- `bun run lint` clean
+- `bun run build` clean
+- `bun run test:all` green
+- New nodes documented in `gitbook/features/`
+- No secrets in the diff
+
+For non-trivial changes, run the `code-reviewer` agent before requesting human review.
+
+---
+
+## Why "Zigsaw"
+
+Like a jigsaw puzzle, Zigsaw helps you connect the pieces — AI models, APIs, services, integrations — into one coherent picture: your perfect automated workflow. Unlike traditional automation tools, Zigsaw speaks your language. Describe what you need; watch your words become production-ready automation.
 
 **The future of automation is conversational. The future is Zigsaw.**
 
-*Connect the pieces. Chat your automation. Build the future.*
-
 ---
 
-**Built with ❤️ for the automation community**  
-[🌐 Website](https://figsaw.dev) | [📚 Documentation](https://docs.figsaw.dev) | [💬 Community](https://community.figsaw.dev) | [🐙 GitHub](https://github.com/figsaw/zigsaw)
+<p align="center">
+  <sub>
+    Built with care for the automation community ·
+    <a href="https://figsaw.dev">Website</a> ·
+    <a href="https://docs.figsaw.dev">Docs</a> ·
+    <a href="https://github.com/lonexreb/zigsaw/issues">Issues</a>
+  </sub>
+</p>
