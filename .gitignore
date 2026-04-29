@@ -12,8 +12,10 @@
 *.key
 *.cert
 firebase_service_account.json
-secrets/
-.secrets/
+/secrets/
+/.secrets/
+/**/secrets-local/
+.secrets-local/
 
 # ===== Node / JS =====
 node_modules/
