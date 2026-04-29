@@ -1,0 +1,100 @@
+# ────────────────────────────────────────────
+# Zigsaw root .gitignore
+# Applies across frontend/, api-backend/, and any future workspaces.
+# ────────────────────────────────────────────
+
+# ===== Secrets & environment =====
+.env
+.env.*
+!.env.example
+!*.env.example
+*.pem
+*.key
+*.cert
+firebase_service_account.json
+secrets/
+.secrets/
+
+# ===== Node / JS =====
+node_modules/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+.npm/
+.next/
+.turbo/
+.cache/
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+.eslintcache
+.parcel-cache/
+.vite/
+.swc/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+.python-version
+venv/
+.venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ===== Logs =====
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+lint.log
+
+# ===== OS =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===== Editors / IDEs =====
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+*.swp
+*.swo
+*~
+.history/
+
+# ===== Test artifacts =====
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ===== Misc =====
+*.tmp
+*.bak
+*.orig
+.tmp/
+tmp/
+.local/
+
+# ===== Manifest / build outputs we never check in =====
+manifests/local/
+data/cache/
+data/runtime/
