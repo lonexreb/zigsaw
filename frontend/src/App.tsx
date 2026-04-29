@@ -12,6 +12,14 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import SuccessPage from "./pages/SuccessPage";
 import CancelPage from "./pages/CancelPage";
+// Marketing surfaces ported from Zigsaw-lab (issue #1)
+import PricingPage from "./pages/marketing/PricingPage";
+import OnboardingPage from "./pages/marketing/OnboardingPage";
+import WaitlistPage from "./pages/marketing/WaitlistPage";
+import UseCasesPage from "./pages/marketing/UseCasesPage";
+import SupportPage from "./pages/marketing/SupportPage";
+import ProductPage from "./pages/marketing/ProductPage";
+import LearnPage from "./pages/marketing/LearnPage";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { currentUser, loading } = useAuth();
@@ -51,6 +59,14 @@ const App = () => (
                 <Route path="/subscription" element={<SubscriptionPage />} />
                 <Route path="/success" element={<SuccessPage />} />
                 <Route path="/cancel" element={<CancelPage />} />
+                {/* Marketing routes (issue #1) */}
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/onboarding" element={<OnboardingPage />} />
+                <Route path="/waitlist" element={<WaitlistPage />} />
+                <Route path="/use-cases" element={<UseCasesPage />} />
+                <Route path="/support" element={<SupportPage />} />
+                <Route path="/product" element={<ProductPage />} />
+                <Route path="/learn" element={<LearnPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
