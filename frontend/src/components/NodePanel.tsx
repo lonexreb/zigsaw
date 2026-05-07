@@ -160,6 +160,22 @@ const nodeTypes: NodeType[] = [
     category: 'Tools'
   },
   {
+    id: 'storyboard',
+    label: 'Storyboard (GPT Image 2)',
+    description: 'Turn a story idea into a 12-frame Arcads-style storyboard with shot list, camera notes, and character casting via OpenAI gpt-image-1',
+    icon: <Layers className="w-5 h-5" />,
+    color: { primary: 'pink', secondary: 'rose', glow: 'pink-400/20' },
+    category: 'Tools'
+  },
+  {
+    id: 'seedance2',
+    label: 'Seedance 2 Video',
+    description: 'Image-to-video — feeds a storyboard image to ByteDance Seedance 2 to render a polished cinematic scene',
+    icon: <Video className="w-5 h-5" />,
+    color: { primary: 'cyan', secondary: 'blue', glow: 'cyan-400/20' },
+    category: 'Tools'
+  },
+  {
     id: 'human_in_loop',
     label: 'Human in Loop',
     description: 'Manual intervention and approval points',

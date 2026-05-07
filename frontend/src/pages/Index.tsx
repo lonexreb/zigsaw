@@ -51,6 +51,8 @@ import WhisperNode from '../components/nodes/WhisperNode';
 import ImagenNode from '../components/nodes/ImagenNode';
 import Veo3Node from '../components/nodes/Veo3Node';
 import Blip2Node from '../components/nodes/Blip2Node';
+import StoryboardNode from '../components/nodes/StoryboardNode';
+import Seedance2Node from '../components/nodes/Seedance2Node';
 import TriggerNode from '../components/nodes/TriggerNode';
 import FirecrawlNode from '../components/nodes/FirecrawlNode';
 
@@ -110,6 +112,8 @@ const nodeTypes = {
   imagen: createWrappedNode(ImagenNode, 'Imagen'),
   veo3: createWrappedNode(Veo3Node, 'Veo3'),
   blip2: createWrappedNode(Blip2Node, 'Blip2'),
+  storyboard: createWrappedNode(StoryboardNode, 'Storyboard'),
+  seedance2: createWrappedNode(Seedance2Node, 'Seedance 2'),
   human_in_loop: createWrappedNode(HumanInTheLoopNode, 'Human in the Loop'),
   database: createWrappedNode(DatabaseNode, 'Database'),
   api_connector: createWrappedNode(ApiConnectorNode, 'API Connector'),
